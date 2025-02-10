@@ -2,13 +2,9 @@
 
 What pokemon are you today ?
 
-[![GitHub issues](https://img.shields.io/github/issues/herisdia/pokedaily-old?logo=%23b69bc9&style=for-the-badge)](https://github.com/herisdia/pokedaily-old/issues)
-[![GitHub forks](https://img.shields.io/github/forks/herisdia/pokedaily-old?logo=b69bc9&style=for-the-badge)](https://github.com/herisdia/pokedaily-old/network)
-[![GitHub stars](https://img.shields.io/github/stars/herisdia/pokedaily-old?color=%23b69bc9&style=for-the-badge)](https://github.com/herisdia/pokedaily-old/stargazers)
-![Website](https://img.shields.io/website?color=%23b69bc9&style=for-the-badge&url=https%3A%2F%2Fpokedaily.diams.app)
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N56FZOR)
+## Information
 
-#### [Upvote it on ProductHunt !](https://www.producthunt.com/posts/pokedaily)
+This project is abandoned, no more update will be made. If someone wanna take over this project, feel free to fork it.
 
 ## Features
 
@@ -20,11 +16,6 @@ What pokemon are you today ?
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
-
-## Roadmap
-
-- Better optimizations for contributions.
-- New online features.
 
 ## Run Locally
 
@@ -62,11 +53,3 @@ at any moment in this repo.
 Pokedaily is not affiliated with Nintendo or Gamefreak Inc.
 
 Pokémon and Pokémon character names are trademarks of Nintendo.
-
-A new v2 is coming soon, with a new design and new features. Stay tuned !
-
-This repo is semi archived, and no new features will be added to this version.
-
-## Authors
-
-- [@herisdia](https://www.github.com/herisdia)

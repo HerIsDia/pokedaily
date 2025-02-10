@@ -3,7 +3,7 @@
   export let data: AppData;
   const allPokemonFounds = data.pokedex;
   let pokemons: number[] = [];
-  for (let index = 0; index < 1010; index++) {
+  for (let index = 0; index < 1025; index++) {
     pokemons.push(index + 1);
   }
 

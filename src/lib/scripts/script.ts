@@ -1,7 +1,7 @@
 import type { Nature, Pokemon, PokemonSpecies, Type } from 'pokenode-ts';
 import { getPokemonNature, getPokemonData, getPokemonTypes } from './pokeAPI';
 
-const version = '2.2';
+const version = 'FINAL';
 
 export interface AppData {
   _lastVersion: string;
@@ -42,7 +42,7 @@ export const script = async () => {
   let pokemonOfTheDay = LocalData ? LocalData.pokemonOfTheDay : undefined;
   let history = LocalData ? LocalData.history : [];
   if (difference) {
-    const randomPokemon = Math.floor(Math.random() * 1009) + 1;
+    const randomPokemon = Math.floor(Math.random() * 1024) + 1;
     const fetchedNewPokemon = await getPokemonData(randomPokemon);
     const randomNature = Math.floor(Math.random() * 24) + 1;
     const fetchedNewNature: Nature = (await getPokemonNature(

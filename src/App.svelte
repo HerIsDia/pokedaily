@@ -18,8 +18,8 @@
     window.location.hash.slice(1) == 'history'
       ? 'history'
       : window.location.hash.slice(1) == 'pokedex'
-      ? 'pokedex'
-      : 'pokemon' || 'pokemon';
+        ? 'pokedex'
+        : 'pokemon' || 'pokemon';
   console.log(window.location.hash.slice(1));
   const { needRefresh, updateServiceWorker } = useRegisterSW({
     onRegistered(swr) {
@@ -90,18 +90,16 @@
       <footer>
         <p>
           Made with <Fa icon={faHeart} /> by
-          <a href="https://diamant.dev">diamant</a>.
+          <a href="https://herisdia.me">diamant</a>.
         </p>
         <p>
           Pokedaily is not affiliated with Nintendo or Gamefreak Inc. - Pokémon
           and Pokémon character names are trademarks of Nintendo.
         </p>
         <p>
-          Surprise ! 9th gen pokemon are here ! Pokédaily v2 is in dev, no major
-          update will be on this version.
-        </p>
-        <p>
-          <a href="https://github.com/herisdia/pokedaily-old">Source code</a>
+          This project no longer maintained. The <a
+            href="https://github.com/herisdia/pokedaily-old">Source code</a
+          > is available if someone want.
         </p>
         {#if !online}
           <p>
