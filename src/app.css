@@ -1,0 +1,138 @@
+/* ============================================================
+   Pokedaily — Pokémon Scarlet & Violet (Violet edition) Theme
+   ============================================================ */
+
+/* --- Google Fonts are loaded in index.html --- */
+
+/* --- Design Tokens --- */
+:root {
+  --bg-main: #0f0f1a;
+  --bg-card: #1c1c2e;
+  --bg-card-hover: #252540;
+  --bg-nav: #13131f;
+  --accent: #9b4dca;
+  --accent-light: #b76ee0;
+  --accent-glow: rgba(155, 77, 202, 0.35);
+  --accent-subtle: rgba(155, 77, 202, 0.12);
+  --text-primary: #f0f0f5;
+  --text-secondary: #9090b0;
+  --text-muted: #5a5a7a;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-accent: rgba(155, 77, 202, 0.4);
+  --shiny-color: #ffd700;
+  --shiny-glow: rgba(255, 215, 0, 0.4);
+  --nav-height: 72px;
+  --card-radius: 20px;
+  --badge-radius: 8px;
+  --font-main: 'Roboto Condensed', 'Roboto', system-ui, sans-serif;
+}
+
+/* --- Reset --- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* --- Selection --- */
+::selection {
+  background-color: var(--accent);
+  color: #fff;
+}
+
+/* --- Type Badge Colors --- */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 12px;
+  border-radius: var(--badge-radius);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.type-normal    { background: rgba(168,167,122,0.18); color: #c8c79a; border-color: rgba(168,167,122,0.4); }
+.type-fighting  { background: rgba(194,46,40,0.18);   color: #e05050; border-color: rgba(194,46,40,0.4); }
+.type-flying    { background: rgba(169,143,243,0.18); color: #b8a0f8; border-color: rgba(169,143,243,0.4); }
+.type-poison    { background: rgba(163,62,161,0.18);  color: #c060c0; border-color: rgba(163,62,161,0.4); }
+.type-ground    { background: rgba(226,191,101,0.18); color: #d8c070; border-color: rgba(226,191,101,0.4); }
+.type-rock      { background: rgba(182,161,54,0.18);  color: #c8b048; border-color: rgba(182,161,54,0.4); }
+.type-bug       { background: rgba(166,185,26,0.18);  color: #b8c830; border-color: rgba(166,185,26,0.4); }
+.type-ghost     { background: rgba(123,98,163,0.18);  color: #9878c8; border-color: rgba(123,98,163,0.4); }
+.type-steel     { background: rgba(183,183,206,0.18); color: #c8c8e0; border-color: rgba(183,183,206,0.4); }
+.type-fire      { background: rgba(238,129,48,0.18);  color: #f0a050; border-color: rgba(238,129,48,0.4); }
+.type-water     { background: rgba(99,144,240,0.18);  color: #80b0f8; border-color: rgba(99,144,240,0.4); }
+.type-grass     { background: rgba(122,199,76,0.18);  color: #90d860; border-color: rgba(122,199,76,0.4); }
+.type-electric  { background: rgba(247,208,44,0.18);  color: #f8d840; border-color: rgba(247,208,44,0.4); }
+.type-psychic   { background: rgba(249,85,135,0.18);  color: #f870a0; border-color: rgba(249,85,135,0.4); }
+.type-ice       { background: rgba(150,217,214,0.18); color: #a8e8e8; border-color: rgba(150,217,214,0.4); }
+.type-dragon    { background: rgba(111,53,252,0.18);  color: #9068f8; border-color: rgba(111,53,252,0.4); }
+.type-dark      { background: rgba(112,87,70,0.18);   color: #987860; border-color: rgba(112,87,70,0.4); }
+.type-fairy     { background: rgba(214,133,173,0.18); color: #e898c8; border-color: rgba(214,133,173,0.4); }
+
+/* --- Utility --- */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* --- Animations --- */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
+  50%       { box-shadow: 0 0 40px var(--accent-glow), 0 0 60px var(--accent-glow); }
+}
+
+@keyframes shiny-sparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.2); }
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
