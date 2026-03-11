@@ -26,6 +26,9 @@
   "dependencies": {
     "pokenode-ts": "^1.20.0"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "author": {
     "email": "git@diamant.dev",
     "name": "Diamant"
