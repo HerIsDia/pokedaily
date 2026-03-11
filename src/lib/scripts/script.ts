@@ -59,7 +59,9 @@ export const script = async (): Promise<AppData> => {
   }
 
   // --- Fetch new Pokemon of the day ---
-  const randomId = Math.floor(Math.random() * 1025) + 1;
+  const devNextId = localStorage.getItem('_devNextId');
+  const randomId = devNextId ? parseInt(devNextId, 10) : Math.floor(Math.random() * 1025) + 1;
+  if (devNextId) localStorage.removeItem('_devNextId');
   const randomNatureId = Math.floor(Math.random() * 25) + 1;
   const isShiny = Math.random() < 1 / 69;
   const level = Math.floor(Math.random() * 99) + 1;

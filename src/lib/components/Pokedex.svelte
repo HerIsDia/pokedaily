@@ -36,6 +36,8 @@
           src="/images/{paddedId}.png"
           alt="#{paddedId}"
           loading="lazy"
+          width="56"
+          height="56"
           class:caught={isCaught}
         />
         {#if isCaught}
@@ -117,6 +119,8 @@
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid transparent;
     overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-size: 64px 64px;
   }
 
   .grid-cell.caught {

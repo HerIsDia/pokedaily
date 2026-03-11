@@ -7,6 +7,7 @@
   import History from './lib/components/History.svelte';
   import Pokedex from './lib/components/Pokedex.svelte';
   import InstallBanner from './lib/components/InstallBanner.svelte';
+  import DevPanel from './lib/components/DevPanel.svelte';
   import type { AppData } from './lib/scripts/script';
 
   // --- View routing ---
@@ -116,12 +117,23 @@
     window.addEventListener('online', () => { online = true; });
     window.addEventListener('offline', () => { online = false; });
   });
+
+  // --- Dev panel ---
+  let showDevPanel = $state(false);
+  onMount(() => {
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        showDevPanel = !showDevPanel;
+      }
+    });
+  });
 </script>
 
 <div class="app-shell">
   <!-- Header -->
   <header class="topbar">
-    <span class="topbar-logo">POKÉDEX</span>
+    <span class="topbar-logo">Pokédaily</span>
     <div class="topbar-meta">
       {#if !online}
         <span class="badge-status badge-offline">Hors ligne</span>
@@ -180,6 +192,14 @@
       </div>
     {/if}
   </main>
+
+  <!-- Dev panel -->
+  {#if showDevPanel}
+    <DevPanel
+      onclose={() => { showDevPanel = false; }}
+      onreload={() => { window.location.reload(); }}
+    />
+  {/if}
 
   <!-- Bottom navigation -->
   <nav class="bottom-nav">
@@ -390,6 +410,7 @@
     height: 52px;
     padding: 0;
     flex-shrink: 0;
+    justify-content: center;
     box-shadow: 0 0 16px var(--accent-glow);
     transition: box-shadow 0.2s, transform 0.15s, background 0.2s;
   }

@@ -41,6 +41,198 @@
   const dateLabel = dt.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
     weekday: 'long', day: 'numeric', month: 'long',
   });
+
+  const typeColors: Record<string, string> = {
+    fire: '#ee8130', water: '#6390f0', grass: '#7ac74c', electric: '#f7d02c',
+    ice: '#96d9d6', fighting: '#c22e28', poison: '#a33ea1', ground: '#e2bf65',
+    flying: '#a98ff3', psychic: '#f95587', bug: '#a6b91a', rock: '#b6a136',
+    ghost: '#7b62a3', dragon: '#6f35fc', dark: '#705746', steel: '#b7b7ce',
+    fairy: '#d685ad', normal: '#a8a77a',
+  };
+
+  let sharing = $state(false);
+
+  async function shareCard() {
+    sharing = true;
+    try {
+      const canvas = document.createElement('canvas');
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const W = 400, H = 560;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      const ctx = canvas.getContext('2d')!;
+      ctx.scale(dpr, dpr);
+
+      const typeColor = typeColors[primaryTypeName] || '#9b4dca';
+
+      // Background
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+      bgGrad.addColorStop(0, '#0f0f1a');
+      bgGrad.addColorStop(1, '#1a0f2e');
+      ctx.fillStyle = bgGrad;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, W, H, 20);
+      ctx.fill();
+
+      // Type glow
+      const glowGrad = ctx.createRadialGradient(W / 2, 170, 0, W / 2, 170, 200);
+      glowGrad.addColorStop(0, typeColor + '30');
+      glowGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = glowGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Top accent bar
+      ctx.fillStyle = typeColor;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, W, 4, [20, 20, 0, 0]);
+      ctx.fill();
+
+      // Entry number
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`N°${entryNumber}`, 24, 36);
+
+      // Shiny badge
+      if (pkmn.isShiny) {
+        ctx.fillStyle = 'rgba(255,215,0,0.18)';
+        ctx.beginPath();
+        ctx.roundRect(W - 92, 20, 80, 26, 13);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(W - 92, 20, 80, 26, 13);
+        ctx.stroke();
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('✦ Shiny', W - 52, 37);
+      }
+
+      // Type badge
+      const typeLabel = (types[0]?.names.find((n) => n.language.name === lang)?.name ?? primaryTypeName);
+      const badgeW = ctx.measureText(typeLabel).width + 24;
+      ctx.fillStyle = typeColor + '35';
+      ctx.beginPath();
+      ctx.roundRect(24, 50, badgeW, 26, 13);
+      ctx.fill();
+      ctx.fillStyle = typeColor;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(typeLabel, 36, 67);
+
+      // Pokemon image
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = imageId;
+      await new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      });
+      ctx.drawImage(img, W / 2 - 100, 80, 200, 200);
+
+      // Pokemon name
+      ctx.fillStyle = '#f0f0f5';
+      ctx.font = 'bold 34px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(rename, W / 2, 320);
+
+      // Original name if renamed
+      if (rename !== pokemonName) {
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '14px sans-serif';
+        ctx.fillText(pokemonName, W / 2, 342);
+      }
+
+      // Stats row background
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.beginPath();
+      ctx.roundRect(W / 2 - 110, 356, 220, 52, 12);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(W / 2 - 110, 356, 220, 52, 12);
+      ctx.stroke();
+
+      // Level
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('NIV.', W / 2 - 50, 371);
+      ctx.fillStyle = '#f0f0f5';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(String(pkmn.level), W / 2 - 50, 392);
+
+      // Divider
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(W / 2, 362);
+      ctx.lineTo(W / 2, 402);
+      ctx.stroke();
+
+      // Nature
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillText('NATURE', W / 2 + 50, 371);
+      ctx.fillStyle = '#f0f0f5';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText(natureName, W / 2 + 50, 392);
+
+      // Date
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '13px sans-serif';
+      ctx.fillText(dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1), W / 2, 432);
+
+      // Separator
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(40, 450);
+      ctx.lineTo(W - 40, 450);
+      ctx.stroke();
+
+      // Branding
+      ctx.fillStyle = '#b76ee0';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('Pokédaily', W / 2, 485);
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('pokedaily.vercel.app', W / 2, 507);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `pokemon-${pkmn.id}.png`, { type: 'image/png' });
+        try {
+          if (navigator.share && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: lang === 'fr' ? `Je suis ${rename} aujourd'hui !` : `I am ${rename} today!`,
+              text: lang === 'fr'
+                ? `Découvre ton Pokémon du jour sur pokedaily.vercel.app`
+                : `Discover your Pokémon of the day at pokedaily.vercel.app`,
+            });
+          } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pokemon-${pkmn.id}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        } catch {
+          // user cancelled share
+        }
+        sharing = false;
+      }, 'image/png');
+    } catch {
+      sharing = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -110,9 +302,24 @@
     </div>
   </div>
 
+  <button class="share-btn" onclick={shareCard} disabled={sharing} aria-label="Partager">
+    {#if sharing}
+      <span class="share-spinner"></span>
+    {:else}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="18" cy="5" r="3"/>
+        <circle cx="6" cy="12" r="3"/>
+        <circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+      {lang === 'fr' ? 'Partager ma carte' : 'Share my card'}
+    {/if}
+  </button>
+
   <footer class="page-footer">
     <p>Pokedaily n'est pas affilié à Nintendo ou Game Freak. Pokémon est une marque déposée de Nintendo.</p>
-    <p>Fait avec ♥ par <a href="https://herisdia.me">diamant</a></p>
+    <p>Fait par <a href="https://herisdia.me">diamant</a> avec Claude Code</p>
   </footer>
 </div>
 
@@ -357,5 +564,53 @@
   .page-footer a {
     color: var(--accent-light);
     text-decoration: none;
+  }
+
+  .share-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-subtle);
+    border: 1px solid var(--border-accent);
+    border-radius: 12px;
+    color: var(--accent-light);
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    letter-spacing: 0.03em;
+  }
+
+  .share-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .share-btn:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+
+  .share-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .share-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .share-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-accent);
+    border-top-color: var(--accent-light);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
   }
 </style>
