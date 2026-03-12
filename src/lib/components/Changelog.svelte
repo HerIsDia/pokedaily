@@ -8,42 +8,44 @@
   interface ChangeEntry {
     version: string;
     date: string;
+    note?: string;
     sections: { title: string; items: string[] }[];
   }
+
+  const NOTE_LAUNCH = lang === 'fr'
+    ? 'Bonjour ou bonsoir, j\'ai décidé de refaire vivre Pokédaily pour les 30 ans de Pokémon mais vu que ma passion pour le développement est néant, j\'utilise Claude Code pour l\'aspect codage. Cette version a été entièrement reconceptualisée pour avoir une meilleure interface et pour planifier des mises à jour régulières !'
+    : 'Hello or good evening, I decided to bring Pokédaily back to life for Pokémon\'s 30th anniversary, but since my passion for development is non-existent, I use Claude Code for the coding side. This version was completely rethought to have a better interface and to plan regular updates!';
 
   const entries: ChangeEntry[] = [
     {
       version: '3.0_b2',
-      date: 'Mars 2026',
+      date: lang === 'fr' ? 'Mars 2026' : 'March 2026',
+      note: NOTE_LAUNCH,
       sections: [
         {
           title: lang === 'fr' ? 'Nouveautés' : "What's new",
           items: lang === 'fr'
             ? [
-                'Système d\'évènements saisonniers avec effets sur le Pokémon du jour',
-                'Compte à rebours et badge d\'évènement en haut de l\'app',
-                'Popup de détails pour chaque évènement (modificateurs, durée)',
-                'Changelog accessible via le badge de version',
-                'Mode développeur revu pour IndexedDB + génération de données de test',
+                'Des évènements spéciaux s\'activent automatiquement tout au long de l\'année ! À certaines dates — anniversaires Pokémon, fêtes, changements de saison — le Pokémon du jour peut changer ou devenir chromatique. Magicarpe le 1er avril, Pikachu pour la journée mondiale Pokémon, et bien d\'autres surprises t\'attendent.',
+                'Un indicateur apparaît en haut de l\'écran lorsqu\'un évènement est en cours. Il te dit aussi combien de jours il reste avant le prochain. Tape dessus pour découvrir ce qui change pendant l\'évènement.',
+                'L\'historique n\'affiche désormais plus qu\'un mois à la fois, navigable avec des flèches. Les jours avec un évènement actif sont signalés par un petit point doré sur la case.',
+                'Tu peux désormais consulter les notes de mise à jour directement dans l\'application, en appuyant sur le numéro de version affiché en haut de l\'écran.',
               ]
             : [
-                'Seasonal event system with effects on the daily Pokémon',
-                'Event countdown and badge at the top of the app',
-                'Detail popup for each event (modifiers, duration)',
-                'Changelog accessible via the version badge',
-                'Developer mode rebuilt for IndexedDB + test data generation',
+                'Special events automatically activate throughout the year! On certain dates — Pokémon anniversaries, holidays, season changes — the daily Pokémon may change or become shiny. Magikarp on April 1st, Pikachu for Pokémon World Day, and many more surprises await.',
+                'An indicator appears at the top of the screen when an event is active. It also tells you how many days until the next one. Tap it to see what changes during the event.',
+                'The history now shows only one month at a time, navigable with arrows. Days with an active event are marked with a small golden dot.',
+                'You can now read the update notes directly in the app by tapping the version number at the top of the screen.',
               ],
         },
         {
           title: lang === 'fr' ? 'Corrections' : 'Bug fixes',
           items: lang === 'fr'
             ? [
-                'Mode développeur corrigé : lit maintenant IndexedDB au lieu de l\'ancien localStorage',
-                'Retour visuel sur le bouton Copier : passe au vert lors d\'une copie réussie',
+                'Lorsque tu copies la carte de ton Pokémon, le bouton passe maintenant au vert pour confirmer que l\'image a bien été copiée dans ton presse-papier.',
               ]
             : [
-                'Developer mode fixed: now reads IndexedDB instead of old localStorage',
-                'Visual feedback on Copy button: turns green on successful copy',
+                'When you copy your Pokémon card, the button now turns green to confirm the image was successfully copied to your clipboard.',
               ],
         },
       ],
@@ -51,23 +53,24 @@
     {
       version: '3.0_b1',
       date: lang === 'fr' ? 'Février 2026' : 'February 2026',
+      note: NOTE_LAUNCH,
       sections: [
         {
           title: lang === 'fr' ? 'Refonte complète' : 'Full rebuild',
           items: lang === 'fr'
             ? [
-                'Nouvelle interface inspirée de Pokémon Écarlate et Violet (thème Violet)',
-                'Migration des données vers IndexedDB pour une meilleure fiabilité',
-                'Migration vers Svelte 5 avec les nouvelles runes',
-                'Calendrier historique et Shinydex',
-                'Nouveau système de partage de carte via l\'API Canvas',
+                'Pokédaily a été entièrement repensé avec un nouveau design sombre inspiré de l\'univers de Pokémon Écarlate et Violet.',
+                'Toutes tes données (Pokémon du jour, historique, Pokédex) sont maintenant sauvegardées de façon plus fiable directement sur ton appareil, même sans connexion.',
+                'Un calendrier te permet de retrouver les Pokémon que tu as rencontrés les jours précédents, jour par jour.',
+                'Un Shinydex recense automatiquement tous les Pokémon chromatiques que tu as eu la chance de croiser.',
+                'Tu peux partager ou copier une carte illustrée de ton Pokémon du jour directement depuis l\'application, en un seul tap.',
               ]
             : [
-                'New interface inspired by Pokémon Scarlet & Violet (Violet theme)',
-                'Data migration to IndexedDB for better reliability',
-                'Migration to Svelte 5 with new runes',
-                'History calendar and Shinydex',
-                'New card sharing system via Canvas API',
+                'Pokédaily was completely rethought with a new dark design inspired by the Pokémon Scarlet & Violet universe.',
+                'All your data (daily Pokémon, history, Pokédex) is now saved more reliably directly on your device, even without a connection.',
+                'A calendar lets you find Pokémon you encountered on previous days, day by day.',
+                'A Shinydex automatically tracks all the shiny Pokémon you\'ve been lucky enough to encounter.',
+                'You can share or copy an illustrated card of your daily Pokémon directly from the app, with a single tap.',
               ],
         },
       ],
@@ -108,6 +111,17 @@
             </span>
             <span class="cl-version-date">{entry.date}</span>
           </div>
+
+          {#if entry.note}
+            <div class="cl-note">
+              <span class="cl-note-gem">✦</span>
+              <div class="cl-note-content">
+                <p>{entry.note}</p>
+                <span class="cl-note-sig">— Diamant</span>
+              </div>
+            </div>
+          {/if}
+
           {#each entry.sections as section}
             <div class="cl-section">
               <h3 class="cl-section-title">{section.title}</h3>
@@ -257,6 +271,45 @@
     color: rgba(255, 255, 255, 0.25);
   }
 
+  /* ── Note de Diamant ── */
+  .cl-note {
+    display: flex;
+    gap: 12px;
+    background: rgba(155, 77, 202, 0.07);
+    border: 1px solid rgba(155, 77, 202, 0.2);
+    border-left: 3px solid rgba(155, 77, 202, 0.6);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+
+  .cl-note-gem {
+    font-size: 14px;
+    color: #b76ee0;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .cl-note-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cl-note-content p {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.55;
+  }
+
+  .cl-note-sig {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(155, 77, 202, 0.8);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Sections ── */
   .cl-section {
     margin-bottom: 10px;
   }
@@ -276,13 +329,13 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 7px;
   }
 
   .cl-list li {
     font-size: 13px;
     color: rgba(255, 255, 255, 0.7);
-    line-height: 1.5;
+    line-height: 1.55;
     padding-left: 14px;
     position: relative;
   }

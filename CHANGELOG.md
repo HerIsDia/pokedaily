@@ -1,24 +1,36 @@
 # Changelog — Pokédaily
 
+> Les notes de mise à jour sont rédigées selon les règles définies dans [`docs/CHANGELOG_GUIDE.md`](docs/CHANGELOG_GUIDE.md).
+
+---
+
 ## 3.0_b2 — Mars 2026
 
+> **Note de Diamant :** Bonjour ou bonsoir, j'ai décidé de refaire vivre Pokédaily pour les 30 ans de Pokémon mais vu que ma passion pour le développement est néant, j'utilise Claude Code pour l'aspect codage. Cette version a été entièrement reconceptualisée pour avoir une meilleure interface et pour planifier des mises à jour régulières !
+> — Diamant
+
 ### Nouveautés
-- **Système d'évènements** : évènements saisonniers (Pokémon Day, Poisson d'avril, Noël, Halloween, Saint-Valentin, Diamant Day, changements de saison, Pokémon GO Fest, Bonne Année, Sortie de Pokopia). Chaque évènement peut modifier le Pokémon du jour (ID forcé, taux Chromatique, niveau).
-- **Compte à rebours** en haut de l'app : badge doré si un évènement est actif, compte à rebours violet pour le prochain évènement. Clic pour voir les détails.
-- **Changelog** : ce panneau ! Accessible via le badge de version dans le header.
-- **Mode développeur revu** : fonctionne maintenant avec IndexedDB. Nouvelle fonctionnalité pour générer automatiquement X jours d'historique aléatoire via l'API.
+
+- Des évènements spéciaux s'activent automatiquement tout au long de l'année. À certaines dates — anniversaires Pokémon, fêtes, changements de saison — le Pokémon du jour peut changer ou devenir chromatique. Magicarpe le 1er avril, Pikachu pour la journée mondiale Pokémon, et bien d'autres surprises.
+- Un indicateur apparaît en haut de l'écran lorsqu'un évènement est en cours, et indique combien de jours restent avant le prochain. On peut taper dessus pour voir ce qui change.
+- L'historique n'affiche désormais plus qu'un mois à la fois, navigable avec des flèches. Les jours avec un évènement actif sont signalés par un petit point doré.
+- Les notes de mise à jour sont accessibles directement dans l'application, en appuyant sur le numéro de version affiché en haut de l'écran.
 
 ### Corrections
-- Mode développeur corrigé : les données étaient lues depuis `localStorage` (ancien format) au lieu d'IndexedDB.
-- Retour visuel sur le bouton « Copier » : le bouton passe désormais au vert lors d'une copie réussie.
+
+- Le bouton "Copier l'image" passe maintenant au vert pour confirmer que la carte a bien été copiée dans le presse-papier.
 
 ---
 
 ## 3.0_b1 — Février 2026
 
+> **Note de Diamant :** Bonjour ou bonsoir, j'ai décidé de refaire vivre Pokédaily pour les 30 ans de Pokémon mais vu que ma passion pour le développement est néant, j'utilise Claude Code pour l'aspect codage. Cette version a été entièrement reconceptualisée pour avoir une meilleure interface et pour planifier des mises à jour régulières !
+> — Diamant
+
 ### Refonte complète
-- Nouvelle interface inspirée de Pokémon Écarlate et Violet (thème Violet).
-- Migration des données de `localStorage` vers IndexedDB pour une meilleure fiabilité.
-- Migration vers Svelte 5 avec les nouvelles runes (`$state`, `$props`).
-- Calendrier historique, Shinydex, support hors-ligne amélioré.
-- Nouveau système de partage de carte (canvas + clipboard API).
+
+- Pokédaily a été entièrement repensé avec un nouveau design sombre inspiré de l'univers de Pokémon Écarlate et Violet.
+- Toutes les données (Pokémon du jour, historique, Pokédex) sont maintenant sauvegardées de façon plus fiable directement sur l'appareil, même sans connexion.
+- Un calendrier permet de retrouver les Pokémon rencontrés les jours précédents, jour par jour.
+- Un Shinydex recense automatiquement tous les Pokémon chromatiques rencontrés.
+- Il est possible de partager ou copier une carte illustrée du Pokémon du jour directement depuis l'application.
