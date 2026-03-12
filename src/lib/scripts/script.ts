@@ -8,9 +8,14 @@ import {
   updateRename,
   type PokemonEntry, type AppState,
 } from './db';
+import {
+  loadEvents, getActiveEvents, getNextEvent, applyEventModifiers,
+  type GameEvent,
+} from './events';
 
 export type { PokemonEntry };
 export type { AppState };
+export type { GameEvent };
 
 export interface AppData {
   pokemonOfTheDay: PokemonEntry;
@@ -18,6 +23,10 @@ export interface AppData {
   history: PokemonEntry[];
   pokedex: number[];
   shinydex: number[];
+  /** Currently active event, or null. */
+  activeEvent: GameEvent | null;
+  /** The soonest upcoming event (excluding active), or null. */
+  nextEvent: { event: GameEvent; daysUntil: number } | null;
 }
 
 /** Returns `/images/001.png` or `/images/001S.png` for shiny. */
@@ -109,6 +118,16 @@ export const script = async (): Promise<AppData> => {
     await migrateFromLocalStorage(db);
   }
 
+  // Load events (fail-safe)
+  const events = await loadEvents();
+  const nowDate = new Date();
+  const activeEvents = getActiveEvents(events, nowDate);
+  const activeEvent = activeEvents.length > 0 ? activeEvents[0] : null;
+  const nextEventResult = getNextEvent(
+    events.filter((e) => !activeEvents.includes(e)),
+    nowDate
+  );
+
   const state = await getState(db);
   const todayEntry = await getTodayEntry(db);
   const dateNow = Date.now() - (Date.now() % 86400000); // UTC start of day
@@ -122,6 +141,8 @@ export const script = async (): Promise<AppData> => {
         history: history.sort((a, b) => b.date - a.date),
         pokedex: state.pokedex,
         shinydex: state.shinydex,
+        activeEvent,
+        nextEvent: nextEventResult,
       };
     }
     throw new Error('offline-no-data');
@@ -132,13 +153,21 @@ export const script = async (): Promise<AppData> => {
     await addHistoryEntry(db, todayEntry);
   }
 
-  // Fetch new Pokémon of the day
+  // Base random values
   const devNextId = localStorage.getItem('_devNextId');
-  const randomId = devNextId ? parseInt(devNextId, 10) : Math.floor(Math.random() * 1025) + 1;
+  const baseId = devNextId ? parseInt(devNextId, 10) : Math.floor(Math.random() * 1025) + 1;
   if (devNextId) localStorage.removeItem('_devNextId');
+  const baseIsShiny = Math.random() < 1 / 69;
+  const baseLevel = Math.floor(Math.random() * 99) + 1;
+
+  // Apply event modifiers
+  const { id: randomId, isShiny, level } = applyEventModifiers(activeEvents, {
+    id: baseId,
+    isShiny: baseIsShiny,
+    level: baseLevel,
+  });
+
   const randomNatureId = Math.floor(Math.random() * 25) + 1;
-  const isShiny = Math.random() < 1 / 69;
-  const level = Math.floor(Math.random() * 99) + 1;
 
   const [fetchedPokemon, fetchedNature] = await Promise.all([
     getPokemonData(randomId),
@@ -181,6 +210,8 @@ export const script = async (): Promise<AppData> => {
     history: history.sort((a, b) => b.date - a.date),
     pokedex: newPokedex,
     shinydex: newShinydex,
+    activeEvent,
+    nextEvent: nextEventResult,
   };
 };
 

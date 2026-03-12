@@ -1,0 +1,155 @@
+{
+  "events": [
+    {
+      "id": "pokopia_2026",
+      "nameFr": "Sortie de Pokopia",
+      "nameEn": "Pokopia Release",
+      "descriptionFr": "À l'occasion de la sortie de Pokopia, Métamorph rôde dans les environs ! Taux de Chromatique augmenté à 1/30.",
+      "descriptionEn": "To celebrate Pokopia's release, Ditto is lurking around! Shiny rate increased to 1/30.",
+      "type": "date_range",
+      "startDate": "2026-03-01",
+      "endDate": "2026-03-31",
+      "modifiers": {
+        "forcedPokemonId": 132,
+        "forcedPokemonChance": 0.10,
+        "shinyRate": 30
+      }
+    },
+    {
+      "id": "april_fools",
+      "nameFr": "Poisson d'avril !",
+      "nameEn": "April Fools!",
+      "descriptionFr": "C'est le 1er avril ! Magicarpe envahit la mare — il ne fait que clapoter... mais il pourrait être Chromatique !",
+      "descriptionEn": "It's April 1st! Magikarp has taken over the pond — it only splashes around... but it might be Shiny!",
+      "type": "recurring_date",
+      "month": 4,
+      "day": 1,
+      "modifiers": {
+        "forcedPokemonId": 129,
+        "forcedPokemonChance": 1.0,
+        "shinyRate": 100
+      }
+    },
+    {
+      "id": "pokemon_day",
+      "nameFr": "Pokémon Day",
+      "nameEn": "Pokémon Day",
+      "descriptionFr": "Le 27 février, c'est la journée mondiale des Pokémon ! Pikachu a 10% de chance d'apparaître, et il sera forcément Chromatique !",
+      "descriptionEn": "February 27th is Pokémon World Day! Pikachu has a 10% chance to appear, and it will definitely be Shiny!",
+      "type": "recurring_date",
+      "month": 2,
+      "day": 27,
+      "modifiers": {
+        "forcedPokemonId": 25,
+        "forcedPokemonChance": 0.10,
+        "forcedShiny": true
+      }
+    },
+    {
+      "id": "diamant_day",
+      "nameFr": "Diamant Day ✦",
+      "nameEn": "Diamant Day ✦",
+      "descriptionFr": "Aujourd'hui c'est une journée très spéciale. Ton Pokémon est forcément Chromatique et de niveau 69 — bonne fête !",
+      "descriptionEn": "Today is a very special day. Your Pokémon is definitely Shiny and level 69 — happy birthday!",
+      "type": "recurring_date",
+      "month": 11,
+      "day": 18,
+      "modifiers": {
+        "forcedShiny": true,
+        "forcedLevel": 69
+      }
+    },
+    {
+      "id": "season_change",
+      "nameFr": "Changement de saison",
+      "nameEn": "Season Change",
+      "descriptionFr": "Les saisons changent ! Vivaldaim et Deerling profitent du renouveau pour apparaître plus souvent (20% de chance).",
+      "descriptionEn": "The seasons change! Sawsbuck and Deerling take advantage of the renewal to appear more often (20% chance).",
+      "type": "recurring_dates",
+      "dates": [
+        { "month": 3, "day": 20 },
+        { "month": 6, "day": 21 },
+        { "month": 9, "day": 22 },
+        { "month": 12, "day": 21 }
+      ],
+      "modifiers": {
+        "forcedPokemonIds": [585, 586],
+        "forcedPokemonChance": 0.20
+      }
+    },
+    {
+      "id": "christmas",
+      "nameFr": "Joyeux Noël !",
+      "nameEn": "Merry Christmas!",
+      "descriptionFr": "Ho ho ho ! Cadoizo livre ses cadeaux aujourd'hui — 100% de chance de le rencontrer, et peut-être en version Chromatique (1/50) !",
+      "descriptionEn": "Ho ho ho! Delibird is delivering gifts today — 100% chance to meet it, and maybe a Shiny one (1/50)!",
+      "type": "recurring_date",
+      "month": 12,
+      "day": 25,
+      "modifiers": {
+        "forcedPokemonId": 225,
+        "forcedPokemonChance": 1.0,
+        "shinyRate": 50
+      }
+    },
+    {
+      "id": "halloween",
+      "nameFr": "Halloween",
+      "nameEn": "Halloween",
+      "descriptionFr": "Les esprits et créatures des ténèbres s'éveillent ! Des Pokémon spectraux hantent la zone avec un taux de Chromatique de 1/30.",
+      "descriptionEn": "Spirits and dark creatures awaken! Ghostly Pokémon haunt the area with a 1/30 shiny rate.",
+      "type": "recurring_date",
+      "month": 10,
+      "day": 31,
+      "modifiers": {
+        "forcedPokemonIds": [92, 93, 94, 200, 292, 353, 354, 355, 356, 442, 477, 478, 487, 563, 592, 593, 710, 711, 718, 778, 855, 856, 867, 869],
+        "forcedPokemonChance": 0.30,
+        "shinyRate": 30
+      }
+    },
+    {
+      "id": "valentine",
+      "nameFr": "Saint-Valentin",
+      "nameEn": "Valentine's Day",
+      "descriptionFr": "L'amour est dans l'air ! Lovdisc nage à la surface, et les Pokémon de type Fée sont de sortie (50% de chance). Taux de Chromatique : 1/30.",
+      "descriptionEn": "Love is in the air! Luvdisc swims to the surface, and Fairy-type Pokémon are out (50% chance). Shiny rate: 1/30.",
+      "type": "recurring_date",
+      "month": 2,
+      "day": 14,
+      "modifiers": {
+        "forcedPokemonIds": [35, 36, 39, 40, 122, 173, 174, 175, 176, 210, 282, 298, 303, 370, 439, 468, 531, 546, 547, 669, 670, 671, 676, 700, 730, 742, 743, 764, 765, 788],
+        "forcedPokemonChance": 0.50,
+        "shinyRate": 30
+      }
+    },
+    {
+      "id": "new_year",
+      "nameFr": "Bonne Année !",
+      "nameEn": "Happy New Year!",
+      "descriptionFr": "Le Nouvel An commence ! Ton Pokémon démarre l'année au niveau 100, et le taux de Chromatique est de 1/50.",
+      "descriptionEn": "The New Year begins! Your Pokémon starts the year at level 100, with a 1/50 shiny rate.",
+      "type": "recurring_date",
+      "month": 1,
+      "day": 1,
+      "modifiers": {
+        "forcedLevel": 100,
+        "shinyRate": 50
+      }
+    },
+    {
+      "id": "go_fest",
+      "nameFr": "Pokémon GO Fest",
+      "nameEn": "Pokémon GO Fest",
+      "descriptionFr": "C'est le GO Fest ! Les Pokémon Chromatiques sont plus fréquents ce week-end (taux : 1/30). Profites-en !",
+      "descriptionEn": "It's GO Fest! Shiny Pokémon are more common this weekend (rate: 1/30). Make the most of it!",
+      "type": "recurring_dates",
+      "dates": [
+        { "month": 6, "day": 14 },
+        { "month": 6, "day": 15 }
+      ],
+      "modifiers": {
+        "shinyRate": 30
+      }
+    }
+  ]
+}

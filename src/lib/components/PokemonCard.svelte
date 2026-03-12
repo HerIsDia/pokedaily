@@ -351,7 +351,7 @@
       {lang === 'fr' ? 'Partager' : 'Share'}
     </button>
 
-    <button class="action-btn" onclick={copyCard} disabled={copying} aria-label="Copier l'image">
+    <button class="action-btn" class:copied={copied} onclick={copyCard} disabled={copying} aria-label="Copier l'image">
       {#if copying}
         <span class="btn-spinner"></span>
       {:else if copied}
@@ -665,6 +665,18 @@
   .action-btn:active:not(:disabled) { transform: scale(0.96); }
   .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .action-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+  .action-btn.copied {
+    background: rgba(76, 200, 120, 0.15);
+    border-color: rgba(76, 200, 120, 0.4);
+    color: #60d080;
+  }
+
+  .action-btn.copied:hover:not(:disabled) {
+    background: rgba(76, 200, 120, 0.25);
+    color: #80f0a0;
+    box-shadow: 0 0 20px rgba(76, 200, 120, 0.3);
+  }
 
   .btn-spinner {
     display: inline-block;
