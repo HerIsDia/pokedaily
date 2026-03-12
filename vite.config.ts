@@ -2,22 +2,27 @@ import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     svelte(),
     VitePWA({
-      includeAssets: [
-        'robots.txt',
-        'apple-touch-icon.png',
-        'images/*.png',
-        'favicon.ico',
-      ],
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        // Only include app shell — NOT Pokemon images
+        globPatterns: ['**/*.{js,css,html,ico,woff2,svg,webp}'],
+        globIgnores: ['**/images/**'],
+      },
       manifest: {
-        name: 'Pokedaily',
-        short_name: 'What Pokémon are you today ?',
-        description: 'Telling You What Pokemon You Are Today',
-        theme_color: '#181818',
+        name: 'Pokédex Daily',
+        short_name: 'Pokédex',
+        description: 'Quel Pokémon es-tu aujourd\'hui ?',
+        theme_color: '#0f0f1a',
+        background_color: '#0f0f1a',
+        display: 'standalone',
+        orientation: 'portrait',
+        start_url: '/',
         icons: [
           {
             src: 'android-chrome-192x192.png',
@@ -37,8 +42,9 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        cleanupOutdatedCaches: true,
+      devOptions: {
+        enabled: true,
+        type: 'module',
       },
     }),
   ],
