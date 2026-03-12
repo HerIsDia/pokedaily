@@ -8,6 +8,8 @@
   import Pokedex from './lib/components/Pokedex.svelte';
   import InstallBanner from './lib/components/InstallBanner.svelte';
   import DevPanel from './lib/components/DevPanel.svelte';
+  import EventBanner from './lib/components/EventBanner.svelte';
+  import Changelog from './lib/components/Changelog.svelte';
   import type { AppData } from './lib/scripts/script';
 
   // --- View routing ---
@@ -118,6 +120,9 @@
     window.addEventListener('offline', () => { online = false; });
   });
 
+  // --- Changelog ---
+  let showChangelog = $state(false);
+
   // --- Dev panel ---
   let showDevPanel = $state(false);
   onMount(() => {
@@ -133,8 +138,16 @@
 <div class="app-shell">
   <!-- Header -->
   <header class="topbar">
-    <span class="topbar-logo">Pokédaily</span>
+    <div class="topbar-left">
+      <span class="topbar-logo">Pokédaily</span>
+      <button class="version-badge" onclick={() => { showChangelog = true; }} aria-label="Voir les nouveautés">
+        3.0_b2
+      </button>
+    </div>
     <div class="topbar-meta">
+      {#if data}
+        <EventBanner activeEvent={data.activeEvent} nextEvent={data.nextEvent} />
+      {/if}
       {#if !online}
         <span class="badge-status badge-offline">Hors ligne</span>
       {/if}
@@ -192,6 +205,11 @@
       </div>
     {/if}
   </main>
+
+  <!-- Changelog -->
+  {#if showChangelog}
+    <Changelog onclose={() => { showChangelog = false; }} />
+  {/if}
 
   <!-- Dev panel -->
   {#if showDevPanel}
@@ -266,6 +284,14 @@
     background: var(--bg-nav);
     border-bottom: 1px solid var(--border-subtle);
     flex-shrink: 0;
+    gap: 8px;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
   }
 
   .topbar-logo {
@@ -274,6 +300,25 @@
     letter-spacing: 0.15em;
     color: var(--accent-light);
     text-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .version-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    background: rgba(155, 77, 202, 0.15);
+    color: rgba(183, 110, 224, 0.7);
+    border: 1px solid rgba(155, 77, 202, 0.25);
+    padding: 2px 7px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-main);
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .version-badge:hover {
+    background: rgba(155, 77, 202, 0.3);
+    color: var(--accent-light);
   }
 
   .topbar-meta {

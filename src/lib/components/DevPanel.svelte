@@ -1,70 +1,136 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { AppData, HistoryEntry } from '../scripts/script';
+  import type { Nature, Type } from 'pokenode-ts';
+  import {
+    openDB, getState, saveState,
+    getTodayEntry, saveTodayEntry,
+    getHistory, addHistoryEntry, deleteHistoryEntry, clearHistoryEntries,
+    clearAll,
+    type PokemonEntry, type AppState,
+  } from '../scripts/db';
+  import { getPokemonData, getPokemonNature, getPokemonTypes } from '../scripts/pokeAPI';
 
   let { onclose, onreload }: { onclose: () => void; onreload: () => void } = $props();
 
-  let data = $state<AppData | null>(null);
+  let db: IDBDatabase | null = $state(null);
+  let appState: AppState | null = $state(null);
+  let todayEntry: PokemonEntry | null = $state(null);
+  let historyEntries: PokemonEntry[] = $state([]);
+
   let nextId = $state('');
   let saved = $state(false);
 
-  onMount(() => {
-    const stored = localStorage.getItem('data');
-    if (stored) data = JSON.parse(stored) as AppData;
+  // Fill history
+  let fillDays = $state('7');
+  let fillProgress = $state<{ current: number; total: number } | null>(null);
+
+  onMount(async () => {
+    const d = await openDB();
+    db = d;
+    const [s, t, h] = await Promise.all([getState(d), getTodayEntry(d), getHistory(d)]);
+    appState = s;
+    todayEntry = t ?? null;
+    historyEntries = h.sort((a, b) => b.date - a.date);
   });
 
-  function save() {
-    if (!data) return;
-    localStorage.setItem('data', JSON.stringify(data));
+  async function save() {
+    if (!db || !todayEntry) return;
+    await saveTodayEntry(db, todayEntry);
     saved = true;
     setTimeout(() => { saved = false; }, 1500);
     onreload();
   }
 
-  function forcePokemon() {
+  async function forcePokemon() {
+    if (!db || !appState) return;
     const id = parseInt(nextId, 10);
     if (id >= 1 && id <= 1025) {
       localStorage.setItem('_devNextId', String(id));
     }
-    const stored = localStorage.getItem('data');
-    if (stored) {
-      const d = JSON.parse(stored) as AppData;
-      d._lastDate = 0;
-      localStorage.setItem('data', JSON.stringify(d));
-    } else {
-      localStorage.removeItem('data');
-    }
+    await saveState(db, { ...appState, lastDate: 0 });
     onreload();
   }
 
-  function forceRandom() {
-    const stored = localStorage.getItem('data');
-    if (stored) {
-      const d = JSON.parse(stored) as AppData;
-      d._lastDate = 0;
-      localStorage.setItem('data', JSON.stringify(d));
-    } else {
-      localStorage.removeItem('data');
-    }
+  async function forceRandom() {
+    if (!db || !appState) return;
+    await saveState(db, { ...appState, lastDate: 0 });
     onreload();
   }
 
-  function removeHistoryEntry(index: number) {
-    if (!data) return;
-    data.history = data.history.filter((_, i) => i !== index);
-    localStorage.setItem('data', JSON.stringify(data));
+  async function removeHistoryEntry(entry: PokemonEntry) {
+    if (!db) return;
+    await deleteHistoryEntry(db, entry.date);
+    historyEntries = historyEntries.filter((e) => e.date !== entry.date);
   }
 
-  function clearHistory() {
-    if (!data) return;
-    data.history = [];
-    data.pokedex = data.pokemonOfTheDay ? [data.pokemonOfTheDay.id] : [];
-    localStorage.setItem('data', JSON.stringify(data));
+  async function clearHistory() {
+    if (!db || !appState) return;
+    await clearHistoryEntries(db);
+    const newPokedex = todayEntry ? [todayEntry.id] : [];
+    const newShinydex = todayEntry?.isShiny ? [todayEntry.id] : [];
+    await saveState(db, { ...appState, pokedex: newPokedex, shinydex: newShinydex });
+    historyEntries = [];
   }
 
-  function resetAll() {
-    localStorage.removeItem('data');
-    sessionStorage.removeItem('done');
+  async function resetAll() {
+    if (!db) return;
+    await clearAll(db);
+    localStorage.removeItem('_devNextId');
+    onreload();
+  }
+
+  async function fillHistory() {
+    if (!db) return;
+    const n = Math.min(Math.max(parseInt(fillDays, 10) || 7, 1), 30);
+    const dateNow = Date.now() - (Date.now() % 86400000);
+    fillProgress = { current: 0, total: n };
+
+    for (let i = 1; i <= n; i++) {
+      const date = dateNow - i * 86400000;
+      // Skip if entry already exists
+      const existing = historyEntries.find((e) => e.date === date);
+      if (existing) {
+        fillProgress = { current: i, total: n };
+        continue;
+      }
+      const randomId = Math.floor(Math.random() * 1025) + 1;
+      const randomNatureId = Math.floor(Math.random() * 25) + 1;
+      const isShiny = Math.random() < 1 / 69;
+      const level = Math.floor(Math.random() * 99) + 1;
+
+      try {
+        const [fetchedPokemon, fetchedNature] = await Promise.all([
+          getPokemonData(randomId),
+          getPokemonNature(randomNatureId) as Promise<Nature>,
+        ]);
+        const typeNames = fetchedPokemon.pokemon.types.map((t) => t.type.name);
+        const fetchedTypes = await Promise.all(
+          typeNames.map((name) => getPokemonTypes(name) as Promise<Type>)
+        );
+        const entry: PokemonEntry = {
+          id: randomId,
+          natureId: randomNatureId,
+          level,
+          isShiny,
+          rename: '',
+          date,
+          nameFr: fetchedPokemon.species.names.find((n) => n.language.name === 'fr')?.name ?? fetchedPokemon.pokemon.name,
+          nameEn: fetchedPokemon.species.names.find((n) => n.language.name === 'en')?.name ?? fetchedPokemon.pokemon.name,
+          natureFr: fetchedNature.names.find((n) => n.language.name === 'fr')?.name ?? fetchedNature.name,
+          natureEn: fetchedNature.names.find((n) => n.language.name === 'en')?.name ?? fetchedNature.name,
+          types: typeNames,
+          typeNamesFr: fetchedTypes.map((t) => t.names.find((n) => n.language.name === 'fr')?.name ?? t.name),
+          typeNamesEn: fetchedTypes.map((t) => t.names.find((n) => n.language.name === 'en')?.name ?? t.name),
+        };
+        await addHistoryEntry(db, entry);
+        historyEntries = [entry, ...historyEntries];
+      } catch {
+        // Skip on API failure
+      }
+      fillProgress = { current: i, total: n };
+    }
+
+    fillProgress = null;
     onreload();
   }
 
@@ -101,11 +167,10 @@
       <!-- Pokémon du jour -->
       <section class="dev-section">
         <h3>Pokémon du jour</h3>
-        {#if data?.pokemonOfTheDay}
-          {@const p = data.pokemonOfTheDay}
+        {#if todayEntry}
           <div class="dev-info-row">
             <span class="dev-label">ID actuel</span>
-            <span class="dev-value accent">#{p.id}</span>
+            <span class="dev-value accent">#{todayEntry.id}</span>
           </div>
           <div class="dev-info-row">
             <span class="dev-label">Niveau</span>
@@ -114,28 +179,30 @@
               type="number"
               min="1"
               max="99"
-              bind:value={p.level}
+              bind:value={todayEntry.level}
             />
           </div>
           <div class="dev-info-row">
             <span class="dev-label">Shiny</span>
             <button
               class="dev-toggle"
-              class:active={p.isShiny}
-              onclick={() => { p.isShiny = !p.isShiny; }}
-            >{p.isShiny ? '✦ Oui' : 'Non'}</button>
+              class:active={todayEntry.isShiny}
+              onclick={() => { if (todayEntry) todayEntry.isShiny = !todayEntry.isShiny; }}
+            >{todayEntry.isShiny ? '✦ Oui' : 'Non'}</button>
           </div>
           <div class="dev-info-row">
             <span class="dev-label">Surnom</span>
-            <input class="dev-input" type="text" maxlength="16" bind:value={p.rename} placeholder="(aucun)" />
+            <input class="dev-input" type="text" maxlength="16" bind:value={todayEntry.rename} placeholder="(aucun)" />
           </div>
           <div class="dev-info-row">
             <span class="dev-label">Dernière date</span>
-            <span class="dev-value muted">{data._lastDate ? formatDate(data._lastDate) : '—'}</span>
+            <span class="dev-value muted">{appState?.lastDate ? formatDate(appState.lastDate) : '—'}</span>
           </div>
           <button class="dev-btn primary" onclick={save}>
             {saved ? '✓ Sauvegardé' : 'Appliquer les changements'}
           </button>
+        {:else}
+          <p class="dev-hint">Chargement…</p>
         {/if}
       </section>
 
@@ -158,21 +225,44 @@
         <button class="dev-btn" onclick={forceRandom}>
           Pokémon aléatoire
         </button>
-        <p class="dev-hint">La page recharge et génère le nouveau Pokémon via l'API.</p>
+        <p class="dev-hint">Réinitialise la date dans IndexedDB et recharge.</p>
+      </section>
+
+      <!-- Remplir l'historique -->
+      <section class="dev-section">
+        <h3>Remplir l'historique</h3>
+        <div class="dev-row">
+          <input
+            class="dev-input flex"
+            type="number"
+            min="1"
+            max="30"
+            bind:value={fillDays}
+            placeholder="Nb jours"
+          />
+          <button
+            class="dev-btn"
+            onclick={fillHistory}
+            disabled={!!fillProgress}
+          >
+            {fillProgress ? `${fillProgress.current}/${fillProgress.total}…` : 'Générer'}
+          </button>
+        </div>
+        <p class="dev-hint">Génère X jours de Pokémon aléatoires via l'API (1–30 jours).</p>
       </section>
 
       <!-- Historique -->
       <section class="dev-section">
-        <h3>Historique ({data?.history.length ?? 0} entrées)</h3>
-        {#if data && data.history.length > 0}
+        <h3>Historique ({historyEntries.length} entrées)</h3>
+        {#if historyEntries.length > 0}
           <div class="dev-history-list">
-            {#each data.history as entry, i (i)}
+            {#each historyEntries as entry (entry.date)}
               <div class="dev-history-entry">
-                <span class="dev-history-id">#{entry.pokemon.id}</span>
-                <span class="dev-history-date">{formatDate(entry._date)}</span>
+                <span class="dev-history-id">#{entry.id}</span>
+                <span class="dev-history-date">{formatDate(entry.date)}</span>
                 <button
                   class="dev-remove"
-                  onclick={() => removeHistoryEntry(i)}
+                  onclick={() => removeHistoryEntry(entry)}
                   aria-label="Supprimer"
                 >✕</button>
               </div>
@@ -192,7 +282,7 @@
         <button class="dev-btn danger" onclick={resetAll}>
           Reset complet (efface tout)
         </button>
-        <p class="dev-hint">Supprime toutes les données localStorage.</p>
+        <p class="dev-hint">Supprime toutes les données IndexedDB.</p>
       </section>
 
     </div>
