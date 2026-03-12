@@ -109,4 +109,4 @@ Pokémon et les noms des personnages Pokémon sont des marques déposées de Nin
 
 ## Licence
 
-[MIT](https://choosealicense.com/licenses/mit/) — Fait par [diamant](https://herisdia.me) avec Claude Code
+[MIT](https://choosealicense.com/licenses/mit/) — Fait par [diamant](https://diamant.ink) avec Claude Code

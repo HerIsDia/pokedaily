@@ -9,32 +9,29 @@
   const imageId = getPokemonImagePath(pkmn.id, pkmn.isShiny);
   const entryNumber = pkmn.id.toString().padStart(4, '0');
 
-  const pokemonName = pkmn.fetched.pokemon.species.names.find(
-    (n) => n.language.name === lang
-  )?.name ?? pkmn.fetched.pokemon.pokemon.name;
-
-  const natureName = pkmn.fetched.nature.names.find(
-    (n) => n.language.name === lang
-  )?.name ?? pkmn.fetched.nature.name;
-
-  const types = pkmn.fetched.types.filter((t) => t !== null);
-  const primaryTypeName = types[0]?.name ?? '';
+  const pokemonName = lang === 'fr' ? pkmn.nameFr : pkmn.nameEn;
+  const natureName = lang === 'fr' ? pkmn.natureFr : pkmn.natureEn;
+  const typeDisplayNames = lang === 'fr' ? pkmn.typeNamesFr : pkmn.typeNamesEn;
+  const primaryTypeName = pkmn.types[0] ?? '';
 
   let rename = $state(pkmn.rename !== '' ? pkmn.rename : pokemonName);
+  let isEditing = $state(false);
+  let editValue = $state('');
 
-  function onRenameInput(e: Event) {
-    const el = e.target as HTMLElement;
-    let val = el.innerText.replace(/\n/g, '').slice(0, 16);
-    rename = val;
-    el.innerText = val;
-    // Move cursor to end
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.selectNodeContents(el);
-    range.collapse(false);
-    sel?.removeAllRanges();
-    sel?.addRange(range);
-    setRename(val);
+  function startEdit() {
+    editValue = rename === pokemonName ? '' : rename;
+    isEditing = true;
+  }
+
+  function confirmRename(val: string) {
+    const trimmed = val.trim().slice(0, 16);
+    rename = trimmed || pokemonName;
+    isEditing = false;
+    setRename(pkmn.date, trimmed);
+  }
+
+  function cancelRename() {
+    isEditing = false;
   }
 
   const dt = new Date();
@@ -50,188 +47,208 @@
     fairy: '#d685ad', normal: '#a8a77a',
   };
 
+  // ── Canvas generation ──────────────────────────────────────────────────
+
+  async function generateCardBlob(): Promise<Blob | null> {
+    const canvas = document.createElement('canvas');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const W = 400, H = 560;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(dpr, dpr);
+
+    const typeColor = typeColors[primaryTypeName] || '#9b4dca';
+
+    // Background
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, '#0f0f1a');
+    bgGrad.addColorStop(1, '#1a0f2e');
+    ctx.fillStyle = bgGrad;
+    ctx.beginPath();
+    ctx.roundRect(0, 0, W, H, 20);
+    ctx.fill();
+
+    // Type glow
+    const glowGrad = ctx.createRadialGradient(W / 2, 170, 0, W / 2, 170, 200);
+    glowGrad.addColorStop(0, typeColor + '30');
+    glowGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Top accent bar
+    ctx.fillStyle = typeColor;
+    ctx.beginPath();
+    ctx.roundRect(0, 0, W, 4, [20, 20, 0, 0]);
+    ctx.fill();
+
+    // Entry number
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`N°${entryNumber}`, 24, 36);
+
+    // Shiny badge
+    if (pkmn.isShiny) {
+      ctx.fillStyle = 'rgba(255,215,0,0.18)';
+      ctx.beginPath();
+      ctx.roundRect(W - 92, 20, 80, 26, 13);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(W - 92, 20, 80, 26, 13);
+      ctx.stroke();
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('✦ Shiny', W - 52, 37);
+    }
+
+    // Type badge
+    const typeLabel = typeDisplayNames[0] ?? primaryTypeName;
+    ctx.font = 'bold 13px sans-serif';
+    const badgeW = ctx.measureText(typeLabel).width + 24;
+    ctx.fillStyle = typeColor + '35';
+    ctx.beginPath();
+    ctx.roundRect(24, 50, badgeW, 26, 13);
+    ctx.fill();
+    ctx.fillStyle = typeColor;
+    ctx.textAlign = 'left';
+    ctx.fillText(typeLabel, 36, 67);
+
+    // Pokémon image
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = imageId;
+    await new Promise<void>((resolve) => { img.onload = () => resolve(); img.onerror = () => resolve(); });
+    ctx.drawImage(img, W / 2 - 100, 80, 200, 200);
+
+    // Pokémon name
+    ctx.fillStyle = '#f0f0f5';
+    ctx.font = 'bold 34px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(rename, W / 2, 320);
+
+    // Original name if renamed
+    if (rename !== pokemonName) {
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(pokemonName, W / 2, 342);
+    }
+
+    // Stats pill background
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - 110, 356, 220, 52, 12);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - 110, 356, 220, 52, 12);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillText('NIV.', W / 2 - 50, 371);
+    ctx.fillStyle = '#f0f0f5';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText(String(pkmn.level), W / 2 - 50, 392);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 362);
+    ctx.lineTo(W / 2, 402);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillText('NATURE', W / 2 + 50, 371);
+    ctx.fillStyle = '#f0f0f5';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText(natureName, W / 2 + 50, 392);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '13px sans-serif';
+    ctx.fillText(dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1), W / 2, 432);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(40, 450);
+    ctx.lineTo(W - 40, 450);
+    ctx.stroke();
+
+    ctx.fillStyle = '#b76ee0';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText('Pokédaily', W / 2, 485);
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '13px sans-serif';
+    ctx.fillText('pokedaily.vercel.app', W / 2, 507);
+
+    return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+  }
+
+  // ── Share ──────────────────────────────────────────────────────────────
+
   let sharing = $state(false);
 
   async function shareCard() {
     sharing = true;
     try {
-      const canvas = document.createElement('canvas');
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const W = 400, H = 560;
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      const ctx = canvas.getContext('2d')!;
-      ctx.scale(dpr, dpr);
-
-      const typeColor = typeColors[primaryTypeName] || '#9b4dca';
-
-      // Background
-      const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-      bgGrad.addColorStop(0, '#0f0f1a');
-      bgGrad.addColorStop(1, '#1a0f2e');
-      ctx.fillStyle = bgGrad;
-      ctx.beginPath();
-      ctx.roundRect(0, 0, W, H, 20);
-      ctx.fill();
-
-      // Type glow
-      const glowGrad = ctx.createRadialGradient(W / 2, 170, 0, W / 2, 170, 200);
-      glowGrad.addColorStop(0, typeColor + '30');
-      glowGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = glowGrad;
-      ctx.fillRect(0, 0, W, H);
-
-      // Top accent bar
-      ctx.fillStyle = typeColor;
-      ctx.beginPath();
-      ctx.roundRect(0, 0, W, 4, [20, 20, 0, 0]);
-      ctx.fill();
-
-      // Entry number
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(`N°${entryNumber}`, 24, 36);
-
-      // Shiny badge
-      if (pkmn.isShiny) {
-        ctx.fillStyle = 'rgba(255,215,0,0.18)';
-        ctx.beginPath();
-        ctx.roundRect(W - 92, 20, 80, 26, 13);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,215,0,0.5)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(W - 92, 20, 80, 26, 13);
-        ctx.stroke();
-        ctx.fillStyle = '#ffd700';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('✦ Shiny', W - 52, 37);
+      const blob = await generateCardBlob();
+      if (!blob) return;
+      const file = new File([blob], `pokemon-${pkmn.id}.png`, { type: 'image/png' });
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: lang === 'fr' ? `Je suis ${rename} aujourd'hui !` : `I am ${rename} today!`,
+          text: lang === 'fr'
+            ? 'Découvre ton Pokémon du jour sur pokedaily.vercel.app'
+            : 'Discover your Pokémon of the day at pokedaily.vercel.app',
+        });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pokemon-${pkmn.id}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
+    } catch { /* user cancelled */ }
+    sharing = false;
+  }
 
-      // Type badge
-      const typeLabel = (types[0]?.names.find((n) => n.language.name === lang)?.name ?? primaryTypeName);
-      const badgeW = ctx.measureText(typeLabel).width + 24;
-      ctx.fillStyle = typeColor + '35';
-      ctx.beginPath();
-      ctx.roundRect(24, 50, badgeW, 26, 13);
-      ctx.fill();
-      ctx.fillStyle = typeColor;
-      ctx.font = 'bold 13px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(typeLabel, 36, 67);
+  // ── Copy ───────────────────────────────────────────────────────────────
 
-      // Pokemon image
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = imageId;
-      await new Promise<void>((resolve) => {
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-      });
-      ctx.drawImage(img, W / 2 - 100, 80, 200, 200);
+  let copying = $state(false);
+  let copied = $state(false);
 
-      // Pokemon name
-      ctx.fillStyle = '#f0f0f5';
-      ctx.font = 'bold 34px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(rename, W / 2, 320);
-
-      // Original name if renamed
-      if (rename !== pokemonName) {
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
-        ctx.font = '14px sans-serif';
-        ctx.fillText(pokemonName, W / 2, 342);
+  async function copyCard() {
+    copying = true;
+    try {
+      const blob = await generateCardBlob();
+      if (!blob) return;
+      if (navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        copied = true;
+        setTimeout(() => { copied = false; }, 2000);
+      } else {
+        // Fallback: download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pokemon-${pkmn.id}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
-
-      // Stats row background
-      ctx.fillStyle = 'rgba(255,255,255,0.05)';
-      ctx.beginPath();
-      ctx.roundRect(W / 2 - 110, 356, 220, 52, 12);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.roundRect(W / 2 - 110, 356, 220, 52, 12);
-      ctx.stroke();
-
-      // Level
-      ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.font = 'bold 10px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('NIV.', W / 2 - 50, 371);
-      ctx.fillStyle = '#f0f0f5';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.fillText(String(pkmn.level), W / 2 - 50, 392);
-
-      // Divider
-      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(W / 2, 362);
-      ctx.lineTo(W / 2, 402);
-      ctx.stroke();
-
-      // Nature
-      ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.font = 'bold 10px sans-serif';
-      ctx.fillText('NATURE', W / 2 + 50, 371);
-      ctx.fillStyle = '#f0f0f5';
-      ctx.font = 'bold 14px sans-serif';
-      ctx.fillText(natureName, W / 2 + 50, 392);
-
-      // Date
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.font = '13px sans-serif';
-      ctx.fillText(dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1), W / 2, 432);
-
-      // Separator
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(40, 450);
-      ctx.lineTo(W - 40, 450);
-      ctx.stroke();
-
-      // Branding
-      ctx.fillStyle = '#b76ee0';
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillText('Pokédaily', W / 2, 485);
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      ctx.font = '13px sans-serif';
-      ctx.fillText('pokedaily.vercel.app', W / 2, 507);
-
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        const file = new File([blob], `pokemon-${pkmn.id}.png`, { type: 'image/png' });
-        try {
-          if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: lang === 'fr' ? `Je suis ${rename} aujourd'hui !` : `I am ${rename} today!`,
-              text: lang === 'fr'
-                ? `Découvre ton Pokémon du jour sur pokedaily.vercel.app`
-                : `Discover your Pokémon of the day at pokedaily.vercel.app`,
-            });
-          } else {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pokemon-${pkmn.id}.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          }
-        } catch {
-          // user cancelled share
-        }
-        sharing = false;
-      }, 'image/png');
-    } catch {
-      sharing = false;
-    }
+    } catch { /* permission denied */ }
+    copying = false;
   }
 </script>
 
@@ -249,9 +266,9 @@
     <div class="card-header">
       <span class="entry-number">N°{entryNumber}</span>
       <div class="type-badges">
-        {#each types as type}
-          <span class="type-badge type-{type.name}">
-            {type.names.find((n) => n.language.name === lang)?.name ?? type.name}
+        {#each pkmn.types as type, i}
+          <span class="type-badge type-{type}">
+            {typeDisplayNames[i] ?? type}
           </span>
         {/each}
         {#if pkmn.isShiny}
@@ -260,22 +277,39 @@
       </div>
     </div>
 
-    <!-- Pokemon image -->
+    <!-- Pokémon image -->
     <div class="pokemon-portrait portrait-{primaryTypeName}" class:shiny={pkmn.isShiny}>
       <img src={imageId} alt={pokemonName} />
     </div>
 
-    <!-- Pokemon info -->
+    <!-- Pokémon info -->
     <div class="card-body">
-      <!-- Editable nickname -->
-      <h1
-        class="pokemon-rename"
-        contenteditable="true"
-        oninput={onRenameInput}
-        title="Modifie le surnom"
-        spellcheck="false"
-        aria-label="Surnom du Pokémon"
-      >{rename}</h1>
+      <!-- Name + rename button -->
+      <div class="name-row">
+        {#if isEditing}
+          <input
+            class="name-input"
+            type="text"
+            value={editValue}
+            placeholder={pokemonName}
+            maxlength="16"
+            autofocus
+            onkeydown={(e) => {
+              if (e.key === 'Enter') confirmRename(e.currentTarget.value);
+              if (e.key === 'Escape') cancelRename();
+            }}
+            onblur={(e) => confirmRename(e.currentTarget.value)}
+          />
+        {:else}
+          <h1 class="pokemon-name">{rename}</h1>
+          <button class="rename-btn" onclick={startEdit} aria-label="Renommer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+        {/if}
+      </div>
 
       <!-- Original name -->
       {#if rename !== pokemonName}
@@ -302,24 +336,45 @@
     </div>
   </div>
 
-  <button class="share-btn" onclick={shareCard} disabled={sharing} aria-label="Partager">
-    {#if sharing}
-      <span class="share-spinner"></span>
-    {:else}
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="18" cy="5" r="3"/>
-        <circle cx="6" cy="12" r="3"/>
-        <circle cx="18" cy="19" r="3"/>
-        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-      </svg>
-      {lang === 'fr' ? 'Partager ma carte' : 'Share my card'}
-    {/if}
-  </button>
+  <!-- Action buttons -->
+  <div class="action-row">
+    <button class="action-btn" onclick={shareCard} disabled={sharing} aria-label="Partager">
+      {#if sharing}
+        <span class="btn-spinner"></span>
+      {:else}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      {/if}
+      {lang === 'fr' ? 'Partager' : 'Share'}
+    </button>
+
+    <button class="action-btn" onclick={copyCard} disabled={copying} aria-label="Copier l'image">
+      {#if copying}
+        <span class="btn-spinner"></span>
+      {:else if copied}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      {:else}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+      {/if}
+      {#if copied}
+        {lang === 'fr' ? 'Copié !' : 'Copied!'}
+      {:else}
+        {lang === 'fr' ? 'Copier' : 'Copy'}
+      {/if}
+    </button>
+  </div>
 
   <footer class="page-footer">
     <p>Pokedaily n'est pas affilié à Nintendo ou Game Freak. Pokémon est une marque déposée de Nintendo.</p>
-    <p>Fait par <a href="https://herisdia.me">diamant</a> avec Claude Code</p>
+    <p>Fait par <a href="https://diamant.ink">diamant</a> avec Claude Code</p>
   </footer>
 </div>
 
@@ -349,7 +404,6 @@
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
   }
 
-  /* Type-specific card accent borders */
   .card-fire     { border-top: 2px solid rgba(238,129,48,0.7); }
   .card-water    { border-top: 2px solid rgba(99,144,240,0.7); }
   .card-grass    { border-top: 2px solid rgba(122,199,76,0.7); }
@@ -369,7 +423,6 @@
   .card-fairy    { border-top: 2px solid rgba(214,133,173,0.7); }
   .card-normal   { border-top: 2px solid rgba(168,167,122,0.7); }
 
-  /* Background glow */
   .card-glow {
     position: absolute;
     top: -60px;
@@ -400,7 +453,6 @@
   .card-glow-fairy    { background: radial-gradient(circle, #d685ad, transparent 70%); }
   .card-glow-normal   { background: radial-gradient(circle, #a8a77a, transparent 70%); }
 
-  /* Card header */
   .card-header {
     display: flex;
     align-items: center;
@@ -437,7 +489,6 @@
     animation: shiny-sparkle 2s ease-in-out infinite;
   }
 
-  /* Pokemon portrait */
   .pokemon-portrait {
     position: relative;
     z-index: 1;
@@ -464,7 +515,6 @@
     box-shadow: 0 0 30px var(--shiny-glow), 0 0 60px rgba(255, 215, 0, 0.15);
   }
 
-  /* Card body */
   .card-body {
     display: flex;
     flex-direction: column;
@@ -475,23 +525,51 @@
     z-index: 1;
   }
 
-  .pokemon-rename {
+  /* ── Rename ── */
+  .name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pokemon-name {
     font-size: 32px;
     font-weight: 900;
     letter-spacing: 0.03em;
     text-align: center;
     color: var(--text-primary);
-    outline: none;
-    cursor: text;
-    border-bottom: 2px solid transparent;
-    transition: border-color 0.2s;
-    min-width: 1ch;
-    max-width: 100%;
-    word-break: break-word;
   }
 
-  .pokemon-rename:focus {
-    border-bottom-color: var(--accent);
+  .rename-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+
+  .rename-btn:hover { color: var(--accent-light); background: var(--accent-subtle); }
+  .rename-btn svg { width: 15px; height: 15px; }
+
+  .name-input {
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    padding: 4px 12px;
+    text-align: center;
+    outline: none;
+    width: 100%;
+    max-width: 260px;
   }
 
   .pokemon-original-name {
@@ -537,7 +615,6 @@
     background: var(--border-subtle);
   }
 
-  /* Card footer */
   .card-footer {
     width: 100%;
     text-align: center;
@@ -552,7 +629,55 @@
     text-transform: capitalize;
   }
 
-  /* Page footer */
+  /* ── Action buttons ── */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--accent-subtle);
+    border: 1px solid var(--border-accent);
+    border-radius: 12px;
+    color: var(--accent-light);
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s, color 0.2s;
+    letter-spacing: 0.03em;
+  }
+
+  .action-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .action-btn:active:not(:disabled) { transform: scale(0.96); }
+  .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .action-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+  .btn-spinner {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--border-accent);
+    border-top-color: var(--accent-light);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* ── Footer ── */
   .page-footer {
     text-align: center;
     font-size: 11px;
@@ -564,53 +689,5 @@
   .page-footer a {
     color: var(--accent-light);
     text-decoration: none;
-  }
-
-  .share-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--accent-subtle);
-    border: 1px solid var(--border-accent);
-    border-radius: 12px;
-    color: var(--accent-light);
-    font-family: var(--font-main);
-    font-size: 14px;
-    font-weight: 700;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-    letter-spacing: 0.03em;
-  }
-
-  .share-btn:hover:not(:disabled) {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 0 20px var(--accent-glow);
-  }
-
-  .share-btn:active:not(:disabled) {
-    transform: scale(0.96);
-  }
-
-  .share-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .share-btn svg {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-  }
-
-  .share-spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--border-accent);
-    border-top-color: var(--accent-light);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
   }
 </style>
