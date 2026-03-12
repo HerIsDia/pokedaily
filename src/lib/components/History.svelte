@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { getPokemonImagePath, getUserLang } from '../scripts/script';
   import type { AppData, PokemonEntry } from '../scripts/script';
+  import { loadEvents, getActiveEvents, type GameEvent } from '../scripts/events';
 
   let { data } = $props<{ data: AppData }>();
 
@@ -12,42 +14,45 @@
       empty: 'Aucune entrée dans ton historique pour le moment.',
       title: 'Historique',
       weekdays: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+      today: "Aujourd'hui",
+      event: 'Évènement',
     },
     en: {
       empty: 'No history entries yet.',
       title: 'History',
       weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      today: 'Today',
+      event: 'Event',
     },
   };
   const l = labels[lang];
 
-  // Group history entries by year-month
   interface MonthGroup {
     year: number;
     month: number;
     label: string;
-    // map from day-of-month (1-31) to entry
     days: Map<number, PokemonEntry>;
-    // total days in month, first weekday offset (0=Mon…6=Sun)
     daysInMonth: number;
     startOffset: number;
   }
 
-  function buildCalendar(entries: PokemonEntry[]): MonthGroup[] {
+  function buildCalendar(entries: PokemonEntry[], todayEntry: PokemonEntry): MonthGroup[] {
     const map = new Map<string, MonthGroup>();
 
-    for (const entry of entries) {
+    // Include today's entry
+    const allEntries = [todayEntry, ...entries];
+
+    for (const entry of allEntries) {
       const d = new Date(entry.date);
       const year = d.getUTCFullYear();
-      const month = d.getUTCMonth(); // 0-based
+      const month = d.getUTCMonth();
       const day = d.getUTCDate();
       const key = `${year}-${month}`;
 
       if (!map.has(key)) {
         const firstDay = new Date(Date.UTC(year, month, 1));
-        // JS getDay(): 0=Sun, so convert to Mon=0
         const jsDay = firstDay.getUTCDay();
-        const startOffset = (jsDay + 6) % 7; // Mon=0, Tue=1, … Sun=6
+        const startOffset = (jsDay + 6) % 7;
         const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
         const label = firstDay.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
         map.set(key, { year, month, label, days: new Map(), daysInMonth, startOffset });
@@ -56,15 +61,41 @@
       map.get(key)!.days.set(day, entry);
     }
 
-    // Sort newest month first
+    // Sort newest month first (index 0)
     return [...map.values()].sort((a, b) =>
       b.year !== a.year ? b.year - a.year : b.month - a.month
     );
   }
 
-  const months = buildCalendar(data.history);
+  const months = buildCalendar(data.history, data.pokemonOfTheDay);
 
-  // Selected entry for tooltip/detail
+  // Current month navigation (0 = most recent)
+  let currentMonthIndex = $state(0);
+  const currentMonth = $derived(months[currentMonthIndex]);
+
+  function prevMonth() {
+    if (currentMonthIndex < months.length - 1) {
+      currentMonthIndex++;
+      selected = null;
+      selectedDay = null;
+    }
+  }
+
+  function nextMonth() {
+    if (currentMonthIndex > 0) {
+      currentMonthIndex--;
+      selected = null;
+      selectedDay = null;
+    }
+  }
+
+  // Today's UTC date parts
+  const todayDate = new Date();
+  const todayYear = todayDate.getUTCFullYear();
+  const todayMonth = todayDate.getUTCMonth();
+  const todayDay = todayDate.getUTCDate();
+
+  // Selected entry
   let selected = $state<PokemonEntry | null>(null);
   let selectedDay = $state<number | null>(null);
 
@@ -82,6 +113,19 @@
     if (entry.rename && entry.rename !== '') return entry.rename;
     return lang === 'fr' ? entry.nameFr : entry.nameEn;
   }
+
+  // Events in calendar
+  let allEvents: GameEvent[] = $state([]);
+
+  onMount(async () => {
+    allEvents = await loadEvents();
+  });
+
+  function getEventsForDay(year: number, month: number, day: number): GameEvent[] {
+    if (allEvents.length === 0) return [];
+    const date = new Date(Date.UTC(year, month, day));
+    return getActiveEvents(allEvents, date);
+  }
 </script>
 
 <div class="history-page">
@@ -93,99 +137,149 @@
       <p>{l.empty}</p>
     </div>
   {:else}
-    <div class="calendar-list">
-      {#each months as mg}
-        <div class="month-block">
-          <h3 class="month-label">{mg.label.charAt(0).toUpperCase() + mg.label.slice(1)}</h3>
+    <div class="calendar-wrap">
+      <!-- Month navigation header -->
+      <div class="month-nav">
+        <button
+          class="nav-arrow"
+          onclick={prevMonth}
+          disabled={currentMonthIndex >= months.length - 1}
+          aria-label={lang === 'fr' ? 'Mois précédent' : 'Previous month'}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span class="month-label">
+          {currentMonth.label.charAt(0).toUpperCase() + currentMonth.label.slice(1)}
+        </span>
+        <button
+          class="nav-arrow"
+          onclick={nextMonth}
+          disabled={currentMonthIndex <= 0}
+          aria-label={lang === 'fr' ? 'Mois suivant' : 'Next month'}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
 
-          <!-- Weekday headers -->
-          <div class="cal-grid">
-            {#each l.weekdays as wd}
-              <div class="cal-weekday">{wd}</div>
-            {/each}
+      <!-- Weekday headers -->
+      <div class="cal-grid">
+        {#each l.weekdays as wd}
+          <div class="cal-weekday">{wd}</div>
+        {/each}
 
-            <!-- Empty cells before month starts -->
-            {#each { length: mg.startOffset } as _}
-              <div class="cal-cell cal-empty"></div>
-            {/each}
+        <!-- Empty offset cells -->
+        {#each { length: currentMonth.startOffset } as _}
+          <div class="cal-cell cal-empty"></div>
+        {/each}
 
-            <!-- Day cells -->
-            {#each { length: mg.daysInMonth } as _, idx}
-              {@const day = idx + 1}
-              {@const entry = mg.days.get(day)}
-              <div
-                class="cal-cell"
-                class:has-entry={!!entry}
-                class:is-selected={selected?.date === entry?.date}
-                onclick={entry ? () => selectEntry(entry, day) : undefined}
-                role={entry ? 'button' : undefined}
-                tabindex={entry ? 0 : undefined}
-                onkeydown={entry ? (e) => { if (e.key === 'Enter' || e.key === ' ') selectEntry(entry, day); } : undefined}
-                title={entry ? getEntryName(entry) : undefined}
-              >
-                {#if entry}
-                  <img
-                    src={getPokemonImagePath(entry.id, entry.isShiny)}
-                    alt={getEntryName(entry)}
-                    loading="lazy"
-                    class:shiny={entry.isShiny}
-                  />
-                  {#if entry.isShiny}
-                    <span class="shiny-dot">✦</span>
-                  {/if}
-                {:else}
-                  <span class="day-number">{day}</span>
-                {/if}
-              </div>
-            {/each}
+        <!-- Day cells -->
+        {#each { length: currentMonth.daysInMonth } as _, idx}
+          {@const day = idx + 1}
+          {@const entry = currentMonth.days.get(day)}
+          {@const isToday = currentMonth.year === todayYear && currentMonth.month === todayMonth && day === todayDay}
+          {@const dayEvents = getEventsForDay(currentMonth.year, currentMonth.month, day)}
+          {@const hasEvent = dayEvents.length > 0}
+          {@const eventTitle = dayEvents.map((e) => lang === 'fr' ? e.nameFr : e.nameEn).join(', ')}
+          <div
+            class="cal-cell"
+            class:has-entry={!!entry}
+            class:is-today={isToday}
+            class:is-selected={selected?.date === entry?.date}
+            class:has-event={hasEvent}
+            onclick={entry ? () => selectEntry(entry, day) : undefined}
+            role={entry ? 'button' : undefined}
+            tabindex={entry ? 0 : undefined}
+            onkeydown={entry ? (e) => { if (e.key === 'Enter' || e.key === ' ') selectEntry(entry, day); } : undefined}
+            title={[entry ? getEntryName(entry) : undefined, hasEvent ? eventTitle : undefined].filter(Boolean).join(' — ') || undefined}
+          >
+            {#if entry}
+              <img
+                src={getPokemonImagePath(entry.id, entry.isShiny)}
+                alt={getEntryName(entry)}
+                loading="lazy"
+                class:shiny={entry.isShiny}
+              />
+              {#if entry.isShiny}
+                <span class="shiny-dot">✦</span>
+              {/if}
+            {:else}
+              <span class="day-number">{day}</span>
+            {/if}
+            {#if hasEvent}
+              <span class="event-dot" title={eventTitle}></span>
+            {/if}
           </div>
+        {/each}
+      </div>
 
-          <!-- Detail card for selected entry in this month -->
-          {#if selected && mg.days.get(selectedDay ?? -1)?.date === selected.date}
-            {@const name = getEntryName(selected)}
-            {@const nature = lang === 'fr' ? selected.natureFr : selected.natureEn}
-            {@const typeNames = lang === 'fr' ? selected.typeNamesFr : selected.typeNamesEn}
-            {@const primaryType = selected.types[0] ?? ''}
-            {@const dateStr = new Date(selected.date).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            <div class="detail-card detail-card-{primaryType}">
-              <div class="detail-img-wrap detail-img-{primaryType}" class:shiny={selected.isShiny}>
-                <img
-                  src={getPokemonImagePath(selected.id, selected.isShiny)}
-                  alt={name}
-                  class:shiny={selected.isShiny}
-                />
-              </div>
-              <div class="detail-info">
-                <span class="detail-name">{name}</span>
-                {#if selected.rename && selected.rename !== ''}
-                  <span class="detail-original">{lang === 'fr' ? selected.nameFr : selected.nameEn}</span>
-                {/if}
-                <span class="detail-date">{dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</span>
-                <div class="detail-meta">
-                  <span class="stat-pill">Niv. {selected.level}</span>
-                  <span class="stat-pill">{nature}</span>
-                  {#if selected.isShiny}
-                    <span class="shiny-pill">✦ Shiny</span>
-                  {/if}
-                  {#each selected.types as type, i}
-                    <span class="type-badge type-{type}">{typeNames[i] ?? type}</span>
-                  {/each}
-                </div>
-              </div>
-            </div>
-          {/if}
+      <!-- Month indicator dots -->
+      {#if months.length > 1}
+        <div class="month-dots">
+          {#each months as _, i}
+            <button
+              class="month-dot"
+              class:active={i === currentMonthIndex}
+              onclick={() => { currentMonthIndex = i; selected = null; selectedDay = null; }}
+              aria-label={months[i].label}
+            ></button>
+          {/each}
         </div>
-      {/each}
+      {/if}
+
+      <!-- Detail card for selected entry -->
+      {#if selected && currentMonth.days.get(selectedDay ?? -1)?.date === selected.date}
+        {@const name = getEntryName(selected)}
+        {@const nature = lang === 'fr' ? selected.natureFr : selected.natureEn}
+        {@const typeNames = lang === 'fr' ? selected.typeNamesFr : selected.typeNamesEn}
+        {@const primaryType = selected.types[0] ?? ''}
+        {@const dateStr = new Date(selected.date).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        {@const selectedDayEvents = getEventsForDay(currentMonth.year, currentMonth.month, selectedDay ?? -1)}
+        <div class="detail-card detail-card-{primaryType}">
+          <div class="detail-img-wrap detail-img-{primaryType}" class:shiny={selected.isShiny}>
+            <img
+              src={getPokemonImagePath(selected.id, selected.isShiny)}
+              alt={name}
+              class:shiny={selected.isShiny}
+            />
+          </div>
+          <div class="detail-info">
+            <span class="detail-name">{name}</span>
+            {#if selected.rename && selected.rename !== ''}
+              <span class="detail-original">{lang === 'fr' ? selected.nameFr : selected.nameEn}</span>
+            {/if}
+            <span class="detail-date">{dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</span>
+            <div class="detail-meta">
+              <span class="stat-pill">Niv. {selected.level}</span>
+              <span class="stat-pill">{nature}</span>
+              {#if selected.isShiny}
+                <span class="shiny-pill">✦ Shiny</span>
+              {/if}
+              {#each selected.types as type, i}
+                <span class="type-badge type-{type}">{typeNames[i] ?? type}</span>
+              {/each}
+              {#each selectedDayEvents as ev}
+                <span class="event-pill">🎉 {lang === 'fr' ? ev.nameFr : ev.nameEn}</span>
+              {/each}
+            </div>
+          </div>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
 
 <style>
   .history-page {
-    padding: 20px 16px 40px;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    padding: 16px 16px 0;
+    overflow: hidden;
+    gap: 12px;
   }
 
   .section-title {
@@ -195,6 +289,7 @@
     text-transform: uppercase;
     color: var(--text-muted);
     padding-left: 4px;
+    flex-shrink: 0;
   }
 
   .empty-state {
@@ -209,31 +304,60 @@
 
   .empty-icon { font-size: 40px; }
 
-  /* ── Calendar ── */
-  .calendar-list {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .month-block {
+  /* ── Calendar wrapper ── */
+  .calendar-wrap {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* ── Month navigation ── */
+  .month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
   }
 
   .month-label {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.04em;
     color: var(--accent-light);
     text-transform: capitalize;
+    flex: 1;
+    text-align: center;
   }
 
+  .nav-arrow {
+    background: rgba(155, 77, 202, 0.1);
+    border: 1px solid rgba(155, 77, 202, 0.25);
+    border-radius: 8px;
+    color: var(--accent-light);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .nav-arrow svg { width: 16px; height: 16px; }
+  .nav-arrow:hover:not(:disabled) { background: rgba(155, 77, 202, 0.25); color: #fff; }
+  .nav-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
+
+  /* ── Calendar grid ── */
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 3px;
+    flex-shrink: 0;
   }
 
   .cal-weekday {
@@ -242,7 +366,7 @@
     font-weight: 700;
     color: var(--text-muted);
     letter-spacing: 0.05em;
-    padding: 4px 0;
+    padding: 2px 0;
     text-transform: uppercase;
   }
 
@@ -264,11 +388,20 @@
     border-color: transparent;
   }
 
+  .cal-cell.is-today {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
   .cal-cell.has-entry {
     background: rgba(155, 77, 202, 0.08);
     border-color: rgba(155, 77, 202, 0.2);
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  }
+
+  .cal-cell.has-entry.is-today {
+    border-color: rgba(155, 77, 202, 0.45);
   }
 
   .cal-cell.has-entry:hover {
@@ -310,6 +443,46 @@
     line-height: 1;
   }
 
+  /* Event indicator dot at bottom of cell */
+  .event-dot {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #ffb41e;
+    pointer-events: none;
+  }
+
+  /* ── Month dots ── */
+  .month-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 2px 0;
+  }
+
+  .month-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.15);
+    transition: background 0.15s, transform 0.15s;
+    padding: 0;
+  }
+
+  .month-dot.active {
+    background: var(--accent);
+    transform: scale(1.3);
+  }
+
+  .month-dot:hover:not(.active) { background: rgba(255, 255, 255, 0.3); }
+
   /* ── Detail card ── */
   .detail-card {
     display: flex;
@@ -320,6 +493,8 @@
     border: 1px solid var(--border-subtle);
     padding: 12px 14px 12px 12px;
     animation: slide-in 0.2s ease;
+    flex-shrink: 0;
+    margin-bottom: 12px;
   }
 
   @keyframes slide-in {
@@ -348,8 +523,8 @@
 
   .detail-img-wrap {
     flex-shrink: 0;
-    width: 72px;
-    height: 72px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-subtle);
@@ -364,8 +539,8 @@
   }
 
   .detail-img-wrap img {
-    width: 60px;
-    height: 60px;
+    width: 52px;
+    height: 52px;
     object-fit: contain;
     image-rendering: pixelated;
   }
@@ -394,7 +569,7 @@
   }
 
   .detail-name {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--text-primary);
     white-space: nowrap;
@@ -411,7 +586,7 @@
     font-size: 11px;
     color: var(--text-muted);
     text-transform: capitalize;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .detail-meta {
@@ -438,5 +613,15 @@
     background: rgba(255, 215, 0, 0.12);
     color: var(--shiny-color);
     border: 1px solid rgba(255, 215, 0, 0.35);
+  }
+
+  .event-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: rgba(255, 180, 30, 0.12);
+    color: #ffb41e;
+    border: 1px solid rgba(255, 180, 30, 0.3);
   }
 </style>
