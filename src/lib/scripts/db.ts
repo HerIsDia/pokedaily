@@ -46,8 +46,10 @@ export interface VRouletteState {
 export interface LuckyDayBox {
   /** YYYY-MM-DD format */
   date: string;
-  /** 16 Pokémon IDs (13 random + 3 Victini) */
+  /** 16 Pokémon IDs */
   box: number[];
+  /** Indices of slots that are guaranteed shiny when won */
+  shinySlots?: number[];
 }
 
 // ── IDB setup ──────────────────────────────────────────────────────────────

@@ -16,7 +16,44 @@
     ? 'Bonjour ou bonsoir, j\'ai décidé de refaire vivre Pokédaily pour les 30 ans de Pokémon mais vu que ma passion pour le développement est néant, j\'utilise Claude Code pour l\'aspect codage. Cette version a été entièrement reconceptualisée pour avoir une meilleure interface et pour planifier des mises à jour régulières !'
     : 'Hello or good evening, I decided to bring Pokédaily back to life for Pokémon\'s 30th anniversary, but since my passion for development is non-existent, I use Claude Code for the coding side. This version was completely rethought to have a better interface and to plan regular updates!';
 
+  const NOTE_V31 = lang === 'fr'
+    ? 'Mise à jour qui ajoute le Pokékit, l\'ajout majeur de cette version 3 que je voulais faire depuis longtemps. Je vous proposerais beaucoup d\'activité secondaire au fil du temps dessus !'
+    : 'This update adds the Pokékit, the major addition of version 3 that I\'ve been wanting to make for a long time. I\'ll be bringing you many side activities over time!';
+
   const entries: ChangeEntry[] = [
+    {
+      version: '3.1',
+      date: lang === 'fr' ? 'Mars 2026' : 'March 2026',
+      note: NOTE_V31,
+      sections: [
+        {
+          title: lang === 'fr' ? 'Nouveautés' : "What's new",
+          items: lang === 'fr'
+            ? [
+                'Nouvel onglet Pokékit avec la V-Roulette, la Team du mois et un calendrier des événements.',
+                'La V-Roulette te permet de dépenser des tickets Victini pour gagner un nouveau Pokémon qui remplace celui du jour. Choisis parmi 3 boîtes mystères, booste un Pokémon, et tente ta chance sur une grille 4x4 !',
+                'La Team du mois génère 6 Pokémon aléatoires chaque mois — ils comptent pour ton Pokédex.',
+                'Nouvel onglet Stats : consulte tes statistiques détaillées (total Pokémon, shinies, types fréquents, Pokédex complétion, etc.).',
+                'Les tickets Victini s\'obtiennent en rencontrant Victini, lors de certains événements (Lucky Day, Poisson d\'avril), et au premier lancement de la V-Roulette.',
+                'Nouvel événement Lucky Day (Vendredi 13) : taux shiny 1/13, tickets Victini, et une boîte PC spéciale !',
+                'Nouvel événement Lancement V-Roulette : Victini a 5% de chance d\'apparaître chaque dimanche de mars.',
+                'Le Poisson d\'avril donne maintenant un ticket Victini et une boîte spéciale avec des Magicarpe, Léviator, et quelques chromatiques garantis.',
+                'L\'indicateur d\'événements dans la barre du haut affiche maintenant tous les événements en cours et ceux à venir dans les 7 prochains jours.',
+              ]
+            : [
+                'New Pokékit tab with the V-Roulette, Team of the Month, and an events calendar.',
+                'The V-Roulette lets you spend Victini tickets to win a new Pokémon that replaces today\'s. Choose from 3 mystery boxes, boost a Pokémon, and try your luck on a 4x4 grid!',
+                'Team of the Month generates 6 random Pokémon each month — they count toward your Pokédex.',
+                'New Stats tab: view your detailed statistics (total Pokémon, shinies, frequent types, Pokédex completion, etc.).',
+                'Victini tickets are earned by encountering Victini, during certain events (Lucky Day, April Fools), and on first V-Roulette launch.',
+                'New Lucky Day event (Friday the 13th): 1/13 shiny rate, Victini tickets, and a special PC box!',
+                'New V-Roulette Launch event: Victini has a 5% chance to appear every Sunday in March.',
+                'April Fools now gives a Victini ticket and a special box with Magikarp, Gyarados, and some guaranteed shinies.',
+                'The event indicator in the top bar now shows all active events and upcoming events within the next 7 days.',
+              ],
+        },
+      ],
+    },
     {
       version: '3.0_b2',
       date: lang === 'fr' ? 'Mars 2026' : 'March 2026',

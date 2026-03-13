@@ -19,15 +19,18 @@
       "id": "april_fools",
       "nameFr": "Poisson d'avril !",
       "nameEn": "April Fools!",
-      "descriptionFr": "C'est le 1er avril ! Magicarpe envahit la mare — il ne fait que clapoter... mais il pourrait être Chromatique !",
-      "descriptionEn": "It's April 1st! Magikarp has taken over the pond — it only splashes around... but it might be Shiny!",
+      "descriptionFr": "C'est le 1er avril ! Magicarpe envahit la mare — il ne fait que clapoter... mais il pourrait être Chromatique ! Tu reçois aussi un ticket Victini et une boîte PC spéciale remplie de Magicarpe et Léviator.",
+      "descriptionEn": "It's April 1st! Magikarp has taken over the pond — it only splashes around... but it might be Shiny! You also get a Victini ticket and a special PC box full of Magikarp and Gyarados.",
       "type": "recurring_date",
       "month": 4,
       "day": 1,
       "modifiers": {
         "forcedPokemonId": 129,
         "forcedPokemonChance": 1.0,
-        "shinyRate": 100
+        "shinyRate": 100,
+        "victiniTicketsMin": 1,
+        "victiniTicketsMax": 1,
+        "aprilFoolsBox": true
       }
     },
     {

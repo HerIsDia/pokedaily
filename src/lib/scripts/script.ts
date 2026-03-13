@@ -239,6 +239,20 @@ export const script = async (): Promise<AppData> => {
       luckyIds.push(494, 494, 494);
       await saveLuckyDayBox(db, { date: new Date(dateNow).toISOString().slice(0, 10), box: luckyIds });
     }
+    // Generate April Fools box (10 Magikarp, 3 Gyarados, 2 shiny Magikarp, 1 shiny Gyarados)
+    if (m.aprilFoolsBox) {
+      const aprilBox: number[] = [
+        129, 129, 129, 129, 129, 129, 129, 129, 129, 129, // 10 Magikarp
+        130, 130, 130,                                      // 3 Gyarados
+        129, 129,                                            // 2 shiny Magikarp (slots 13, 14)
+        130,                                                 // 1 shiny Gyarados (slot 15)
+      ];
+      await saveLuckyDayBox(db, {
+        date: new Date(dateNow).toISOString().slice(0, 10),
+        box: aprilBox,
+        shinySlots: [13, 14, 15],
+      });
+    }
   }
 
   await saveVictiniTickets(db, victiniTickets);

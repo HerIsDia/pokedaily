@@ -17,6 +17,8 @@ export interface EventModifiers {
   victiniTicketsMax?: number;
   /** Generate a special Lucky Day box for V-Roulette */
   luckyDayBox?: boolean;
+  /** Generate a special April Fools box (10 Magikarp, 3 Gyarados, 2 shiny Magikarp, 1 shiny Gyarados) */
+  aprilFoolsBox?: boolean;
 }
 
 export interface RecurringDate {

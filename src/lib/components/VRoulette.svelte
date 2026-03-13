@@ -27,6 +27,7 @@
   let resultEntry = $state<PokemonEntry | null>(null);
   let loading = $state(true);
   let luckyBox = $state<number[] | null>(null);
+  let luckyShinySlots = $state<number[]>([]);
   let showLuckyBox = $state(false);
   let showPopup = $state(false);
   let highlightedIndex = $state<number | null>(null);
@@ -98,6 +99,7 @@
     const lucky = await getLuckyDayBox(db);
     if (lucky) {
       luckyBox = lucky.box;
+      luckyShinySlots = lucky.shinySlots ?? [];
     }
 
     loading = false;
@@ -118,6 +120,10 @@
     boxLocked = true;
     spinResult = null;
     resultEntry = null;
+  }
+
+  function isSlotShiny(index: number): boolean {
+    return showLuckyBox && luckyShinySlots.includes(index);
   }
 
   async function selectBoosted(pokemonId: number) {
@@ -195,7 +201,9 @@
     try {
       const natureId = Math.floor(Math.random() * 25) + 1;
       const level = Math.floor(Math.random() * 99) + 1;
-      const isShiny = Math.random() < 1 / 69;
+      // Force shiny if the slot is marked as a shiny slot (April Fools box etc.)
+      const isShinySlot = showLuckyBox && luckyShinySlots.includes(winIndex);
+      const isShiny = isShinySlot || Math.random() < 1 / 69;
 
       const [fetchedPokemon, fetchedNature] = await Promise.all([
         getPokemonData(wonId),
@@ -337,15 +345,16 @@
             : 'Click a Pokémon to boost it (1/4 chance):'}
         </p>
         <div class="boost-grid">
-          {#each popupIds as id}
+          {#each popupIds as id, i}
             <button
               class="boost-cell"
               class:boosted={boostedId === id}
+              class:shiny-slot={isSlotShiny(i)}
               onclick={() => selectBoosted(id)}
               disabled={spinning}
             >
               <img
-                src={getPokemonImagePath(id, false)}
+                src={getPokemonImagePath(id, isSlotShiny(i))}
                 alt="#{id}"
                 class="boost-img"
                 loading="lazy"
@@ -407,12 +416,16 @@
               class="grid-cell"
               class:highlighted={highlightedIndex === i}
               class:winner={gridFinished && highlightedIndex === i}
+              class:shiny-slot={isSlotShiny(i)}
             >
               <img
-                src={getPokemonImagePath(id, false)}
+                src={getPokemonImagePath(id, isSlotShiny(i))}
                 alt="#{id}"
                 class="grid-cell-img"
               />
+              {#if isSlotShiny(i)}
+                <span class="shiny-slot-star">✦</span>
+              {/if}
             </div>
           {/each}
         </div>
@@ -855,6 +868,26 @@
     width: 100%;
     aspect-ratio: 1;
     image-rendering: pixelated;
+  }
+
+  /* Shiny slot indicator */
+  .grid-cell.shiny-slot {
+    position: relative;
+    background: rgba(255, 215, 0, 0.08);
+    border-color: rgba(255, 215, 0, 0.25);
+  }
+
+  .shiny-slot-star {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 10px;
+    color: var(--shiny-color);
+  }
+
+  .boost-cell.shiny-slot {
+    background: rgba(255, 215, 0, 0.08);
+    border-color: rgba(255, 215, 0, 0.25);
   }
 
   /* ── Result ── */
