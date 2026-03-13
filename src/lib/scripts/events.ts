@@ -119,6 +119,24 @@ export function getNextEvent(
   return best;
 }
 
+/** Returns all upcoming events within the given number of days. */
+export function getUpcomingEvents(
+  events: GameEvent[],
+  date: Date,
+  withinDays: number = 7
+): { event: GameEvent; daysUntil: number }[] {
+  const results: { event: GameEvent; daysUntil: number }[] = [];
+
+  for (const event of events) {
+    const daysUntil = daysUntilNextOccurrence(event, date);
+    if (daysUntil !== null && daysUntil > 0 && daysUntil <= withinDays) {
+      results.push({ event, daysUntil });
+    }
+  }
+
+  return results.sort((a, b) => a.daysUntil - b.daysUntil);
+}
+
 function daysUntilNextOccurrence(event: GameEvent, from: Date): number | null {
   const fromDay = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate());
 

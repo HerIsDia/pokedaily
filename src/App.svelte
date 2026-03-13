@@ -148,7 +148,7 @@
     </div>
     <div class="topbar-meta">
       {#if data}
-        <EventBanner activeEvent={data.activeEvent} nextEvent={data.nextEvent} />
+        <EventBanner activeEvents={data.activeEvents} upcomingEvents={data.upcomingEvents} />
       {/if}
       {#if !online}
         <span class="badge-status badge-offline">Hors ligne</span>

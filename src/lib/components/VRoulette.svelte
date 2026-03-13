@@ -20,6 +20,7 @@
   let tickets = $state(data.victiniTickets);
   let rouletteState = $state<VRouletteState | null>(null);
   let selectedBox = $state<number | null>(null);
+  let boxLocked = $state(false);
   let boostedId = $state<number | null>(null);
   let spinning = $state(false);
   let spinResult = $state<number | null>(null);
@@ -27,6 +28,9 @@
   let loading = $state(true);
   let luckyBox = $state<number[] | null>(null);
   let showLuckyBox = $state(false);
+  let showPopup = $state(false);
+  let highlightedIndex = $state<number | null>(null);
+  let gridFinished = $state(false);
 
   // Seeded PRNG (mulberry32)
   function mulberry32(seed: number) {
@@ -45,7 +49,6 @@
   }
 
   function generateBoxes(month: string): number[][] {
-    // Create seed from month string
     let seed = 0;
     for (let i = 0; i < month.length; i++) {
       seed = ((seed << 5) - seed + month.charCodeAt(i)) | 0;
@@ -101,8 +104,18 @@
   });
 
   function selectBox(index: number) {
-    if (spinning) return;
+    if (spinning || boxLocked) return;
     selectedBox = index;
+    boxLocked = true;
+    spinResult = null;
+    resultEntry = null;
+  }
+
+  function selectLuckyBox() {
+    if (spinning || boxLocked) return;
+    showLuckyBox = true;
+    selectedBox = 0;
+    boxLocked = true;
     spinResult = null;
     resultEntry = null;
   }
@@ -127,6 +140,8 @@
     spinning = true;
     spinResult = null;
     resultEntry = null;
+    gridFinished = false;
+    showPopup = true;
 
     const ids = getSelectedPokemonIds();
 
@@ -138,23 +153,35 @@
       winIndex = Math.floor(Math.random() * ids.length);
     }
 
-    // Animate the roulette
-    const spinEl = document.querySelector('.roulette-strip');
-    if (spinEl) {
-      const totalSlots = ids.length * 4; // repeat 4 times for smooth scroll
-      const targetSlot = ids.length * 3 + winIndex; // land on 4th iteration
-      const slotWidth = 80;
-      const offset = targetSlot * slotWidth + slotWidth / 2;
-      (spinEl as HTMLElement).style.transition = 'none';
-      (spinEl as HTMLElement).style.transform = 'translateX(0)';
-      // Force reflow
-      void (spinEl as HTMLElement).offsetWidth;
-      (spinEl as HTMLElement).style.transition = 'transform 3.5s cubic-bezier(0.15, 0.85, 0.35, 1)';
-      (spinEl as HTMLElement).style.transform = `translateX(-${offset - 160}px)`;
-    }
+    // Grid highlight animation
+    const totalSteps = 30 + Math.floor(Math.random() * 10);
+    let step = 0;
+    let delay = 80;
 
-    // Wait for animation
-    await new Promise((r) => setTimeout(r, 3800));
+    await new Promise<void>((resolve) => {
+      function tick() {
+        if (step < totalSteps - 1) {
+          highlightedIndex = Math.floor(Math.random() * ids.length);
+          step++;
+          // Accelerate deceleration in last third
+          if (step > totalSteps * 0.6) {
+            delay += 40;
+          } else if (step > totalSteps * 0.4) {
+            delay += 15;
+          }
+          setTimeout(tick, delay);
+        } else {
+          // Land on the winner
+          highlightedIndex = winIndex;
+          gridFinished = true;
+          resolve();
+        }
+      }
+      tick();
+    });
+
+    // Brief pause on winner
+    await new Promise((r) => setTimeout(r, 600));
 
     const wonId = ids[winIndex];
     spinResult = wonId;
@@ -210,7 +237,21 @@
 
     spinning = false;
   }
+
+  function closePopup() {
+    if (spinning) return;
+    showPopup = false;
+  }
+
+  // Check if there's an active event with a featured Pokémon (for Lucky Day box display)
+  const luckyDayEvent = data.activeEvents?.find((e) => e.modifiers.luckyDayBox);
+  const luckyFeaturedId = luckyDayEvent?.modifiers.forcedPokemonId ?? 494;
+
+  // Reactive selected pokemon IDs for the grid
+  let popupIds = $derived(getSelectedPokemonIds());
 </script>
+
+<svelte:window onkeydown={(e) => { if (showPopup && e.key === 'Escape' && !spinning) showPopup = false; }} />
 
 <div class="vroulette-container">
   <div class="vroulette-header">
@@ -227,20 +268,29 @@
     </div>
   {:else if rouletteState}
     <!-- Lucky Day box toggle -->
-    {#if luckyBox}
-      <div class="lucky-toggle">
-        <button
-          class="lucky-btn"
-          class:active={showLuckyBox}
-          onclick={() => { showLuckyBox = !showLuckyBox; selectedBox = showLuckyBox ? 0 : null; }}
-        >
-          {lang === 'fr' ? 'Boîte Lucky Day' : 'Lucky Day Box'}
-        </button>
-      </div>
+    {#if luckyBox && !boxLocked}
+      <button
+        class="lucky-box-card"
+        onclick={selectLuckyBox}
+        disabled={spinning}
+      >
+        <div class="lucky-box-header">
+          <span class="lucky-label">{lang === 'fr' ? 'Boîte Lucky Day' : 'Lucky Day Box'}</span>
+          <span class="lucky-star">★</span>
+        </div>
+        <div class="lucky-box-preview">
+          <img
+            src={getPokemonImagePath(luckyFeaturedId, false)}
+            alt="Victini"
+            class="lucky-featured-img"
+          />
+          <span class="lucky-featured-label">{lang === 'fr' ? 'Pokémon vedette' : 'Featured Pokémon'}</span>
+        </div>
+      </button>
     {/if}
 
-    {#if !showLuckyBox}
-      <!-- Box selection -->
+    {#if !boxLocked}
+      <!-- Box selection (preview limited to 3 Pokémon) -->
       <p class="vroulette-instruction">
         {lang === 'fr' ? 'Choisis une boîte PC :' : 'Choose a PC box:'}
       </p>
@@ -248,13 +298,12 @@
         {#each rouletteState.boxes as box, i}
           <button
             class="box-card"
-            class:selected={selectedBox === i}
             onclick={() => selectBox(i)}
             disabled={spinning}
           >
             <span class="box-label">{lang === 'fr' ? 'Boîte' : 'Box'} {i + 1}</span>
-            <div class="box-preview">
-              {#each box as id}
+            <div class="box-preview-limited">
+              {#each box.slice(0, 3) as id}
                 <img
                   src={getPokemonImagePath(id, false)}
                   alt="#{id}"
@@ -262,15 +311,25 @@
                   loading="lazy"
                 />
               {/each}
+              <div class="box-hidden-count">
+                +13
+              </div>
             </div>
           </button>
         {/each}
       </div>
-    {/if}
+    {:else}
+      <!-- Box locked indicator -->
+      <div class="locked-box-banner">
+        <span class="lock-icon">🔒</span>
+        <span>
+          {showLuckyBox
+            ? (lang === 'fr' ? 'Boîte Lucky Day sélectionnée' : 'Lucky Day Box selected')
+            : (lang === 'fr' ? `Boîte ${(selectedBox ?? 0) + 1} sélectionnée` : `Box ${(selectedBox ?? 0) + 1} selected`)}
+        </span>
+      </div>
 
-    <!-- Selected box detail + boosted selection -->
-    {#if selectedBox !== null || showLuckyBox}
-      {@const ids = getSelectedPokemonIds()}
+      <!-- Selected box detail + boosted selection -->
       <div class="selected-box-detail">
         <p class="boost-hint">
           {lang === 'fr'
@@ -278,7 +337,7 @@
             : 'Click a Pokémon to boost it (1/4 chance):'}
         </p>
         <div class="boost-grid">
-          {#each ids as id, i}
+          {#each popupIds as id}
             <button
               class="boost-cell"
               class:boosted={boostedId === id}
@@ -299,26 +358,6 @@
         </div>
       </div>
 
-      <!-- Roulette viewport -->
-      <div class="roulette-viewport">
-        <div class="roulette-pointer"></div>
-        <div class="roulette-track">
-          <div class="roulette-strip">
-            {#each Array(4) as _, rep}
-              {#each ids as id}
-                <div class="roulette-slot">
-                  <img
-                    src={getPokemonImagePath(id, false)}
-                    alt="#{id}"
-                    class="roulette-slot-img"
-                  />
-                </div>
-              {/each}
-            {/each}
-          </div>
-        </div>
-      </div>
-
       <!-- Spin button -->
       <button
         class="spin-btn"
@@ -333,32 +372,82 @@
           {lang === 'fr' ? 'Lancer la roulette' : 'Spin the roulette'} (1 ticket)
         {/if}
       </button>
-
-      <!-- Result -->
-      {#if resultEntry}
-        <div class="spin-result" class:shiny={resultEntry.isShiny}>
-          <img
-            src={getPokemonImagePath(resultEntry.id, resultEntry.isShiny)}
-            alt={lang === 'fr' ? resultEntry.nameFr : resultEntry.nameEn}
-            class="result-img"
-          />
-          <div class="result-info">
-            <span class="result-name">
-              {#if resultEntry.isShiny}<span class="shiny-star">✦</span>{/if}
-              {lang === 'fr' ? resultEntry.nameFr : resultEntry.nameEn}
-            </span>
-            <span class="result-level">Lv. {resultEntry.level}</span>
-            <p class="result-hint">
-              {lang === 'fr'
-                ? 'Ce Pokémon remplace ton Pokémon du jour !'
-                : 'This Pokémon replaces your daily Pokémon!'}
-            </p>
-          </div>
-        </div>
-      {/if}
     {/if}
   {/if}
 </div>
+
+<!-- Roulette popup (bottom-sheet) -->
+{#if showPopup}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    class="roulette-backdrop"
+    onclick={(e) => { if (e.target === e.currentTarget && !spinning) closePopup(); }}
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="roulette-popup">
+      <div class="popup-header">
+        <h3 class="popup-title">V-Roulette</h3>
+        {#if !spinning}
+          <button class="popup-close" onclick={closePopup} aria-label="Fermer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        {/if}
+      </div>
+
+      <div class="popup-body">
+        <!-- 4x4 Grid roulette -->
+        <div class="roulette-grid">
+          {#each popupIds as id, i}
+            <div
+              class="grid-cell"
+              class:highlighted={highlightedIndex === i}
+              class:winner={gridFinished && highlightedIndex === i}
+            >
+              <img
+                src={getPokemonImagePath(id, false)}
+                alt="#{id}"
+                class="grid-cell-img"
+              />
+            </div>
+          {/each}
+        </div>
+
+        <!-- Result -->
+        {#if resultEntry}
+          <div class="spin-result" class:shiny={resultEntry.isShiny}>
+            <img
+              src={getPokemonImagePath(resultEntry.id, resultEntry.isShiny)}
+              alt={lang === 'fr' ? resultEntry.nameFr : resultEntry.nameEn}
+              class="result-img"
+            />
+            <div class="result-info">
+              <span class="result-name">
+                {#if resultEntry.isShiny}<span class="shiny-star">✦</span>{/if}
+                {lang === 'fr' ? resultEntry.nameFr : resultEntry.nameEn}
+              </span>
+              <span class="result-level">Lv. {resultEntry.level}</span>
+              <p class="result-hint">
+                {lang === 'fr'
+                  ? 'Ce Pokémon remplace ton Pokémon du jour !'
+                  : 'This Pokémon replaces your daily Pokémon!'}
+              </p>
+            </div>
+          </div>
+
+          <!-- Refresh button -->
+          <button class="refresh-btn" onclick={onreload}>
+            {lang === 'fr' ? 'Rafraîchir la page' : 'Refresh page'}
+          </button>
+        {/if}
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   .vroulette-container {
@@ -415,26 +504,68 @@
     animation: spin 0.8s linear infinite;
   }
 
-  .lucky-toggle {
-    margin-bottom: 12px;
-  }
-
-  .lucky-btn {
-    background: rgba(255, 215, 0, 0.1);
+  /* Lucky Day box card */
+  .lucky-box-card {
+    width: 100%;
+    background: rgba(255, 215, 0, 0.08);
     border: 1px solid rgba(255, 215, 0, 0.3);
-    color: var(--shiny-color);
-    font-family: var(--font-main);
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 14px;
-    border-radius: 8px;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 16px;
     cursor: pointer;
-    transition: background 0.15s;
+    font-family: var(--font-main);
+    color: var(--text-primary);
+    transition: border-color 0.15s, background 0.15s;
+    text-align: center;
   }
 
-  .lucky-btn.active {
-    background: rgba(255, 215, 0, 0.25);
+  .lucky-box-card:hover:not(:disabled) {
     border-color: rgba(255, 215, 0, 0.6);
+    background: rgba(255, 215, 0, 0.15);
+  }
+
+  .lucky-box-card:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .lucky-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .lucky-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--shiny-color);
+    letter-spacing: 0.04em;
+  }
+
+  .lucky-star {
+    color: var(--shiny-color);
+    font-size: 14px;
+  }
+
+  .lucky-box-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lucky-featured-img {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+  }
+
+  .lucky-featured-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
   }
 
   .vroulette-instruction {
@@ -443,12 +574,11 @@
     margin-bottom: 10px;
   }
 
-  /* Box selector */
+  /* Box selector — limited preview */
   .box-selector {
     display: flex;
     gap: 8px;
     margin-bottom: 16px;
-    overflow-x: auto;
   }
 
   .box-card {
@@ -467,11 +597,7 @@
 
   .box-card:hover:not(:disabled) {
     border-color: var(--border-accent);
-  }
-
-  .box-card.selected {
-    border-color: var(--accent-light);
-    background: rgba(155, 77, 202, 0.1);
+    background: rgba(155, 77, 202, 0.08);
   }
 
   .box-card:disabled {
@@ -489,17 +615,48 @@
     margin-bottom: 6px;
   }
 
-  .box-preview {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2px;
+  .box-preview-limited {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
   }
 
   .box-pokemon-thumb {
-    width: 100%;
-    aspect-ratio: 1;
+    width: 32px;
+    height: 32px;
     image-rendering: pixelated;
-    opacity: 0.7;
+    opacity: 0.8;
+  }
+
+  .box-hidden-count {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 4px 6px;
+    min-width: 28px;
+  }
+
+  /* Locked box banner */
+  .locked-box-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(155, 77, 202, 0.1);
+    border: 1px solid rgba(155, 77, 202, 0.3);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-light);
+    margin-bottom: 14px;
+  }
+
+  .lock-icon {
+    font-size: 14px;
   }
 
   /* Boost grid */
@@ -557,67 +714,6 @@
     color: #f0a050;
   }
 
-  /* Roulette viewport */
-  .roulette-viewport {
-    position: relative;
-    margin: 16px 0;
-    overflow: hidden;
-    border-radius: 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    height: 88px;
-  }
-
-  .roulette-pointer {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2px;
-    height: 100%;
-    background: var(--accent-light);
-    z-index: 2;
-    box-shadow: 0 0 8px var(--accent-glow);
-  }
-
-  .roulette-pointer::before {
-    content: '';
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 8px solid var(--accent-light);
-  }
-
-  .roulette-track {
-    overflow: hidden;
-    height: 100%;
-  }
-
-  .roulette-strip {
-    display: flex;
-    height: 100%;
-    will-change: transform;
-  }
-
-  .roulette-slot {
-    flex-shrink: 0;
-    width: 80px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-right: 1px solid var(--border-subtle);
-  }
-
-  .roulette-slot-img {
-    width: 64px;
-    height: 64px;
-    image-rendering: pixelated;
-  }
-
   /* Spin button */
   .spin-btn {
     width: 100%;
@@ -646,17 +742,136 @@
     cursor: not-allowed;
   }
 
-  /* Result */
+  /* ── Roulette popup (bottom-sheet) ── */
+  .roulette-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 900;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.15s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .roulette-popup {
+    background: #0f0f1a;
+    border: 1px solid rgba(240, 160, 80, 0.3);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 60px rgba(240, 160, 80, 0.15);
+    animation: slideUp 0.2s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .popup-title {
+    font-size: 16px;
+    font-weight: 900;
+    color: #f0a050;
+    letter-spacing: 0.04em;
+  }
+
+  .popup-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .popup-close:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+  .popup-close svg { width: 18px; height: 18px; }
+
+  .popup-body {
+    padding: 16px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── 4x4 Grid roulette ── */
+  .roulette-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .grid-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 8px;
+    transition: border-color 0.08s, background 0.08s, box-shadow 0.08s;
+  }
+
+  .grid-cell.highlighted {
+    border-color: #f0a050;
+    background: rgba(240, 160, 80, 0.15);
+    box-shadow: 0 0 12px rgba(240, 160, 80, 0.3);
+  }
+
+  .grid-cell.winner {
+    border-color: #f0a050;
+    background: rgba(240, 160, 80, 0.25);
+    box-shadow: 0 0 24px rgba(240, 160, 80, 0.5);
+    animation: winnerPulse 0.6s ease-in-out infinite alternate;
+  }
+
+  @keyframes winnerPulse {
+    from { box-shadow: 0 0 16px rgba(240, 160, 80, 0.3); }
+    to { box-shadow: 0 0 28px rgba(240, 160, 80, 0.6); }
+  }
+
+  .grid-cell-img {
+    width: 100%;
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+  }
+
+  /* ── Result ── */
   .spin-result {
-    margin-top: 16px;
     display: flex;
     align-items: center;
     gap: 16px;
     padding: 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-accent);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(155, 77, 202, 0.4);
     border-radius: 16px;
     animation: fadeSlideUp 0.4s ease;
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .spin-result.shiny {
@@ -679,6 +894,7 @@
   .result-name {
     font-size: 18px;
     font-weight: 900;
+    color: #f0f0f5;
   }
 
   .shiny-star {
@@ -687,7 +903,7 @@
 
   .result-level {
     font-size: 12px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.4);
     font-weight: 700;
   }
 
@@ -695,5 +911,28 @@
     font-size: 11px;
     color: var(--accent-light);
     margin-top: 4px;
+  }
+
+  /* Refresh button */
+  .refresh-btn {
+    width: 100%;
+    padding: 14px;
+    background: rgba(155, 77, 202, 0.2);
+    border: 1px solid rgba(155, 77, 202, 0.5);
+    border-radius: 14px;
+    color: var(--accent-light);
+    font-family: var(--font-main);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+  }
+
+  .refresh-btn:hover {
+    background: rgba(155, 77, 202, 0.3);
+  }
+
+  .refresh-btn:active {
+    transform: scale(0.98);
   }
 </style>

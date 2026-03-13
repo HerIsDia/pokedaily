@@ -11,7 +11,7 @@ import {
   type PokemonEntry, type AppState,
 } from './db';
 import {
-  loadEvents, getActiveEvents, getNextEvent, applyEventModifiers,
+  loadEvents, getActiveEvents, getNextEvent, getUpcomingEvents, applyEventModifiers,
   type GameEvent,
 } from './events';
 
@@ -27,8 +27,12 @@ export interface AppData {
   shinydex: number[];
   /** Currently active event, or null. */
   activeEvent: GameEvent | null;
+  /** All currently active events. */
+  activeEvents: GameEvent[];
   /** The soonest upcoming event (excluding active), or null. */
   nextEvent: { event: GameEvent; daysUntil: number } | null;
+  /** All upcoming events within 7 days. */
+  upcomingEvents: { event: GameEvent; daysUntil: number }[];
   /** Current Victini ticket count. */
   victiniTickets: number;
   /** All loaded events for the events calendar. */
@@ -129,10 +133,9 @@ export const script = async (): Promise<AppData> => {
   const nowDate = new Date();
   const activeEvents = getActiveEvents(events, nowDate);
   const activeEvent = activeEvents.length > 0 ? activeEvents[0] : null;
-  const nextEventResult = getNextEvent(
-    events.filter((e) => !activeEvents.includes(e)),
-    nowDate
-  );
+  const nonActiveEvents = events.filter((e) => !activeEvents.includes(e));
+  const nextEventResult = getNextEvent(nonActiveEvents, nowDate);
+  const upcomingEvents = getUpcomingEvents(nonActiveEvents, nowDate, 7);
 
   const state = await getState(db);
   const todayEntry = await getTodayEntry(db);
@@ -148,7 +151,9 @@ export const script = async (): Promise<AppData> => {
         pokedex: state.pokedex,
         shinydex: state.shinydex,
         activeEvent,
+        activeEvents,
         nextEvent: nextEventResult,
+        upcomingEvents,
         victiniTickets,
         allEvents: events,
       };
@@ -247,7 +252,9 @@ export const script = async (): Promise<AppData> => {
     pokedex: newPokedex,
     shinydex: newShinydex,
     activeEvent,
+    activeEvents,
     nextEvent: nextEventResult,
+    upcomingEvents,
     victiniTickets,
     allEvents: events,
   };
