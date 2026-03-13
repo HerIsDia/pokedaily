@@ -6,6 +6,7 @@
     getTodayEntry, saveTodayEntry,
     getHistory, addHistoryEntry, deleteHistoryEntry, clearHistoryEntries,
     clearAll,
+    getVictiniTickets, saveVictiniTickets,
     type PokemonEntry, type AppState,
   } from '../scripts/db';
   import { getPokemonData, getPokemonNature, getPokemonTypes } from '../scripts/pokeAPI';
@@ -20,6 +21,10 @@
   let nextId = $state('');
   let saved = $state(false);
 
+  // Victini tickets
+  let ticketCount = $state(0);
+  let ticketAdd = $state('1');
+
   // Fill history
   let fillDays = $state('7');
   let fillProgress = $state<{ current: number; total: number } | null>(null);
@@ -27,10 +32,11 @@
   onMount(async () => {
     const d = await openDB();
     db = d;
-    const [s, t, h] = await Promise.all([getState(d), getTodayEntry(d), getHistory(d)]);
+    const [s, t, h, tc] = await Promise.all([getState(d), getTodayEntry(d), getHistory(d), getVictiniTickets(d)]);
     appState = s;
     todayEntry = t ?? null;
     historyEntries = h.sort((a, b) => b.date - a.date);
+    ticketCount = tc;
   });
 
   async function save() {
@@ -55,6 +61,13 @@
     if (!db || !appState) return;
     await saveState(db, { ...appState, lastDate: 0 });
     onreload();
+  }
+
+  async function addTickets() {
+    if (!db) return;
+    const amount = parseInt(ticketAdd, 10) || 0;
+    ticketCount = Math.max(0, ticketCount + amount);
+    await saveVictiniTickets(db, ticketCount);
   }
 
   async function removeHistoryEntry(entry: PokemonEntry) {
@@ -226,6 +239,27 @@
           Pokémon aléatoire
         </button>
         <p class="dev-hint">Réinitialise la date dans IndexedDB et recharge.</p>
+      </section>
+
+      <!-- Tickets Victini -->
+      <section class="dev-section">
+        <h3>Tickets Victini</h3>
+        <div class="dev-info-row">
+          <span class="dev-label">Tickets actuels</span>
+          <span class="dev-value accent">{ticketCount}</span>
+        </div>
+        <div class="dev-row">
+          <input
+            class="dev-input flex"
+            type="number"
+            bind:value={ticketAdd}
+            placeholder="Quantité (+/-)"
+          />
+          <button class="dev-btn" onclick={addTickets}>
+            Ajouter
+          </button>
+        </div>
+        <p class="dev-hint">Utilise un nombre négatif pour retirer des tickets.</p>
       </section>
 
       <!-- Remplir l'historique -->

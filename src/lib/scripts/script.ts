@@ -6,6 +6,8 @@ import {
   getTodayEntry, saveTodayEntry,
   getHistory, addHistoryEntry,
   updateRename,
+  getVictiniTickets, saveVictiniTickets,
+  saveLuckyDayBox,
   type PokemonEntry, type AppState,
 } from './db';
 import {
@@ -27,6 +29,10 @@ export interface AppData {
   activeEvent: GameEvent | null;
   /** The soonest upcoming event (excluding active), or null. */
   nextEvent: { event: GameEvent; daysUntil: number } | null;
+  /** Current Victini ticket count. */
+  victiniTickets: number;
+  /** All loaded events for the events calendar. */
+  allEvents: GameEvent[];
 }
 
 /** Returns `/images/001.png` or `/images/001S.png` for shiny. */
@@ -135,7 +141,7 @@ export const script = async (): Promise<AppData> => {
 
   if (!shouldRefresh) {
     if (todayEntry) {
-      const history = await getHistory(db);
+      const [history, victiniTickets] = await Promise.all([getHistory(db), getVictiniTickets(db)]);
       return {
         pokemonOfTheDay: todayEntry,
         history: history.sort((a, b) => b.date - a.date),
@@ -143,6 +149,8 @@ export const script = async (): Promise<AppData> => {
         shinydex: state.shinydex,
         activeEvent,
         nextEvent: nextEventResult,
+        victiniTickets,
+        allEvents: events,
       };
     }
     throw new Error('offline-no-data');
@@ -202,6 +210,34 @@ export const script = async (): Promise<AppData> => {
   const newState: AppState = { lastDate: dateNow, pokedex: newPokedex, shinydex: newShinydex };
   await saveState(db, newState);
 
+  // Victini ticket logic
+  let victiniTickets = await getVictiniTickets(db);
+
+  // Award ticket if the Pokémon is Victini
+  if (randomId === 494) {
+    victiniTickets += 1;
+  }
+
+  // Award tickets from active events (Lucky Day, etc.)
+  for (const event of activeEvents) {
+    const m = event.modifiers;
+    if (m.victiniTicketsMin !== undefined && m.victiniTicketsMax !== undefined) {
+      victiniTickets += Math.floor(Math.random() * (m.victiniTicketsMax - m.victiniTicketsMin + 1)) + m.victiniTicketsMin;
+    }
+    // Generate Lucky Day box
+    if (m.luckyDayBox) {
+      const luckyIds: number[] = [];
+      for (let i = 0; i < 13; i++) {
+        luckyIds.push(Math.floor(Math.random() * 1025) + 1);
+      }
+      // Add 3 Victini (ID 494)
+      luckyIds.push(494, 494, 494);
+      await saveLuckyDayBox(db, { date: new Date(dateNow).toISOString().slice(0, 10), box: luckyIds });
+    }
+  }
+
+  await saveVictiniTickets(db, victiniTickets);
+
   const history = await getHistory(db);
   sessionStorage.setItem('done', '0');
 
@@ -212,6 +248,8 @@ export const script = async (): Promise<AppData> => {
     shinydex: newShinydex,
     activeEvent,
     nextEvent: nextEventResult,
+    victiniTickets,
+    allEvents: events,
   };
 };
 
