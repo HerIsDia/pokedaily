@@ -26,6 +26,32 @@ export interface AppState {
   shinydex: number[];
 }
 
+export interface MonthlyTeam {
+  /** YYYY-MM format */
+  month: string;
+  pokemon: PokemonEntry[];
+}
+
+export interface VRouletteState {
+  /** YYYY-MM format */
+  month: string;
+  /** 3 boxes of 16 Pokémon IDs each */
+  boxes: number[][];
+  /** ID of the boosted Pokémon (1/4 chance), or null */
+  boostedId: number | null;
+  /** Whether the first-time bonus ticket has been claimed */
+  firstTimeClaimed: boolean;
+}
+
+export interface LuckyDayBox {
+  /** YYYY-MM-DD format */
+  date: string;
+  /** 16 Pokémon IDs */
+  box: number[];
+  /** Indices of slots that are guaranteed shiny when won */
+  shinySlots?: number[];
+}
+
 // ── IDB setup ──────────────────────────────────────────────────────────────
 
 const DB_NAME = 'pokedaily';
@@ -175,4 +201,48 @@ export async function clearAll(db: IDBDatabase): Promise<void> {
     idbClear(db, 'today'),
     idbClear(db, 'history'),
   ]);
+}
+
+// ── Victini Tickets ───────────────────────────────────────────────────────
+
+export async function getVictiniTickets(db: IDBDatabase): Promise<number> {
+  const r = await idbGet<{ k: string; v: number }>(db, 'state', 'victiniTickets');
+  return r?.v ?? 0;
+}
+
+export async function saveVictiniTickets(db: IDBDatabase, count: number): Promise<void> {
+  await idbPut(db, 'state', { k: 'victiniTickets', v: count });
+}
+
+// ── Monthly Team ──────────────────────────────────────────────────────────
+
+export async function getMonthlyTeam(db: IDBDatabase): Promise<MonthlyTeam | null> {
+  const r = await idbGet<{ k: string; v: MonthlyTeam }>(db, 'state', 'monthlyTeam');
+  return r?.v ?? null;
+}
+
+export async function saveMonthlyTeam(db: IDBDatabase, team: MonthlyTeam): Promise<void> {
+  await idbPut(db, 'state', { k: 'monthlyTeam', v: team });
+}
+
+// ── V-Roulette State ──────────────────────────────────────────────────────
+
+export async function getVRouletteState(db: IDBDatabase): Promise<VRouletteState | null> {
+  const r = await idbGet<{ k: string; v: VRouletteState }>(db, 'state', 'vrouletteState');
+  return r?.v ?? null;
+}
+
+export async function saveVRouletteState(db: IDBDatabase, state: VRouletteState): Promise<void> {
+  await idbPut(db, 'state', { k: 'vrouletteState', v: state });
+}
+
+// ── Lucky Day Box ─────────────────────────────────────────────────────────
+
+export async function getLuckyDayBox(db: IDBDatabase): Promise<LuckyDayBox | null> {
+  const r = await idbGet<{ k: string; v: LuckyDayBox }>(db, 'state', 'luckyDayBox');
+  return r?.v ?? null;
+}
+
+export async function saveLuckyDayBox(db: IDBDatabase, box: LuckyDayBox): Promise<void> {
+  await idbPut(db, 'state', { k: 'luckyDayBox', v: box });
 }

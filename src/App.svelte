@@ -6,6 +6,8 @@
   import PokemonCard from './lib/components/PokemonCard.svelte';
   import History from './lib/components/History.svelte';
   import Pokedex from './lib/components/Pokedex.svelte';
+  import Stats from './lib/components/Stats.svelte';
+  import Pokekit from './lib/components/Pokekit.svelte';
   import InstallBanner from './lib/components/InstallBanner.svelte';
   import DevPanel from './lib/components/DevPanel.svelte';
   import EventBanner from './lib/components/EventBanner.svelte';
@@ -13,14 +15,14 @@
   import type { AppData } from './lib/scripts/script';
 
   // --- View routing ---
-  type View = 'pokemon' | 'history' | 'pokedex';
-  let view = $state<View>(
-    window.location.hash === '#history'
-      ? 'history'
-      : window.location.hash === '#pokedex'
-        ? 'pokedex'
-        : 'pokemon'
-  );
+  type View = 'pokemon' | 'history' | 'pokedex' | 'stats' | 'pokekit';
+  const hashMap: Record<string, View> = {
+    '#history': 'history',
+    '#pokedex': 'pokedex',
+    '#stats': 'stats',
+    '#pokekit': 'pokekit',
+  };
+  let view = $state<View>(hashMap[window.location.hash] ?? 'pokemon');
 
   function navigate(target: View) {
     view = target;
@@ -141,12 +143,12 @@
     <div class="topbar-left">
       <span class="topbar-logo">Pokédaily</span>
       <button class="version-badge" onclick={() => { showChangelog = true; }} aria-label="Voir les nouveautés">
-        3.0_b2
+        3.1
       </button>
     </div>
     <div class="topbar-meta">
       {#if data}
-        <EventBanner activeEvent={data.activeEvent} nextEvent={data.nextEvent} />
+        <EventBanner activeEvents={data.activeEvents} upcomingEvents={data.upcomingEvents} />
       {/if}
       {#if !online}
         <span class="badge-status badge-offline">Hors ligne</span>
@@ -199,8 +201,12 @@
           <PokemonCard {data} />
         {:else if view === 'history'}
           <History {data} />
+        {:else if view === 'stats'}
+          <Stats {data} />
         {:else if view === 'pokedex'}
           <Pokedex {data} />
+        {:else if view === 'pokekit'}
+          <Pokekit {data} onreload={() => { window.location.reload(); }} />
         {/if}
       </div>
     {/if}
@@ -238,6 +244,22 @@
     </button>
 
     <button
+      class="nav-tab"
+      class:active={view === 'stats'}
+      onclick={() => navigate('stats')}
+      aria-label="Statistiques"
+    >
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 20V10"/>
+          <path d="M12 20V4"/>
+          <path d="M6 20v-6"/>
+        </svg>
+      </span>
+      <span class="nav-label">Stats</span>
+    </button>
+
+    <button
       class="nav-tab nav-tab-center"
       class:active={view === 'pokemon'}
       onclick={() => navigate('pokemon')}
@@ -263,6 +285,20 @@
         </svg>
       </span>
       <span class="nav-label">Pokédex</span>
+    </button>
+
+    <button
+      class="nav-tab"
+      class:active={view === 'pokekit'}
+      onclick={() => navigate('pokekit')}
+      aria-label="Pokékit"
+    >
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </span>
+      <span class="nav-label">Pokékit</span>
     </button>
   </nav>
 </div>
@@ -427,7 +463,7 @@
     cursor: pointer;
     color: var(--text-muted);
     transition: color 0.2s, transform 0.15s;
-    padding: 4px 20px;
+    padding: 4px 10px;
     border-radius: 12px;
     font-family: var(--font-main);
   }

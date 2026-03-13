@@ -6,10 +6,12 @@ import {
   getTodayEntry, saveTodayEntry,
   getHistory, addHistoryEntry,
   updateRename,
+  getVictiniTickets, saveVictiniTickets,
+  saveLuckyDayBox,
   type PokemonEntry, type AppState,
 } from './db';
 import {
-  loadEvents, getActiveEvents, getNextEvent, applyEventModifiers,
+  loadEvents, getActiveEvents, getNextEvent, getUpcomingEvents, applyEventModifiers,
   type GameEvent,
 } from './events';
 
@@ -25,8 +27,16 @@ export interface AppData {
   shinydex: number[];
   /** Currently active event, or null. */
   activeEvent: GameEvent | null;
+  /** All currently active events. */
+  activeEvents: GameEvent[];
   /** The soonest upcoming event (excluding active), or null. */
   nextEvent: { event: GameEvent; daysUntil: number } | null;
+  /** All upcoming events within 7 days. */
+  upcomingEvents: { event: GameEvent; daysUntil: number }[];
+  /** Current Victini ticket count. */
+  victiniTickets: number;
+  /** All loaded events for the events calendar. */
+  allEvents: GameEvent[];
 }
 
 /** Returns `/images/001.png` or `/images/001S.png` for shiny. */
@@ -123,10 +133,9 @@ export const script = async (): Promise<AppData> => {
   const nowDate = new Date();
   const activeEvents = getActiveEvents(events, nowDate);
   const activeEvent = activeEvents.length > 0 ? activeEvents[0] : null;
-  const nextEventResult = getNextEvent(
-    events.filter((e) => !activeEvents.includes(e)),
-    nowDate
-  );
+  const nonActiveEvents = events.filter((e) => !activeEvents.includes(e));
+  const nextEventResult = getNextEvent(nonActiveEvents, nowDate);
+  const upcomingEvents = getUpcomingEvents(nonActiveEvents, nowDate, 7);
 
   const state = await getState(db);
   const todayEntry = await getTodayEntry(db);
@@ -135,14 +144,18 @@ export const script = async (): Promise<AppData> => {
 
   if (!shouldRefresh) {
     if (todayEntry) {
-      const history = await getHistory(db);
+      const [history, victiniTickets] = await Promise.all([getHistory(db), getVictiniTickets(db)]);
       return {
         pokemonOfTheDay: todayEntry,
         history: history.sort((a, b) => b.date - a.date),
         pokedex: state.pokedex,
         shinydex: state.shinydex,
         activeEvent,
+        activeEvents,
         nextEvent: nextEventResult,
+        upcomingEvents,
+        victiniTickets,
+        allEvents: events,
       };
     }
     throw new Error('offline-no-data');
@@ -202,6 +215,48 @@ export const script = async (): Promise<AppData> => {
   const newState: AppState = { lastDate: dateNow, pokedex: newPokedex, shinydex: newShinydex };
   await saveState(db, newState);
 
+  // Victini ticket logic
+  let victiniTickets = await getVictiniTickets(db);
+
+  // Award ticket if the Pokémon is Victini
+  if (randomId === 494) {
+    victiniTickets += 1;
+  }
+
+  // Award tickets from active events (Lucky Day, etc.)
+  for (const event of activeEvents) {
+    const m = event.modifiers;
+    if (m.victiniTicketsMin !== undefined && m.victiniTicketsMax !== undefined) {
+      victiniTickets += Math.floor(Math.random() * (m.victiniTicketsMax - m.victiniTicketsMin + 1)) + m.victiniTicketsMin;
+    }
+    // Generate Lucky Day box
+    if (m.luckyDayBox) {
+      const luckyIds: number[] = [];
+      for (let i = 0; i < 13; i++) {
+        luckyIds.push(Math.floor(Math.random() * 1025) + 1);
+      }
+      // Add 3 Victini (ID 494)
+      luckyIds.push(494, 494, 494);
+      await saveLuckyDayBox(db, { date: new Date(dateNow).toISOString().slice(0, 10), box: luckyIds });
+    }
+    // Generate April Fools box (10 Magikarp, 3 Gyarados, 2 shiny Magikarp, 1 shiny Gyarados)
+    if (m.aprilFoolsBox) {
+      const aprilBox: number[] = [
+        129, 129, 129, 129, 129, 129, 129, 129, 129, 129, // 10 Magikarp
+        130, 130, 130,                                      // 3 Gyarados
+        129, 129,                                            // 2 shiny Magikarp (slots 13, 14)
+        130,                                                 // 1 shiny Gyarados (slot 15)
+      ];
+      await saveLuckyDayBox(db, {
+        date: new Date(dateNow).toISOString().slice(0, 10),
+        box: aprilBox,
+        shinySlots: [13, 14, 15],
+      });
+    }
+  }
+
+  await saveVictiniTickets(db, victiniTickets);
+
   const history = await getHistory(db);
   sessionStorage.setItem('done', '0');
 
@@ -211,7 +266,11 @@ export const script = async (): Promise<AppData> => {
     pokedex: newPokedex,
     shinydex: newShinydex,
     activeEvent,
+    activeEvents,
     nextEvent: nextEventResult,
+    upcomingEvents,
+    victiniTickets,
+    allEvents: events,
   };
 };
 

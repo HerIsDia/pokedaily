@@ -19,15 +19,18 @@
       "id": "april_fools",
       "nameFr": "Poisson d'avril !",
       "nameEn": "April Fools!",
-      "descriptionFr": "C'est le 1er avril ! Magicarpe envahit la mare — il ne fait que clapoter... mais il pourrait être Chromatique !",
-      "descriptionEn": "It's April 1st! Magikarp has taken over the pond — it only splashes around... but it might be Shiny!",
+      "descriptionFr": "C'est le 1er avril ! Magicarpe envahit la mare — il ne fait que clapoter... mais il pourrait être Chromatique ! Tu reçois aussi un ticket Victini et une boîte PC spéciale remplie de Magicarpe et Léviator.",
+      "descriptionEn": "It's April 1st! Magikarp has taken over the pond — it only splashes around... but it might be Shiny! You also get a Victini ticket and a special PC box full of Magikarp and Gyarados.",
       "type": "recurring_date",
       "month": 4,
       "day": 1,
       "modifiers": {
         "forcedPokemonId": 129,
         "forcedPokemonChance": 1.0,
-        "shinyRate": 100
+        "shinyRate": 100,
+        "victiniTicketsMin": 1,
+        "victiniTicketsMax": 1,
+        "aprilFoolsBox": true
       }
     },
     {
@@ -149,6 +152,37 @@
       ],
       "modifiers": {
         "shinyRate": 30
+      }
+    },
+    {
+      "id": "lucky_day",
+      "nameFr": "Lucky Day",
+      "nameEn": "Lucky Day",
+      "descriptionFr": "Vendredi 13 ! Le taux de shiny est de 1/13 et tu reçois entre 1 et 3 tickets Victini, ainsi qu'une boîte PC spéciale pour la V-Roulette comprenant 13 Pokémon aléatoires et 3 Victini.",
+      "descriptionEn": "Friday the 13th! Shiny rate is 1/13 and you receive 1-3 Victini tickets, plus a special PC box for the V-Roulette with 13 random Pokémon and 3 Victini.",
+      "type": "recurring_weekday_date",
+      "weekday": 5,
+      "day": 13,
+      "modifiers": {
+        "shinyRate": 13,
+        "victiniTicketsMin": 1,
+        "victiniTicketsMax": 3,
+        "luckyDayBox": true
+      }
+    },
+    {
+      "id": "victini_launch_march_2026",
+      "nameFr": "Lancement V-Roulette",
+      "nameEn": "V-Roulette Launch",
+      "descriptionFr": "Pour le lancement de la V-Roulette, Victini a 5% de chance d'apparaître chaque dimanche de mars !",
+      "descriptionEn": "For the V-Roulette launch, Victini has a 5% chance to appear every Sunday in March!",
+      "type": "date_range_weekday",
+      "startDate": "2026-03-01",
+      "endDate": "2026-03-31",
+      "weekday": 0,
+      "modifiers": {
+        "forcedPokemonId": 494,
+        "forcedPokemonChance": 0.05
       }
     }
   ]

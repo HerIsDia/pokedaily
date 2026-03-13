@@ -11,6 +11,14 @@ export interface EventModifiers {
   shinyRate?: number;
   /** Force a specific level */
   forcedLevel?: number;
+  /** Min Victini tickets to award */
+  victiniTicketsMin?: number;
+  /** Max Victini tickets to award */
+  victiniTicketsMax?: number;
+  /** Generate a special Lucky Day box for V-Roulette */
+  luckyDayBox?: boolean;
+  /** Generate a special April Fools box (10 Magikarp, 3 Gyarados, 2 shiny Magikarp, 1 shiny Gyarados) */
+  aprilFoolsBox?: boolean;
 }
 
 export interface RecurringDate {
@@ -24,8 +32,8 @@ export interface GameEvent {
   nameEn: string;
   descriptionFr: string;
   descriptionEn: string;
-  type: 'date_range' | 'recurring_date' | 'recurring_dates';
-  // date_range
+  type: 'date_range' | 'recurring_date' | 'recurring_dates' | 'recurring_weekday_date' | 'date_range_weekday';
+  // date_range / date_range_weekday
   startDate?: string;
   endDate?: string;
   // recurring_date
@@ -33,6 +41,8 @@ export interface GameEvent {
   day?: number;
   // recurring_dates
   dates?: RecurringDate[];
+  // recurring_weekday_date / date_range_weekday
+  weekday?: number; // 0=Sunday, 5=Friday, etc.
   modifiers: EventModifiers;
 }
 
@@ -58,6 +68,7 @@ export async function loadEvents(): Promise<GameEvent[]> {
 function isEventActive(event: GameEvent, date: Date): boolean {
   const month = date.getUTCMonth() + 1; // 1-indexed
   const day = date.getUTCDate();
+  const weekday = date.getUTCDay(); // 0=Sunday
 
   if (event.type === 'date_range' && event.startDate && event.endDate) {
     const d = date.toISOString().slice(0, 10);
@@ -70,6 +81,17 @@ function isEventActive(event: GameEvent, date: Date): boolean {
 
   if (event.type === 'recurring_dates' && event.dates) {
     return event.dates.some((rd) => rd.month === month && rd.day === day);
+  }
+
+  // e.g. every Friday the 13th
+  if (event.type === 'recurring_weekday_date') {
+    return event.weekday === weekday && event.day === day;
+  }
+
+  // e.g. every Sunday during a date range
+  if (event.type === 'date_range_weekday' && event.startDate && event.endDate) {
+    const d = date.toISOString().slice(0, 10);
+    return d >= event.startDate && d <= event.endDate && event.weekday === weekday;
   }
 
   return false;
@@ -99,6 +121,24 @@ export function getNextEvent(
   return best;
 }
 
+/** Returns all upcoming events within the given number of days. */
+export function getUpcomingEvents(
+  events: GameEvent[],
+  date: Date,
+  withinDays: number = 7
+): { event: GameEvent; daysUntil: number }[] {
+  const results: { event: GameEvent; daysUntil: number }[] = [];
+
+  for (const event of events) {
+    const daysUntil = daysUntilNextOccurrence(event, date);
+    if (daysUntil !== null && daysUntil > 0 && daysUntil <= withinDays) {
+      results.push({ event, daysUntil });
+    }
+  }
+
+  return results.sort((a, b) => a.daysUntil - b.daysUntil);
+}
+
 function daysUntilNextOccurrence(event: GameEvent, from: Date): number | null {
   const fromDay = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate());
 
@@ -107,8 +147,6 @@ function daysUntilNextOccurrence(event: GameEvent, from: Date): number | null {
     const end = Date.parse(event.endDate);
     if (fromDay >= start && fromDay <= end) return 0;
     if (fromDay < start) return Math.round((start - fromDay) / 86400000);
-    // If it's a one-year event (not recurring), don't show it after end
-    // If dates suggest it recurs yearly, find next year
     const startDate = new Date(event.startDate);
     const nextYear = new Date(Date.UTC(from.getUTCFullYear() + 1, startDate.getUTCMonth(), startDate.getUTCDate()));
     const diff = Math.round((nextYear.getTime() - fromDay) / 86400000);
@@ -123,6 +161,32 @@ function daysUntilNextOccurrence(event: GameEvent, from: Date): number | null {
     const candidates = event.dates.map((d) => daysUntilDate(from, d.month, d.day));
     const filtered = candidates.filter((d): d is number => d !== null && d > 0);
     return filtered.length > 0 ? Math.min(...filtered) : null;
+  }
+
+  // recurring_weekday_date: scan ahead up to 365 days for the next matching weekday+day
+  if (event.type === 'recurring_weekday_date' && event.weekday !== undefined && event.day !== undefined) {
+    for (let i = 1; i <= 365; i++) {
+      const future = new Date(fromDay + i * 86400000);
+      if (future.getUTCDay() === event.weekday && future.getUTCDate() === event.day) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  // date_range_weekday: next matching weekday within the date range
+  if (event.type === 'date_range_weekday' && event.startDate && event.endDate && event.weekday !== undefined) {
+    const start = Date.parse(event.startDate);
+    const end = Date.parse(event.endDate);
+    if (fromDay > end) return null; // event is past
+    const searchStart = Math.max(fromDay + 86400000, start);
+    for (let d = searchStart; d <= end; d += 86400000) {
+      const dt = new Date(d);
+      if (dt.getUTCDay() === event.weekday) {
+        return Math.round((d - fromDay) / 86400000);
+      }
+    }
+    return null;
   }
 
   return null;

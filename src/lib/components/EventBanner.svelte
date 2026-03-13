@@ -3,11 +3,11 @@
   import type { GameEvent } from '../scripts/script';
 
   let {
-    activeEvent,
-    nextEvent,
+    activeEvents,
+    upcomingEvents,
   }: {
-    activeEvent: GameEvent | null;
-    nextEvent: { event: GameEvent; daysUntil: number } | null;
+    activeEvents: GameEvent[];
+    upcomingEvents: { event: GameEvent; daysUntil: number }[];
   } = $props();
 
   const lang = getUserLang();
@@ -21,31 +21,37 @@
     showPopup = false;
   }
 
-  function handleBackdropKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') closePopup();
-  }
+  const hasContent = $derived(activeEvents.length > 0 || upcomingEvents.length > 0);
 </script>
 
 <svelte:window onkeydown={(e) => { if (showPopup && e.key === 'Escape') showPopup = false; }} />
 
-{#if activeEvent || nextEvent}
+{#if hasContent}
   <button
     class="event-badge"
-    class:active={!!activeEvent}
+    class:active={activeEvents.length > 0}
     onclick={togglePopup}
-    aria-label={activeEvent ? `Évènement en cours : ${lang === 'fr' ? activeEvent.nameFr : activeEvent.nameEn}` : `Prochain évènement`}
+    aria-label={activeEvents.length > 0
+      ? `${activeEvents.length} ${lang === 'fr' ? 'évènement(s) en cours' : 'active event(s)'}`
+      : `${upcomingEvents.length} ${lang === 'fr' ? 'évènement(s) à venir' : 'upcoming event(s)'}`}
   >
-    {#if activeEvent}
+    {#if activeEvents.length > 0}
       <span class="event-dot"></span>
       <span class="event-label">
-        {lang === 'fr' ? activeEvent.nameFr : activeEvent.nameEn}
+        {lang === 'fr' ? activeEvents[0].nameFr : activeEvents[0].nameEn}
       </span>
-    {:else if nextEvent}
+      {#if activeEvents.length > 1}
+        <span class="event-extra">+{activeEvents.length - 1}</span>
+      {/if}
+    {:else if upcomingEvents.length > 0}
       <span class="event-label muted">
-        ⏱ {nextEvent.daysUntil === 1
+        ⏱ {upcomingEvents[0].daysUntil === 1
           ? (lang === 'fr' ? 'demain' : 'tomorrow')
-          : (lang === 'fr' ? `dans ${nextEvent.daysUntil}j` : `in ${nextEvent.daysUntil}d`)}
+          : (lang === 'fr' ? `dans ${upcomingEvents[0].daysUntil}j` : `in ${upcomingEvents[0].daysUntil}d`)}
       </span>
+      {#if upcomingEvents.length > 1}
+        <span class="event-extra muted">+{upcomingEvents.length - 1}</span>
+      {/if}
     {/if}
   </button>
 {/if}
@@ -61,101 +67,101 @@
   >
     <div class="event-popup">
       <div class="popup-header">
-        <div class="popup-title-row">
-          {#if activeEvent}
-            <span class="popup-status active">{lang === 'fr' ? 'EN COURS' : 'ACTIVE'}</span>
-          {:else}
-            <span class="popup-status upcoming">{lang === 'fr' ? 'À VENIR' : 'UPCOMING'}</span>
-          {/if}
-          <button class="popup-close" onclick={closePopup} aria-label="Fermer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-        <h2 class="popup-name">
-          {#if activeEvent}
-            {lang === 'fr' ? activeEvent.nameFr : activeEvent.nameEn}
-          {:else if nextEvent}
-            {lang === 'fr' ? nextEvent.event.nameFr : nextEvent.event.nameEn}
-          {/if}
-        </h2>
+        <h2 class="popup-title">{lang === 'fr' ? 'Évènements' : 'Events'}</h2>
+        <button class="popup-close" onclick={closePopup} aria-label="Fermer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
 
       <div class="popup-body">
-        <p class="popup-description">
-          {#if activeEvent}
-            {lang === 'fr' ? activeEvent.descriptionFr : activeEvent.descriptionEn}
-          {:else if nextEvent}
-            {lang === 'fr' ? nextEvent.event.descriptionFr : nextEvent.event.descriptionEn}
-          {/if}
-        </p>
-
-        {#if nextEvent && !activeEvent}
-          <div class="popup-countdown">
-            <span class="countdown-number">{nextEvent.daysUntil}</span>
-            <span class="countdown-label">{lang === 'fr' ? (nextEvent.daysUntil <= 1 ? 'jour restant' : 'jours restants') : (nextEvent.daysUntil <= 1 ? 'day remaining' : 'days remaining')}</span>
-          </div>
+        <!-- Active events section -->
+        {#if activeEvents.length > 0}
+          <div class="section-label active-label">{lang === 'fr' ? 'EN COURS' : 'ACTIVE'}</div>
+          {#each activeEvents as event}
+            {@const m = event.modifiers}
+            <div class="event-card active-card">
+              <h3 class="event-card-name">{lang === 'fr' ? event.nameFr : event.nameEn}</h3>
+              <p class="event-card-desc">{lang === 'fr' ? event.descriptionFr : event.descriptionEn}</p>
+              <div class="event-card-modifiers">
+                {#if m.forcedPokemonChance !== undefined}
+                  <div class="modifier-chip">
+                    <span class="modifier-icon">🎯</span>
+                    <span>{lang === 'fr' ? `${Math.round(m.forcedPokemonChance * 100)}% chance de rencontre forcée` : `${Math.round(m.forcedPokemonChance * 100)}% forced encounter chance`}</span>
+                  </div>
+                {/if}
+                {#if m.shinyRate !== undefined}
+                  <div class="modifier-chip">
+                    <span class="modifier-icon">✦</span>
+                    <span>{lang === 'fr' ? `Taux Chromatique : 1/${m.shinyRate}` : `Shiny rate: 1/${m.shinyRate}`}</span>
+                  </div>
+                {/if}
+                {#if m.forcedShiny}
+                  <div class="modifier-chip">
+                    <span class="modifier-icon">✦</span>
+                    <span>{lang === 'fr' ? 'Pokémon forcément Chromatique' : 'Pokémon always Shiny'}</span>
+                  </div>
+                {/if}
+                {#if m.forcedLevel !== undefined}
+                  <div class="modifier-chip">
+                    <span class="modifier-icon">⭐</span>
+                    <span>{lang === 'fr' ? `Niveau forcé : ${m.forcedLevel}` : `Forced level: ${m.forcedLevel}`}</span>
+                  </div>
+                {/if}
+              </div>
+            </div>
+          {/each}
         {/if}
 
-        <!-- Modifier summary -->
-        {#if activeEvent}
-          {@const m = activeEvent.modifiers}
-          <div class="popup-modifiers">
-            {#if m.forcedPokemonChance !== undefined}
-              <div class="modifier-chip">
-                <span class="modifier-icon">🎯</span>
-                <span>{lang === 'fr' ? `${Math.round(m.forcedPokemonChance * 100)}% chance de rencontre forcée` : `${Math.round(m.forcedPokemonChance * 100)}% forced encounter chance`}</span>
+        <!-- Upcoming events section -->
+        {#if upcomingEvents.length > 0}
+          <div class="section-label upcoming-label">{lang === 'fr' ? 'À VENIR' : 'UPCOMING'}</div>
+          {#each upcomingEvents as { event, daysUntil }}
+            {@const m = event.modifiers}
+            <div class="event-card upcoming-card">
+              <div class="event-card-top">
+                <h3 class="event-card-name">{lang === 'fr' ? event.nameFr : event.nameEn}</h3>
+                <span class="event-card-countdown">
+                  {daysUntil === 1
+                    ? (lang === 'fr' ? 'demain' : 'tomorrow')
+                    : (lang === 'fr' ? `dans ${daysUntil}j` : `in ${daysUntil}d`)}
+                </span>
               </div>
-            {/if}
-            {#if m.shinyRate !== undefined}
-              <div class="modifier-chip">
-                <span class="modifier-icon">✦</span>
-                <span>{lang === 'fr' ? `Taux Chromatique : 1/${m.shinyRate}` : `Shiny rate: 1/${m.shinyRate}`}</span>
+              <p class="event-card-desc muted">{lang === 'fr' ? event.descriptionFr : event.descriptionEn}</p>
+              <div class="event-card-modifiers">
+                {#if m.forcedPokemonChance !== undefined}
+                  <div class="modifier-chip muted">
+                    <span class="modifier-icon">🎯</span>
+                    <span>{lang === 'fr' ? `${Math.round(m.forcedPokemonChance * 100)}% chance de rencontre forcée` : `${Math.round(m.forcedPokemonChance * 100)}% forced encounter chance`}</span>
+                  </div>
+                {/if}
+                {#if m.shinyRate !== undefined}
+                  <div class="modifier-chip muted">
+                    <span class="modifier-icon">✦</span>
+                    <span>{lang === 'fr' ? `Taux Chromatique : 1/${m.shinyRate}` : `Shiny rate: 1/${m.shinyRate}`}</span>
+                  </div>
+                {/if}
+                {#if m.forcedShiny}
+                  <div class="modifier-chip muted">
+                    <span class="modifier-icon">✦</span>
+                    <span>{lang === 'fr' ? 'Pokémon forcément Chromatique' : 'Pokémon always Shiny'}</span>
+                  </div>
+                {/if}
+                {#if m.forcedLevel !== undefined}
+                  <div class="modifier-chip muted">
+                    <span class="modifier-icon">⭐</span>
+                    <span>{lang === 'fr' ? `Niveau forcé : ${m.forcedLevel}` : `Forced level: ${m.forcedLevel}`}</span>
+                  </div>
+                {/if}
               </div>
-            {/if}
-            {#if m.forcedShiny}
-              <div class="modifier-chip">
-                <span class="modifier-icon">✦</span>
-                <span>{lang === 'fr' ? 'Pokémon forcément Chromatique' : 'Pokémon always Shiny'}</span>
-              </div>
-            {/if}
-            {#if m.forcedLevel !== undefined}
-              <div class="modifier-chip">
-                <span class="modifier-icon">⭐</span>
-                <span>{lang === 'fr' ? `Niveau forcé : ${m.forcedLevel}` : `Forced level: ${m.forcedLevel}`}</span>
-              </div>
-            {/if}
-          </div>
-        {:else if nextEvent}
-          {@const m = nextEvent.event.modifiers}
-          <div class="popup-modifiers">
-            {#if m.forcedPokemonChance !== undefined}
-              <div class="modifier-chip muted">
-                <span class="modifier-icon">🎯</span>
-                <span>{lang === 'fr' ? `${Math.round(m.forcedPokemonChance * 100)}% chance de rencontre forcée` : `${Math.round(m.forcedPokemonChance * 100)}% forced encounter chance`}</span>
-              </div>
-            {/if}
-            {#if m.shinyRate !== undefined}
-              <div class="modifier-chip muted">
-                <span class="modifier-icon">✦</span>
-                <span>{lang === 'fr' ? `Taux Chromatique : 1/${m.shinyRate}` : `Shiny rate: 1/${m.shinyRate}`}</span>
-              </div>
-            {/if}
-            {#if m.forcedShiny}
-              <div class="modifier-chip muted">
-                <span class="modifier-icon">✦</span>
-                <span>{lang === 'fr' ? 'Pokémon forcément Chromatique' : 'Pokémon always Shiny'}</span>
-              </div>
-            {/if}
-            {#if m.forcedLevel !== undefined}
-              <div class="modifier-chip muted">
-                <span class="modifier-icon">⭐</span>
-                <span>{lang === 'fr' ? `Niveau forcé : ${m.forcedLevel}` : `Forced level: ${m.forcedLevel}`}</span>
-              </div>
-            {/if}
-          </div>
+            </div>
+          {/each}
+        {/if}
+
+        {#if activeEvents.length === 0 && upcomingEvents.length === 0}
+          <p class="no-events">{lang === 'fr' ? 'Aucun évènement en ce moment.' : 'No events right now.'}</p>
         {/if}
       </div>
     </div>
@@ -201,6 +207,20 @@
   .event-label { white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
   .event-label.muted { color: rgba(255, 255, 255, 0.4); }
 
+  .event-extra {
+    font-size: 10px;
+    font-weight: 800;
+    background: rgba(255, 180, 30, 0.25);
+    padding: 1px 5px;
+    border-radius: 8px;
+    color: #ffb41e;
+  }
+
+  .event-extra.muted {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.4);
+  }
+
   /* ── Popup ── */
   .event-backdrop {
     position: fixed;
@@ -226,6 +246,9 @@
     border-radius: 20px 20px 0 0;
     width: 100%;
     max-width: 480px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 -8px 60px rgba(255, 180, 30, 0.15);
     animation: slideUp 0.2s ease;
   }
@@ -238,33 +261,17 @@
   .popup-header {
     padding: 16px 20px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .popup-title-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    flex-shrink: 0;
   }
 
-  .popup-status {
-    font-size: 10px;
+  .popup-title {
+    font-size: 18px;
     font-weight: 900;
-    letter-spacing: 0.12em;
-    padding: 3px 8px;
-    border-radius: 6px;
-  }
-
-  .popup-status.active {
-    background: rgba(255, 180, 30, 0.2);
-    color: #ffb41e;
-    border: 1px solid rgba(255, 180, 30, 0.4);
-  }
-
-  .popup-status.upcoming {
-    background: rgba(155, 77, 202, 0.2);
-    color: #b76ee0;
-    border: 1px solid rgba(155, 77, 202, 0.4);
+    color: #f0f0f5;
+    letter-spacing: 0.02em;
   }
 
   .popup-close {
@@ -282,62 +289,111 @@
   .popup-close:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
   .popup-close svg { width: 18px; height: 18px; }
 
-  .popup-name {
-    font-size: 18px;
-    font-weight: 900;
-    color: #f0f0f5;
-    letter-spacing: 0.02em;
-  }
-
   .popup-body {
     padding: 16px 20px 24px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    overflow-y: auto;
   }
 
-  .popup-description {
-    font-size: 14px;
-    color: var(--text-secondary, #9090b0);
-    line-height: 1.6;
-  }
-
-  .popup-countdown {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
-
-  .countdown-number {
-    font-size: 36px;
+  /* Section labels */
+  .section-label {
+    font-size: 10px;
     font-weight: 900;
+    letter-spacing: 0.12em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    align-self: flex-start;
+  }
+
+  .active-label {
+    background: rgba(255, 180, 30, 0.2);
+    color: #ffb41e;
+    border: 1px solid rgba(255, 180, 30, 0.4);
+  }
+
+  .upcoming-label {
+    background: rgba(155, 77, 202, 0.2);
     color: #b76ee0;
-    line-height: 1;
+    border: 1px solid rgba(155, 77, 202, 0.4);
+    margin-top: 8px;
   }
 
-  .countdown-label {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.4);
-  }
-
-  .popup-modifiers {
+  /* Event cards */
+  .event-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .active-card {
+    border-color: rgba(255, 180, 30, 0.2);
+  }
+
+  .upcoming-card {
+    border-color: rgba(155, 77, 202, 0.15);
+  }
+
+  .event-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .event-card-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: #f0f0f5;
+  }
+
+  .event-card-countdown {
+    font-size: 11px;
+    font-weight: 700;
+    color: #b76ee0;
+    white-space: nowrap;
+  }
+
+  .event-card-desc {
+    font-size: 13px;
+    color: var(--text-secondary, #9090b0);
+    line-height: 1.5;
+  }
+
+  .event-card-desc.muted {
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .event-card-modifiers {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .modifier-chip {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 10px;
-    font-size: 13px;
+    font-size: 12px;
     color: #f0f0f5;
   }
 
   .modifier-chip.muted { color: rgba(255, 255, 255, 0.4); }
-  .modifier-icon { font-size: 15px; flex-shrink: 0; }
+  .modifier-icon { font-size: 14px; flex-shrink: 0; }
+
+  .no-events {
+    font-size: 14px;
+    color: var(--text-secondary, #9090b0);
+    text-align: center;
+    padding: 20px 0;
+  }
 </style>
