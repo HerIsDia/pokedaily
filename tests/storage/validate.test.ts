@@ -143,6 +143,32 @@ describe('parseState', () => {
     expect(problems.length).toBeGreaterThanOrEqual(4);
   });
 
+  describe('Pokémon boosté de la roulette', () => {
+    it('est relu tel quel', () => {
+      const { state, problems } = parseState(
+        { rouletteBoost: { month: '2026-05', id: 25 } },
+        lookup,
+      );
+      expect(problems).toEqual([]);
+      expect(state.rouletteBoost).toEqual({ month: '2026-05', id: 25 });
+    });
+
+    it.each([
+      [{ month: '2026-13', id: 25 }],
+      [{ month: '2026-05', id: 99999 }],
+      [{ month: 5, id: 25 }],
+      ['oups'],
+    ])('ignore un boost abîmé (%j) et le dit', (boost) => {
+      const { state, problems } = parseState({ rouletteBoost: boost }, lookup);
+      expect(state.rouletteBoost).toBeNull();
+      expect(problems).toHaveLength(1);
+    });
+
+    it('absent : null, sans problème', () => {
+      expect(parseState({}, lookup).state.rouletteBoost).toBeNull();
+    });
+  });
+
   describe('boîtes spéciales', () => {
     it('refuse les boîtes mal formées', () => {
       const bad = [

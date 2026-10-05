@@ -90,6 +90,15 @@ describe('dépôt IndexedDB', () => {
     expect(loaded.state.caughtShiny).toEqual([6]);
   });
 
+  it('sauvegarde et relit le Pokémon boosté de la roulette', async () => {
+    const repo = await open();
+    const s0 = (await repo.load()).state;
+    const s1 = { ...s0, rouletteBoost: { month: '2026-05', id: 25 } };
+    await repo.save(s0, s1);
+    repo.close();
+    expect((await (await open()).load()).state.rouletteBoost).toEqual({ month: '2026-05', id: 25 });
+  });
+
   it("n'écrit que ce qui a changé et supprime ce qui disparaît", async () => {
     const repo = await open();
     const s0 = (await repo.load()).state;

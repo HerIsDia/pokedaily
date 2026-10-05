@@ -4,6 +4,9 @@ import type { DrawResult } from '../../src/core/draw';
 import {
   NotEnoughTicketsError,
   addTickets,
+  boostFor,
+  playRoulette,
+  setRouletteBoost,
   allEntries,
   applyDailyDraw,
   caughtForms,
@@ -315,5 +318,72 @@ describe('collection : espèces et formes (Pokédex séparé)', () => {
     const isForm = (id: number) => id > 10000;
     expect([...caughtSpecies(state, speciesOf)].sort((a, b) => a - b)).toEqual([6, 25]);
     expect(caughtForms(state, isForm)).toEqual([10034]);
+  });
+});
+
+describe('V-Roulette : un tour complet', () => {
+  const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+  const base = (tickets: number): GameState => ({
+    ...applyDailyDraw(emptyGameState(), result(entry('2026-05-01', 25, { rename: 'Sparky' }))),
+    tickets,
+  });
+  const play = (state: GameState, over: Partial<Parameters<typeof playRoulette>[1]> = {}) =>
+    playRoulette(state, {
+      ids,
+      shinySlots: [],
+      boostedId: null,
+      rng: seededRng(7),
+      pool: testPool,
+      ...over,
+    });
+
+  it('remplace le Pokémon du jour, dépense UN ticket, garde le jour, efface le surnom', () => {
+    const before = base(3);
+    const { state, index, prize } = play(before);
+    expect(state.tickets).toBe(2);
+    expect(ids[index]).toBe(prize.id);
+    expect(todayEntry(state)).toEqual(prize);
+    expect(prize.day).toBe('2026-05-01');
+    expect(prize.rename).toBe('');
+    expect(state.caught).toContain(prize.id);
+    expect(before.tickets).toBe(3); // l'ancien état n'est pas modifié
+  });
+
+  it('sans ticket : erreur claire, et AUCUN jet de hasard consommé', () => {
+    let draws = 0;
+    const rng = { next: () => (draws++, 0.5) };
+    expect(() => play(base(0), { rng })).toThrow(NotEnoughTicketsError);
+    expect(draws).toBe(0);
+  });
+
+  it('sans Pokémon du jour : erreur, rien de dépensé', () => {
+    expect(() => play({ ...emptyGameState(), tickets: 5 })).toThrow(RangeError);
+  });
+
+  it('une case « shiny garanti » donne un shiny (si le Pokémon peut l’être)', () => {
+    const { prize } = play(base(1), { ids: [1, 1, 1, 1], shinySlots: [0, 1, 2, 3] });
+    expect(prize.isShiny).toBe(true);
+    // #7 ne peut pas être shiny dans le monde de test : jamais de shiny, même « garanti »
+    const none = play(base(1), { ids: [7], shinySlots: [0] });
+    expect(none.prize.isShiny).toBe(false);
+  });
+
+  it('un Pokémon boosté gagne environ 1 fois sur 4', () => {
+    let wins = 0;
+    const rng = seededRng(99);
+    const N = 4000;
+    for (let i = 0; i < N; i++) {
+      const { prize } = play(base(1), { boostedId: 5, rng });
+      if (prize.id === 5) wins++;
+    }
+    expect(wins / N).toBeGreaterThan(0.22);
+    expect(wins / N).toBeLessThan(0.28);
+  });
+
+  it('le boost est propre à un mois', () => {
+    const s = setRouletteBoost(emptyGameState(), '2026-05', 25);
+    expect(boostFor(s, '2026-05')).toBe(25);
+    expect(boostFor(s, '2026-06')).toBeNull();
+    expect(boostFor(setRouletteBoost(s, '2026-05', null), '2026-05')).toBeNull();
   });
 });

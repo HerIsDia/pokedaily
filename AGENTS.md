@@ -6,7 +6,7 @@
 ## Le projet en 3 lignes
 
 **Pokédaily** — PWA « Quel Pokémon es-tu aujourd'hui ? » : un Pokémon par jour (espèces 1–1025 **et formes alternatives**), avec nature, niveau et 1/69 de shiny. Tout est **local** (IndexedDB), aucun serveur à nous, aucun compte. Interface FR/EN, thème sombre Écarlate/Violet.
-**État** : phases 1 à 4 faites (outillage, données Pokémon FR/EN, images, **noyau de jeu testé**, **sauvegarde IndexedDB + état partagé + export/import**). L'écran affiche le **vrai Pokémon du jour**, tiré et sauvegardé, qui change à minuit sans recharger. Écrans : carte du jour (avec **partage en image**), historique, Pokédex/Shinydex/Formes, statistiques, À propos (export/import). Phase 5 en cours, écran par écran (`docs/REBUILD_PLAN.md` §6.3) : reste roulette, team, changelog, mode dev.
+**État** : phases 1 à 4 faites (outillage, données Pokémon FR/EN, images, **noyau de jeu testé**, **sauvegarde IndexedDB + état partagé + export/import**). L'écran affiche le **vrai Pokémon du jour**, tiré et sauvegardé, qui change à minuit sans recharger. Écrans : carte du jour (avec **partage en image** et bandeau d'événements), historique, Pokédex/Shinydex/Formes, statistiques, Pokékit (V-Roulette, team du mois), À propos (export/import). Phase 5 en cours, écran par écran (`docs/REBUILD_PLAN.md` §6.3) : reste changelog, mode dev.
 
 ## Décisions de direction (Diamant) — à respecter
 
@@ -73,6 +73,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `assets/extra/` | (optionnel, absent pour l'instant) images déposées à la main : `<id>.png`, `<id>s.png` pour le shiny ; à créditer |
 | `src/app/boot.ts` | Démarrage : ouvre la sauvegarde (ou le mode mémoire), monte l'écran, tire le Pokémon du jour, nettoie la v3.1 |
 | `src/features/card/` | Carte du jour (reçoit un état en lecture + `onRename`) ; `share-image.ts` (image PNG de la carte : contenu / dessin / assemblage séparés) et `share-actions.ts` (Partager / Copier / Télécharger) ; `preview.ts` : **aperçu de dev** `/?preview=10034&shiny=1&level=88&nature=timid` (en mémoire, **rien n'est sauvegardé**) |
+| `src/features/kit/` | Pokékit : `kit.ts` (menu), `roulette.ts` (V-Roulette), `team.ts` (team du mois), `spin-schedule.ts` (le « film » de l'animation, pur) |
 | `src/features/events/` | Bandeau + liste des événements (`events-ui.ts`), étiquettes des effets (`modifiers.ts`) |
 | `src/ui/dialog.ts` | `createModal` : fenêtre modale accessible (élément natif `<dialog>` : focus, Échap, retour du focus). **À utiliser pour toute fenêtre** |
 | `src/features/stats/` | Statistiques (`stats.ts` pur : séries en jours locaux, totaux, classements + `stats-view.ts`) |
@@ -111,7 +112,8 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 
 9. **`window.indexedDB` peut LEVER une erreur rien qu'à sa lecture** (stockage bloqué) : passe par `browserIndexedDb()` (`storage/db.ts`), jamais `globalThis.indexedDB` directement. Cas couvert par un test unitaire **et** vérifié dans Chromium (un `getter` qui lève).
 10. **Transactions IndexedDB** : ne fais **aucun** `await` d'autre chose qu'une requête IndexedDB au milieu d'une transaction (elle se terminerait toute seule). Les tests d'atomicité utilisent `fake-indexeddb` (une valeur non clonable fait échouer la sauvegarde ; il ne doit rien rester).
-11. **Import** : il remplace TOUT, y compris le Pokémon d'aujourd'hui (un fichier ancien redonne un nouveau tirage pour aujourd'hui). C'est voulu et dit dans la confirmation.
+11. **Format de sauvegarde** : `STATE_SCHEMA_VERSION` reste à **1** tant que l'app n'est pas lancée ; on y a AJOUTÉ des champs facultatifs (ex. `rouletteBoost`), lus avec une valeur par défaut. Après le lancement, tout changement incompatible exige un numéro de version + une migration testée.
+12. **Import** : il remplace TOUT, y compris le Pokémon d'aujourd'hui (un fichier ancien redonne un nouveau tirage pour aujourd'hui). C'est voulu et dit dans la confirmation.
 
 ## Ne pas faire
 

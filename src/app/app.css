@@ -148,3 +148,12 @@
   font-size: 12px;
   color: var(--text-muted);
 }
+
+/* 5 entrées dans le menu du bas : on resserre un peu les petits écrans. */
+@media (max-width: 380px) {
+  .nav-link {
+    padding-inline: 2px;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+}

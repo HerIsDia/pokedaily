@@ -285,3 +285,105 @@ describe('mode sans sauvegarde', () => {
     expect(game.today.get()).not.toBeNull();
   });
 });
+
+describe('V-Roulette et team du mois', () => {
+  const box = Array.from({ length: 16 }, (_, i) => i + 1);
+  const request = { ids: box, shinySlots: [], boostedId: null };
+
+  /** Un jeu démarré, avec `tickets` tickets dans la sauvegarde. */
+  async function started(tickets: number, seed = 1) {
+    const repo = await openRepo();
+    const game = make(repo, seed);
+    await game.start();
+    // Nombre de tickets exact (tirer Victini le jour même en offre un) : on le fixe.
+    await game.importState({ ...game.state.get(), tickets });
+    return { repo, game };
+  }
+
+  it('le premier passage offre UN ticket, jamais deux', async () => {
+    const { game } = await started(0);
+    expect(await game.claimRouletteBonus()).toBe(true);
+    expect(game.state.get().tickets).toBe(1);
+    expect(await game.claimRouletteBonus()).toBe(false);
+    expect(game.state.get().tickets).toBe(1);
+  });
+
+  it('un tour remplace le Pokémon du jour, coûte un ticket, et survit au rechargement', async () => {
+    const { game } = await started(2);
+    const outcome = await game.spin(request);
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(box[outcome.index]).toBe(outcome.prize.id);
+    expect(game.today.get()).toEqual(outcome.prize);
+    expect(game.state.get().tickets).toBe(1);
+    game.close();
+
+    const again = make(await openRepo(), 5);
+    await again.start();
+    expect(again.today.get()).toEqual(outcome.prize);
+    expect(again.state.get().tickets).toBe(1);
+  });
+
+  it('sans ticket : refus, et RIEN ne change (ni Pokémon ni ticket)', async () => {
+    const { game } = await started(0);
+    const before = game.state.get();
+    expect(await game.spin(request)).toEqual({ ok: false, reason: 'no_tickets' });
+    expect(game.state.get()).toBe(before);
+  });
+
+  it('un tour dont la sauvegarde échoue ne perd pas le ticket : il reste affiché avec son Pokémon', async () => {
+    const { repo, game } = await started(1);
+    repo.save = () => Promise.reject(new Error('quota'));
+    const outcome = await game.spin(request);
+    expect(outcome.ok).toBe(true);
+    // Ticket et Pokémon vont ENSEMBLE : si l'un est visible, l'autre aussi.
+    expect(game.state.get().tickets).toBe(0);
+    expect(game.today.get()).toEqual(outcome.ok ? outcome.prize : null);
+    expect(game.saveFailed.get()).toBe(true);
+  });
+
+  it('deux onglets : le 2ᵉ tour repart des données fraîches (pas de ticket dépensé deux fois)', async () => {
+    const a = await started(1);
+    const b = make(await openRepo(), 9);
+    await b.start();
+    expect(b.state.get().tickets).toBe(1);
+    expect((await a.game.spin(request)).ok).toBe(true); // A utilise l'unique ticket
+    // B croit encore avoir 1 ticket : conflit → relecture → plus aucun ticket
+    expect(await b.spin(request)).toEqual({ ok: false, reason: 'no_tickets' });
+    expect(b.state.get().tickets).toBe(0);
+  });
+
+  it('le Pokémon boosté est enregistré pour le mois', async () => {
+    const { game } = await started(0);
+    await game.setBoost('2026-05', 7);
+    game.close();
+    const again = make(await openRepo());
+    await again.start();
+    expect(again.state.get().rouletteBoost).toEqual({ month: '2026-05', id: 7 });
+    await again.setBoost('2026-05', null);
+    expect(again.state.get().rouletteBoost).toBeNull();
+  });
+
+  it('la team du mois est créée une seule fois par mois, puis relue', async () => {
+    const { game } = await started(0);
+    expect(game.currentMonth()).toBe('2026-05');
+    await game.ensureMonthlyTeam('2026-05');
+    const team = game.state.get().monthlyTeam;
+    expect(team?.month).toBe('2026-05');
+    expect(team?.pokemon).toHaveLength(6);
+    expect(new Set(team?.pokemon.map((p) => p.id)).size).toBe(6);
+    await game.ensureMonthlyTeam('2026-05');
+    expect(game.state.get().monthlyTeam).toBe(team); // inchangée
+    game.close();
+
+    const again = make(await openRepo(), 77);
+    await again.start();
+    expect(again.state.get().monthlyTeam).toEqual(team);
+    await again.ensureMonthlyTeam('2026-06'); // nouveau mois : nouvelle team
+    expect(again.state.get().monthlyTeam?.month).toBe('2026-06');
+    // les Pokémon de la team comptent pour la collection
+    for (const p of again.state.get().monthlyTeam!.pokemon) {
+      expect(again.state.get().caught).toContain(p.id);
+    }
+  });
+});

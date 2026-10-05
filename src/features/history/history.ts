@@ -21,7 +21,7 @@ export interface HistoryDeps {
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-function monthLabel(month: MonthView, lang: Lang): string {
+export function monthLabel(month: Pick<MonthView, 'year' | 'month'>, lang: Lang): string {
   return capitalize(
     new Intl.DateTimeFormat(localeOf(lang), {
       month: 'long',

@@ -51,6 +51,7 @@ function richState(): GameState {
   s = applyDailyDraw(s, draw(entry('2026-03-17', 25, { rename: 'Pika' })));
   const box = buildSpecialBox('lucky_day', '2026-03-18', seededRng(1), testPool);
   s = applyDailyDraw(s, draw(entry('2026-03-18', 6, { isShiny: true }), { boxes: [box] }));
+  s = { ...s, rouletteBoost: { month: '2026-03', id: 25 } };
   return setMonthlyTeam(s, { month: '2026-03', pokemon: [entry('2026-03-01', 150)] });
 }
 

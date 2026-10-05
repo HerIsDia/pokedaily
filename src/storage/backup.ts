@@ -29,6 +29,7 @@ export interface BackupFile {
     caught: number[];
     caughtShiny: number[];
     rouletteBonusClaimed: boolean;
+    rouletteBoost: GameState['rouletteBoost'];
     monthlyTeam: GameState['monthlyTeam'];
   };
 }
@@ -51,6 +52,7 @@ export function buildBackup(
       caught: state.caught,
       caughtShiny: state.caughtShiny,
       rouletteBonusClaimed: state.rouletteBonusClaimed,
+      rouletteBoost: state.rouletteBoost,
       monthlyTeam: state.monthlyTeam,
     },
   };

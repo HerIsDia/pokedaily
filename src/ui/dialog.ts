@@ -16,6 +16,8 @@ export interface ModalOptions {
 
 export interface Modal {
   element: HTMLDialogElement;
+  /** Pendant qu'une action est en cours, Échap et le bouton Fermer sont sans effet. */
+  setBusy(busy: boolean): void;
   open(): void;
   close(): void;
 }
@@ -78,11 +80,23 @@ export function createModal({
   );
   close.setAttribute('aria-label', closeLabel());
   scope.add(() => {
+    busy = false;
     if (element.open) api.close();
+  });
+
+  let busy = false;
+  // Échap (événement `cancel`) : refusé tant que la fenêtre est occupée.
+  element.addEventListener('cancel', (event) => {
+    if (busy) event.preventDefault();
   });
 
   const api: Modal = {
     element,
+    setBusy(value) {
+      busy = value;
+      close.disabled = value;
+      element.toggleAttribute('data-busy', value);
+    },
     open() {
       if (element.open) return;
       onOpen?.();
@@ -92,6 +106,7 @@ export function createModal({
       close.focus();
     },
     close() {
+      if (busy) return;
       if (typeof element.close === 'function') element.close();
       else element.removeAttribute('open');
     },

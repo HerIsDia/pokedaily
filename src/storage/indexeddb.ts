@@ -32,6 +32,7 @@ const META_FIELDS = [
   'caught',
   'caughtShiny',
   'rouletteBonusClaimed',
+  'rouletteBoost',
   'monthlyTeam',
 ] as const satisfies readonly (keyof GameState)[];
 

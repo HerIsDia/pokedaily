@@ -6,6 +6,9 @@ import { createHistoryView } from '../features/history/history';
 import { createHomeView } from '../features/home/home';
 import { createPokedexView } from '../features/pokedex/pokedex';
 import type { Game } from '../state/game';
+import { createKitView } from '../features/kit/kit';
+import { createRouletteView } from '../features/kit/roulette';
+import { createTeamView } from '../features/kit/team';
 import { createStatsView } from '../features/stats/stats-view';
 import { createAboutView } from './about';
 import { icon, type IconName } from './icons';
@@ -31,17 +34,27 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
     { path: 'history', view: createHistoryView({ i18n, game }) },
     { path: 'pokedex', view: createPokedexView({ i18n, game }) },
     { path: 'stats', view: createStatsView({ i18n, game }) },
+    { path: 'kit', view: createKitView({ i18n, game }) },
+    { path: 'kit/roulette', view: createRouletteView({ i18n, game }) },
+    { path: 'kit/team', view: createTeamView({ i18n, game }) },
     { path: 'about', view: createAboutView({ i18n, game }) },
   ];
   const router = createRouter(outlet, routes, { fallback: '' });
 
   /** Un lien du menu : `aria-current="page"` quand on est dessus. */
-  const link = (path: string, name: IconName, label: () => string, className: string) => {
+  const link = (
+    path: string,
+    name: IconName,
+    label: () => string,
+    className: string,
+    /** Les écrans qui comptent comme « dans cette rubrique » (ex. kit/roulette pour kit). */
+    isCurrent: (route: string) => boolean = (route) => route === path,
+  ) => {
     const text = h('span', { class: 'nav-label' }, bindText(scope, [lang], label));
     const a = h('a', { class: className, href: `#/${path}` }, icon(name), text);
     bindAttr(scope, a, 'aria-label', [lang], label);
     bindAttr(scope, a, 'aria-current', [router.current], () =>
-      router.current.get() === path ? 'page' : undefined,
+      isCurrent(router.current.get()) ? 'page' : undefined,
     );
     return a;
   };
@@ -79,6 +92,13 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
     link('history', 'history', () => t('nav.history'), 'nav-link'),
     link('pokedex', 'pokedex', () => t('nav.pokedex'), 'nav-link'),
     link('stats', 'stats', () => t('nav.stats'), 'nav-link'),
+    link(
+      'kit',
+      'kit',
+      () => t('nav.kit'),
+      'nav-link',
+      (route) => route === 'kit' || route.startsWith('kit/'),
+    ),
   );
   bindAttr(scope, tabBar, 'aria-label', [lang], () => t('nav.main'));
 

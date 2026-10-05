@@ -4,6 +4,8 @@ import { drawOfTheDay, type DrawResult } from './draw';
 import type { GameEvent } from './events/types';
 import { INITIAL_FORM_PITY, type FormPity } from './form-pity';
 import type { DrawPool, PokemonEntry } from './model';
+import { createPokemon } from './pokemon';
+import { spinRoulette } from './roulette';
 import { clampName } from './names';
 import type { Rng } from './rng';
 
@@ -23,6 +25,13 @@ export interface MonthlyTeam {
   pokemon: PokemonEntry[];
 }
 
+/** Le Pokémon « boosté » choisi pour la V-Roulette (valable pour un mois, comme les boîtes). */
+export interface RouletteBoost {
+  /** « AAAA-MM » */
+  month: string;
+  id: number;
+}
+
 export interface GameState {
   /** Le Pokémon de chaque jour d'ouverture, indexé par jour (AAAA-MM-JJ). */
   entries: Record<Day, PokemonEntry>;
@@ -38,6 +47,8 @@ export interface GameState {
   caughtShiny: number[];
   /** Le ticket offert au tout premier passage à la V-Roulette a-t-il été donné ? */
   rouletteBonusClaimed: boolean;
+  /** Le boost choisi ce mois-ci (un nouveau mois l'efface : voir `boostFor`). */
+  rouletteBoost: RouletteBoost | null;
   monthlyTeam: MonthlyTeam | null;
 }
 
@@ -51,6 +62,7 @@ export function emptyGameState(): GameState {
     caught: [],
     caughtShiny: [],
     rouletteBonusClaimed: false,
+    rouletteBoost: null,
     monthlyTeam: null,
   };
 }
@@ -201,4 +213,48 @@ export function setMonthlyTeam(state: GameState, team: MonthlyTeam): GameState {
     if (entry.isShiny) caughtShiny = withId(caughtShiny, entry.id);
   }
   return { ...state, monthlyTeam: team, caught, caughtShiny };
+}
+
+/** Le Pokémon boosté valable pour `month`, ou `null` (le choix d'un mois ne passe pas au suivant). */
+export function boostFor(state: GameState, month: string): number | null {
+  return state.rouletteBoost?.month === month ? state.rouletteBoost.id : null;
+}
+
+/** Choisit (ou retire, avec `null`) le Pokémon boosté du mois. */
+export function setRouletteBoost(state: GameState, month: string, id: number | null): GameState {
+  return { ...state, rouletteBoost: id === null ? null : { month, id } };
+}
+
+export interface RoulettePlay {
+  /** Les 16 Pokémon de la boîte choisie. */
+  ids: readonly number[];
+  /** Cases qui donnent un shiny garanti (boîtes spéciales). */
+  shinySlots: readonly number[];
+  boostedId: number | null;
+  rng: Rng;
+  pool: DrawPool;
+}
+
+/**
+ * UN tour de V-Roulette, en un seul mouvement : on tire la case gagnante, on fabrique le
+ * Pokémon, il REMPLACE celui du jour et UN ticket est dépensé. S'il manque un ticket ou un
+ * Pokémon du jour, rien n'est tiré (aucun jet de hasard consommé).
+ */
+export function playRoulette(
+  state: GameState,
+  { ids, shinySlots, boostedId, rng, pool }: RoulettePlay,
+): { state: GameState; index: number; prize: PokemonEntry } {
+  if (state.lastDrawDay === null || !todayEntry(state))
+    throw new RangeError('Aucun Pokémon du jour à remplacer.');
+  if (state.tickets < 1) throw new NotEnoughTicketsError();
+  const { index, id } = spinRoulette(rng, ids, boostedId);
+  const prize = createPokemon({
+    id,
+    day: state.lastDrawDay,
+    rng,
+    pool,
+    forcedShiny: shinySlots.includes(index),
+  });
+  const next = replaceTodayWithPrize(state, prize);
+  return { state: next, index, prize: next.entries[state.lastDrawDay] as PokemonEntry };
 }

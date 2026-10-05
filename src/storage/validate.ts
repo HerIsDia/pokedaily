@@ -35,6 +35,7 @@ export interface RawState {
   caught?: unknown;
   caughtShiny?: unknown;
   rouletteBonusClaimed?: unknown;
+  rouletteBoost?: unknown;
   monthlyTeam?: unknown;
 }
 
@@ -45,6 +46,7 @@ const MAX_TICKETS = 1_000_000;
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
+const isMonth = (v: string): boolean => /^\d{4}-(0[1-9]|1[0-2])$/.test(v);
 
 /** Valide UNE entrée ; renvoie l'entrée nettoyée ou le motif du refus. */
 export function parseEntry(
@@ -128,7 +130,7 @@ function parseTeam(raw: unknown, lookup: StateLookup, problems: string[]): Month
   if (
     !isObject(raw) ||
     typeof raw.month !== 'string' ||
-    !/^\d{4}-(0[1-9]|1[0-2])$/.test(raw.month) ||
+    !isMonth(raw.month) ||
     !Array.isArray(raw.pokemon)
   ) {
     problems.push('team du mois illisible (ignorée)');
@@ -192,6 +194,19 @@ export function parseState(
     problems.push(`nombre de tickets « ${String(raw.tickets)} » invalide (remis à zéro)`);
 
   state.rouletteBonusClaimed = raw.rouletteBonusClaimed === true;
+
+  const boost = raw.rouletteBoost;
+  if (
+    isObject(boost) &&
+    typeof boost.month === 'string' &&
+    isMonth(boost.month) &&
+    isInt(boost.id) &&
+    lookup.hasId(boost.id)
+  ) {
+    state.rouletteBoost = { month: boost.month, id: boost.id };
+  } else if (boost !== undefined && boost !== null) {
+    problems.push('Pokémon boosté de la roulette illisible (ignoré)');
+  }
 
   // ── Boîtes spéciales ────────────────────────────────────────────────────
   if (Array.isArray(raw.boxes)) {

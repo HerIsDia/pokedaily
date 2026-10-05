@@ -1,12 +1,19 @@
 import { localDay } from '../core/dates';
 import type { GameEvent } from '../core/events/types';
 import {
+  NotEnoughTicketsError,
+  claimRouletteBonus,
   emptyGameState,
   ensureTodayDraw,
+  playRoulette,
   renameEntry,
+  setMonthlyTeam,
+  setRouletteBoost,
   todayEntry,
   type GameState,
 } from '../core/game-state';
+import { monthKey } from '../core/dates';
+import { buildMonthlyTeam } from '../core/team';
 import type { DrawPool, PokemonEntry } from '../core/model';
 import { mathRng, type Rng } from '../core/rng';
 import { buildBackup, parseBackup, type BackupResult } from '../storage/backup';
@@ -52,6 +59,18 @@ export interface GameDeps {
 
 export type ImportOutcome = { ok: true } | { ok: false };
 
+export type SpinOutcome =
+  | { ok: true; index: number; prize: PokemonEntry }
+  | { ok: false; reason: 'no_tickets' | 'no_pokemon' };
+
+export interface SpinRequest {
+  /** Les 16 Pokémon de la boîte choisie. */
+  ids: readonly number[];
+  /** Cases au shiny garanti (boîtes spéciales). */
+  shinySlots: readonly number[];
+  boostedId: number | null;
+}
+
 export interface Game {
   state: ReadStore<GameState>;
   /** Le Pokémon du jour (`null` tant que rien n'est tiré). */
@@ -69,6 +88,19 @@ export interface Game {
   /** Tire le Pokémon du jour s'il ne l'est pas encore (minuit passé, par exemple). */
   ensureToday(): Promise<void>;
   rename(day: string, name: string): Promise<void>;
+  /** Le ticket offert au tout premier passage à la V-Roulette. `true` s'il vient d'être donné. */
+  claimRouletteBonus(): Promise<boolean>;
+  /** Choisit (ou retire) le Pokémon boosté du mois. */
+  setBoost(month: string, id: number | null): Promise<void>;
+  /**
+   * Un tour de V-Roulette : le résultat est décidé, le Pokémon du jour remplacé et UN ticket
+   * dépensé en une seule sauvegarde. Sans ticket : rien n'est touché.
+   */
+  spin(request: SpinRequest): Promise<SpinOutcome>;
+  /** Crée la team du mois `month` si elle n'existe pas encore. */
+  ensureMonthlyTeam(month: string): Promise<void>;
+  /** Le mois (« AAAA-MM ») d'aujourd'hui, avec l'horloge du jeu. */
+  currentMonth(): string;
   exportBackup(): { filename: string; json: string };
   /** Lit un fichier d'import SANS rien modifier. */
   readBackup(text: string): BackupResult;
@@ -177,6 +209,51 @@ export function createGame(deps: GameDeps): Game {
     rename(day, name) {
       return enqueue(() => commit((current) => renameEntry(current, day, name)));
     },
+
+    async claimRouletteBonus() {
+      let granted = false;
+      await enqueue(() =>
+        commit((current) => {
+          granted = !current.rouletteBonusClaimed; // recalculé si on rejoue après un conflit
+          return claimRouletteBonus(current);
+        }),
+      );
+      return granted;
+    },
+
+    setBoost(month, id) {
+      return enqueue(() => commit((current) => setRouletteBoost(current, month, id)));
+    },
+
+    spin(request) {
+      return enqueue(async (): Promise<SpinOutcome> => {
+        let outcome: SpinOutcome = { ok: false, reason: 'no_pokemon' };
+        try {
+          await commit((current) => {
+            const played = playRoulette(current, { ...request, rng, pool });
+            outcome = { ok: true, index: played.index, prize: played.prize };
+            return played.state;
+          });
+        } catch (failure) {
+          if (failure instanceof NotEnoughTicketsError) return { ok: false, reason: 'no_tickets' };
+          if (failure instanceof RangeError) return { ok: false, reason: 'no_pokemon' };
+          throw failure;
+        }
+        return outcome;
+      });
+    },
+
+    ensureMonthlyTeam(month) {
+      return enqueue(() =>
+        commit((current) => {
+          if (current.monthlyTeam?.month === month) return current;
+          const day = localDay(now());
+          return setMonthlyTeam(current, { month, pokemon: buildMonthlyTeam(day, rng, pool) });
+        }),
+      );
+    },
+
+    currentMonth: () => monthKey(localDay(now())),
 
     exportBackup() {
       return buildBackup(state.get(), now());

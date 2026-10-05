@@ -1,0 +1,339 @@
+.kit-page,
+.team-page,
+.roulette-page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 16px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kit-title {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.kit-subtitle {
+  margin-top: -6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.back-link {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-light);
+  text-decoration: none;
+}
+
+.kit-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.kit-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: inherit;
+  text-decoration: none;
+}
+
+.kit-tile:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-accent);
+}
+
+.kit-tile-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-subtle);
+  color: var(--accent-light);
+}
+
+.kit-tile-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.kit-tile h2 {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.kit-tile p {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.ticket-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Team du mois */
+.team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+}
+
+.team-card,
+.team-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--type-color, var(--accent));
+}
+
+.team-card[data-shiny] {
+  border-color: var(--shiny-color);
+}
+
+.team-card .team-img,
+.team-card .sprite-missing {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.team-name {
+  font-size: 17px;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.team-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.team-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.team-note {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* V-Roulette */
+.roulette-tickets {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent-light);
+}
+
+.roulette-notice {
+  min-height: 1.3em;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.box-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.box-tab {
+  padding: 6px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.box-tab.active {
+  background: var(--accent-subtle);
+  border-color: var(--border-accent);
+  color: var(--accent-light);
+}
+
+.box-grid,
+.spin-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/* Dans la fenêtre, la grille est plus compacte pour laisser la place au résultat. */
+.spin-grid {
+  width: min(100%, 260px);
+  margin-inline: auto;
+}
+
+.box-cell,
+.spin-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.box-cell {
+  cursor: pointer;
+}
+
+.box-cell:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.box-cell.boosted {
+  border-color: var(--shiny-color);
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.35);
+}
+
+.box-cell img,
+.spin-cell img,
+.box-cell .sprite-missing,
+.spin-cell .sprite-missing {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+}
+
+.boost-star {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: 12px;
+}
+
+.boost-hint,
+.roulette-hint {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.roulette-hint[hidden] {
+  display: none;
+}
+
+.spin-btn {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.spin-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.spin-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.spin-cell.lit {
+  border-color: var(--accent-light);
+  background: var(--accent-subtle);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.spin-cell.winner {
+  border-color: var(--shiny-color);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.5);
+}
+
+.spin-status {
+  min-height: 1.4em;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.spin-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.spin-result:empty {
+  display: none;
+}
+
+.spin-result .spin-result-img,
+.spin-result .sprite-missing {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+.spin-result-meta {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.spin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spin-actions .action-btn {
+  text-decoration: none;
+}
+
+/* Écran court : une fois le résultat connu, on masque la grille pour que les boutons restent visibles. */
+@media (max-height: 760px) {
+  .spin-body.done .spin-grid {
+    display: none;
+  }
+}
