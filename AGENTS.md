@@ -73,6 +73,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `assets/extra/` | (optionnel, absent pour l'instant) images déposées à la main : `<id>.png`, `<id>s.png` pour le shiny ; à créditer |
 | `src/app/boot.ts` | Démarrage : ouvre la sauvegarde (ou le mode mémoire), monte l'écran, tire le Pokémon du jour, nettoie la v3.1 |
 | `src/features/card/` | Carte du jour (reçoit un état en lecture + `onRename`) ; `share-image.ts` (image PNG de la carte : contenu / dessin / assemblage séparés) et `share-actions.ts` (Partager / Copier / Télécharger) ; `preview.ts` : **aperçu de dev** `/?preview=10034&shiny=1&level=88&nature=timid` (en mémoire, **rien n'est sauvegardé**) |
+| `src/features/history/` · `shared/` | Calendrier mensuel (`calendar.ts` pur + `history.ts`) · `shared/sprite.ts` (`createSprite` : image avec repère « ? » si absente, à réutiliser partout) |
 | `src/features/home/` · `backup/` | Accueil (chargement/erreur, bandeaux, carte) · panneau « Ma collection » (export/import avec confirmation) |
 | `src/pwa/sw.ts` | Service worker (shell seulement pour l'instant) |
 | `tests/` | Miroir de `src/` |

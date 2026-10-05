@@ -1,0 +1,249 @@
+.history-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-title {
+  padding-left: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.history-empty {
+  padding: 48px 16px;
+  text-align: center;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.history-empty[hidden],
+.cal-wrap[hidden] {
+  display: none;
+}
+
+.cal-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cal-month-label {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cal-arrow {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-accent);
+  border-radius: 10px;
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.cal-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.cal-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.cal-weekday {
+  padding-bottom: 4px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cal-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.cal-empty {
+  border-color: transparent;
+}
+
+.cal-cell.has-entry {
+  background: var(--bg-card);
+  cursor: pointer;
+}
+
+.cal-cell.has-entry:hover {
+  background: var(--bg-card-hover);
+}
+
+.cal-cell img,
+.cal-cell .sprite-missing {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+}
+
+.sprite-missing {
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  color: var(--text-muted);
+}
+
+.cal-cell.is-today {
+  border-color: var(--accent-light);
+}
+
+.cal-cell.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.shiny-dot {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 10px;
+  color: var(--shiny-color);
+}
+
+.event-dot {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--accent-light);
+}
+
+.month-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.month-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.month-dot.active {
+  background: var(--accent-light);
+  opacity: 1;
+}
+
+.detail-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--type-color, var(--accent));
+}
+
+.detail-card[data-shiny] {
+  border-color: var(--shiny-color);
+}
+
+.detail-card .detail-img,
+.detail-card .sprite-missing {
+  flex: none;
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+}
+
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.detail-name {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.detail-original,
+.detail-date {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.stat-pill,
+.shiny-pill,
+.event-pill {
+  padding: 3px 10px;
+  border-radius: var(--badge-radius);
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.shiny-pill {
+  background: rgba(255, 215, 0, 0.14);
+  color: var(--shiny-color);
+}
+
+.event-pill {
+  background: var(--accent-subtle);
+  color: var(--accent-light);
+}

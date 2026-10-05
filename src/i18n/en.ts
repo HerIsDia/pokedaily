@@ -6,6 +6,7 @@ export const en: Record<MessageKey, string> = {
   'app.tagline': 'Which Pokémon are you today?',
   'lang.label': 'Language',
   'nav.card': 'Pokémon of the day',
+  'nav.history': 'History',
   'nav.about': 'About',
 
   'card.level': 'Lv.',
@@ -29,6 +30,11 @@ export const en: Record<MessageKey, string> = {
   'about.disclaimer':
     'Pokédaily is not affiliated with Nintendo, Game Freak or The Pokémon Company. Pokémon and its characters are trademarks of their respective owners.',
   'about.version': 'Version {version}',
+
+  'history.title': 'History',
+  'history.empty': 'Your history is empty for now: come back tomorrow!',
+  'history.prev': 'Previous month',
+  'history.next': 'Next month',
 
   'home.loading': 'Opening your collection…',
   'home.error.too_new':

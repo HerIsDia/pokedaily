@@ -2,6 +2,7 @@ import { LANGS, type I18n, type Lang } from '../i18n';
 import { bindAttr, bindText, effect, h } from '../ui/dom';
 import { createRouter, type Route } from '../ui/router';
 import { Scope } from '../ui/scope';
+import { createHistoryView } from '../features/history/history';
 import { createHomeView } from '../features/home/home';
 import type { Game } from '../state/game';
 import { createAboutView } from './about';
@@ -24,6 +25,7 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
   const outlet = h('main', { class: 'app-main' });
   const routes: Route[] = [
     { path: '', view: createHomeView({ i18n, game }) },
+    { path: 'history', view: createHistoryView({ i18n, game }) },
     { path: 'about', view: createAboutView({ i18n, game }) },
   ];
   const router = createRouter(outlet, routes, { fallback: '' });
@@ -58,6 +60,7 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
       'nav',
       { class: 'app-nav' },
       link('', () => t('nav.card')),
+      link('history', () => t('nav.history')),
       link('about', () => t('nav.about')),
     ),
     h('div', { class: 'lang-switch', role: 'group' }, ...LANGS.map(langButton)),

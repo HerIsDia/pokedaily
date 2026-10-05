@@ -4,6 +4,7 @@ export const fr = {
   'app.tagline': "Quel Pokémon es-tu aujourd'hui ?",
   'lang.label': 'Langue',
   'nav.card': 'Pokémon du jour',
+  'nav.history': 'Historique',
   'nav.about': 'À propos',
 
   'card.level': 'Niv.',
@@ -27,6 +28,11 @@ export const fr = {
   'about.disclaimer':
     "Pokédaily n'est pas affilié à Nintendo, Game Freak ou The Pokémon Company. Pokémon et ses personnages sont des marques déposées de leurs propriétaires.",
   'about.version': 'Version {version}',
+
+  'history.title': 'Historique',
+  'history.empty': "Ton historique est vide pour l'instant : reviens demain !",
+  'history.prev': 'Mois précédent',
+  'history.next': 'Mois suivant',
 
   'home.loading': 'Ouverture de ta collection…',
   'home.error.too_new':
