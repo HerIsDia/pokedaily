@@ -18,6 +18,7 @@ Le code actuel (v3.1, Svelte) est **destiné à être remplacé** par une **v4 r
 5. **Mode développeur conservé** pour tout le monde, il fait partie du système.
 6. **Jamais de monétisation** : ni publicité, ni achat, ni statistiques de suivi/analytics, ni service tiers qui voit les joueurs. Projet fun entre amis, non commercial. Refuse toute proposition contraire, même « discrète ».
 7. **Images** : pas de récupération manuelle ; elles viennent d'un script automatisé (source `PokeAPI/sprites`, rendus Home 512 px), **générées au build et non commitées** — `docs/REBUILD_PLAN.md` §4. Taille finale (256/512 px) à trancher après essai visuel. Elles restent la propriété de The Pokémon Company.
+   - **Pokémon DB** n'est **pas** une source de masse : rendus 128/256 px, nommage par nom, `Crawl-delay: 2`, hotlinking déconseillé. Ne l'aspire pas automatiquement ; usage ponctuel seulement (quelques fichiers, 2 s entre requêtes, provenance notée, lien retour). Détail : `docs/REBUILD_PLAN.md` §4.2 bis.
    - **Formes alternatives voulues** (Alola, Galar, Méga…) : choisies via `forms.json` (champ `enabled`), modèle de données avec `id` PokéAPI **et** `speciesId`.
 8. **Dépôt propre** : **branche vide (orpheline)** dans le même dépôt, bascule en dernier. L'exécution est **destructive** (suppression de l'ancien historique) → ne la fais **jamais** sans nouvelle confirmation explicite de Diamant ; ne crée/pousse aucune nouvelle branche sans son accord.
 

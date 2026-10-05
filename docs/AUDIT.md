@@ -283,6 +283,7 @@ Points relevés par `svelte-check` et la lecture : popups `role="dialog"` sans `
 - **Ton dossier actuel** : 1025/1025 images normales ✅ et 1024/1025 shiny ✅ (il manque seulement `774S.png`). Pour les *espèces*, il ne manque donc presque rien. Ce qui manque massivement, ce sont les **formes** (Alola, Galar, Méga…) : le dossier n'en contient **aucune** (seuls les ids ≤ 1025 existent).
 - **PokéAPI** compte **1 351** entrées « pokémon » : **1 025 espèces + 326 formes** (ids `10001`–`10326`) ✅ ([API](https://pokeapi.co/api/v2/pokemon?limit=1)).
 - **Source `PokeAPI/sprites`, rendus Home 512×512** : sur 1 351 × 2 (normal + shiny) = **2 700 fichiers testés** ✅ (requêtes HEAD), **2 661 existent** ; les **39 absents sont tous des formes**. **Aucune image d'espèce 1–1025 ne manque** (le shiny de Minior existe chez eux).
+- **Pokémon DB** (suggéré par Diamant) : grande collection, mais sprites Home en 128 px (256 px au maximum), noms au lieu d'identifiants, `Crawl-delay: 2` et hotlinking déconseillé ✅ → pas adapté comme source automatique ; voir `REBUILD_PLAN.md` §4.2 bis.
 - **Conclusion** : un **script automatique** peut reconstituer l'ensemble complet sans aucune manipulation manuelle. Détail et options : `REBUILD_PLAN.md` §4.
 
 ### 8.3 Deuxième série de réponses (5 octobre 2026)

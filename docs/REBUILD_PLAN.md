@@ -132,6 +132,27 @@ tests/                          Vitest (core + storage via fake-indexeddb)
 | C — Lien direct vers un CDN (jsDelivr/raw GitHub) | L'app charge les images chez eux, le SW les met en cache | Aucun hébergement | Dépendance externe en direct, ❓ limites et conditions de jsDelivr non vérifiées, 1ʳᵉ visite hors-ligne impossible |
 | D — Stockage d'objets (R2, Blob…) | On héberge les fichiers ailleurs | Léger | Un service + un compte de plus à gérer |
 
+### 4.2 bis Et la source Pokémon DB ? (vérifié le 5 oct. 2026)
+
+Diamant a signalé que [Pokémon DB](https://pokemondb.net/sprites) possède une très grande collection de sprites. C'est vrai : toutes les générations (Gen 1 à 9), normal et shiny, formes, dos, et même **plus de 100 costumes Pokémon GO** pour Pikachu seul ✅. Mais pour **notre usage principal** (alimenter l'app automatiquement), ce n'est pas la bonne source :
+
+| Critère | `PokeAPI/sprites` (retenue) | Pokémon DB |
+|---|---|---|
+| Qualité des rendus « Home » | **512×512** PNG ✅ | **128×128** (`/1x/`) ; **256×256** au chemin sans taille ✅ ; pas de variante `/2x/` (404 ✅) |
+| Artworks | Official Artwork 475×475 PNG ✅ | `large` en **JPEG** (82 Ko pour Pikachu, **sans transparence**) ; version vectorielle 639×800 PNG 16 bits ; AVIF ✅ |
+| Nommage | Par **identifiant** PokéAPI (`10001.png`) : correspond 1 pour 1 à nos données | Par **nom** (`raichu-alolan`, `pikachu-sinnoh-cap`) : il faudrait un tableau de correspondance, avec un risque d'erreurs (ex. `alolan` chez eux, `alola` chez PokéAPI) |
+| Conçue pour un usage par programme | Oui (c'est le dépôt compagnon de PokéAPI) | **Non** : site web grand public |
+| Règles d'usage | Dépôt CC0 ; les images restent © The Pokémon Company ✅ | Le site demande de **ne pas faire de lien direct** (« hotlinking uses bandwidth and costs us money ») et de les **télécharger puis héberger soi-même** ou d'utiliser leur code avec **lien retour** ; les sites qui coûtent trop de bande passante **peuvent être bloqués** ✅ ([notice sur leurs pages de sprites](https://pokemondb.net/sprites/pikachu), [discussion PokéBase](https://pokemondb.net/pokebase/meta/66098/what-does-the-message-the-sprites-gallery-mean-layman-terms)) |
+| `robots.txt` | — | `Crawl-delay: 2` pour tous ; `wget` interdit ✅ ([robots.txt](https://pokemondb.net/robots.txt)) |
+| Couverture de nos 39 images manquantes | — | **Peu utile** : sur 12 noms testés (costumes de Pikachu, Koraidon/Miraidon, « partenaires »), seul `pikachu-sinnoh-cap` répond (normal + shiny). Les autres noms essayés renvoient 404, mais **mes noms sont des suppositions** ❓ : résultat non concluant |
+
+**Verdict** : on garde **`PokeAPI/sprites`** comme source du script. Aspirer ~2 700 fichiers sur Pokémon DB à chaque build, à raison d'une requête toutes les 2 s (≈ 1 h 30), serait lent, fragile et peu respectueux d'un site qui vit de la bande passante qu'on lui demanderait.
+
+**Là où Pokémon DB peut quand même servir** :
+- **Combler quelques trous à la main** (par ex. les shiny de casquettes de Pikachu absents chez PokeAPI) : une seule fois, quelques fichiers, 2 s entre chaque requête, ajoutés dans un petit dossier `assets/extra/` avec la liste de provenance. Qualité à comparer (128/256 px contre 512 px).
+- **Idées fun** : costumes Pokémon GO pour des événements, sprites « rétro » par génération. À noter que `PokeAPI/sprites` propose déjà les sprites par génération ✅ : à regarder en premier.
+- **Si on utilise un jour leurs fichiers** : les créditer et ajouter un **lien vers Pokémon DB** dans l'écran « À propos ».
+
 ### 4.3 Fonctionnement de l'option B
 
 `pnpm sprites` (idempotent, reprend où il s'est arrêté, cache local) :
