@@ -4,6 +4,8 @@
 > Tout ce qui est marqué ✅ a été **vérifié** (code lu, commande exécutée ou expérience lancée).
 > Tout ce qui est marqué ❓ est une **hypothèse non vérifiée** : à confirmer avant d'agir.
 
+> **Mise à jour du 5 octobre 2026 :** Diamant a répondu aux questions de l'audit. Ses décisions (reconstruction de zéro en TS/JS pur, jour local, pas de migration, FR+EN, mode dev conservé, **jamais de monétisation**…) sont au **§8**. Les constats ci-dessous décrivent la v3.1 et restent valables comme cahier des charges de non-régression.
+
 Documents liés : [`ARCHITECTURE.md`](ARCHITECTURE.md) (comment ça marche aujourd'hui) · [`REBUILD_PLAN.md`](REBUILD_PLAN.md) (comment reconstruire + idées fun) · [`../AGENTS.md`](../AGENTS.md) (consignes pour les agents IA).
 
 ---
@@ -25,10 +27,10 @@ Documents liés : [`ARCHITECTURE.md`](ARCHITECTURE.md) (comment ça marche aujou
 
 **Top 5 des priorités** (détail en §6)
 
-1. Supprimer la dépendance à PokéAPI à l'exécution : embarquer un petit fichier de données (noms FR/EN, types, natures) → app 100 % hors-ligne, −1 dépendance, −36 vulnérabilités prod, bundle plus léger.
+1. Supprimer la dépendance à PokéAPI à l'exécution (et, par décision de Diamant, à tout moteur de rendu) : embarquer un petit fichier de données (noms FR/EN, types, natures) → app 100 % hors-ligne, −1 dépendance, −36 vulnérabilités prod, bundle plus léger.
 2. Créer **une seule** fonction qui fabrique un Pokémon (au lieu de 5 copies) + **une seule** source de vérité pour l'état (au lieu de « chaque composant lit/écrit IndexedDB puis on recharge la page »).
 3. Corriger les 6 bugs confirmés (§6.1), dont : ticket Victini perdu si l'API échoue, Boîte Lucky Day jamais expirée, compte à rebours faux pour les événements ponctuels.
-4. Alléger les images (WebP + 256 px) et sortir l'historique lourd du dépôt si besoin.
+4. Remplacer les 95 Mo d'images du dépôt par un **script automatique** qui les récupère (espèces **et** formes) depuis une source publique et les convertit en WebP (voir §8.2 et `REBUILD_PLAN.md` §4), et repartir d'un dépôt léger.
 5. Poser le filet de sécurité : tests sur la logique pure (événements, tirage), CI GitHub Actions, lint/format.
 
 ---
@@ -228,7 +230,7 @@ Légende : 🔴 bug confirmé · 🟠 risque / fragilité · 🟡 dette · 🔵 
 - ✅ **Pas de HTML injecté** : aucun `{@html}`, `innerHTML`, `eval` dans `src/`. Le surnom (saisie utilisateur) est affiché par interpolation Svelte (échappée) et dessiné en canvas. **Pas de faille XSS identifiée.**
 - ✅ **Aucun secret** dans le dépôt (pas de `.env`, pas de clé d'API ; PokéAPI est publique). Aucun compte utilisateur, tout est local.
 - 🟡 **Données perso** : seulement le Pokémon du jour/historique, sur l'appareil. Requêtes externes : `pokeapi.co` et Google Fonts (l'IP de l'utilisateur est vue par Google → point RGPD classique, évitable en auto-hébergeant la police).
-- 🟡 **Mode développeur accessible à tous** (`Ctrl/Cmd+Shift+C`). Pas de danger (tout est local), mais n'importe qui peut s'offrir des tickets/shiny : OK pour un jeu sans classement, à assumer. ❓ Le raccourci `Ctrl+Shift+C` est aussi celui de l'inspecteur des navigateurs : conflit possible, à tester.
+- 🟡 **Mode développeur accessible à tous** (`Ctrl/Cmd+Shift+C`). Pas de danger (tout est local), mais n'importe qui peut s'offrir des tickets/shiny : OK pour un jeu sans classement. **Décision de Diamant : il fait partie intégrante du système, on le garde pour tout le monde.** ❓ Le raccourci `Ctrl+Shift+C` est aussi celui de l'inspecteur des navigateurs : conflit possible, à tester.
 - 🟡 **Pas de sauvegarde/export** : si l'utilisateur vide les données de son navigateur, il perd tout (historique, shinydex). Pour une app dont la valeur est la collection, c'est le plus gros « risque produit » (voir idées dans `REBUILD_PLAN.md`).
 - 🟡 Dépendances non à jour (§3.1) et aucun mécanisme de veille (pas de Dependabot/Renovate).
 
@@ -238,10 +240,11 @@ Points relevés par `svelte-check` et la lecture : popups `role="dialog"` sans `
 
 ### 6.7 Juridique / propriété intellectuelle (⚠️ à traiter sérieusement)
 
-- Le dépôt contient **2 050 images de Pokémon** (« official artwork » ❓ — **la provenance exacte n'est documentée nulle part**) sous une licence **MIT** : or la MIT ne peut pas relicencier des images qui appartiennent à Nintendo / Creatures / Game Freak / The Pokémon Company.
+- Le dépôt contient **2 050 images de Pokémon** (**Diamant les a récupérées sur un dépôt GitHub** ; la source la plus probable est [`PokeAPI/sprites`](https://github.com/PokeAPI/sprites), rendus « Home » 512×512 — même taille que tes fichiers, mais ❓ non prouvé ; **rien n'est documenté dans le dépôt**) sous une licence **MIT** : or la MIT ne peut pas relicencier des images qui appartiennent à Nintendo / Creatures / Game Freak / The Pokémon Company.
 - La page « Media Usage Guidelines » de The Pokémon Company International précise que l'usage de leurs contenus est limité à des usages **informatifs/éditoriaux et non commerciaux**, sans modification ni suggestion de partenariat ([source](https://pokemon.gamespress.com/Media-Usage-Guidelines)) ; ❓ ce texte vise surtout la presse : la situation d'un projet de fan reste une zone grise, **je ne suis pas juriste**.
+- Le `LICENCE.txt` de `PokeAPI/sprites` précise : *« All image contents within are Copyright The Pokémon Company. This repository is distributed under CC0 »* : le CC0 couvre la structure du dépôt source, **pas les images**.
 - Le disclaimer « non affilié à Nintendo… » est présent (README + bas de la carte). Bon réflexe.
-- **Conséquences pratiques à décider** : (a) rester non commercial (pas de pub, pas d'achat in-app) ; (b) documenter la provenance des images ; (c) séparer la licence du **code** (MIT) des **assets** (droits réservés à leurs propriétaires) dans le README ; (d) envisager de ne plus héberger les images soi-même (charger depuis une source publique) — mais cela se paie en hors-ligne et en dépendance.
+- **Conséquences pratiques à décider** : (a) rester non commercial (pas de pub, pas d'achat in-app) — **décision de Diamant : jamais de monétisation**, à écrire explicitement dans le README ; (b) documenter la provenance des images ; (c) séparer la licence du **code** (MIT) des **assets** (droits réservés à leurs propriétaires) dans le README ; (d) envisager de ne plus héberger les images soi-même (charger depuis une source publique) — mais cela se paie en hors-ligne et en dépendance.
 
 ---
 
@@ -260,22 +263,43 @@ Points relevés par `svelte-check` et la lecture : popups `role="dialog"` sans `
 
 ---
 
-## 8. Questions ouvertes (j'ai besoin de toi)
+## 8. Décisions de Diamant (5 octobre 2026) et questions restantes
 
-1. **Reconstruction : on garde Svelte 5 + Vite + PWA ?** (ma recommandation : oui, on refait la *structure*, pas la techno — voir plan.)
-2. **Images** : tu te souviens d'où elles viennent ? Veux-tu les garder dans le dépôt (WebP, ~25 Mo) ou autre approche ?
-3. **Historique git** : OK pour repartir sur un dépôt/branche propre (sans les 294 Mo) ou préfères-tu garder tout l'historique ?
-4. **Jour UTC vs local** : le nouveau Pokémon doit-il arriver à minuit **heure locale** de chaque joueur ?
-5. **Données utilisateurs existantes** : y a-t-il de vrais utilisateurs (et combien ❓) dont l'historique doit survivre à la reconstruction ? (Cela impose de préserver le schéma IndexedDB actuel ou d'écrire une migration.)
-6. **Langues** : FR + EN seulement, ou prévoir d'autres langues ?
-7. **Mode développeur** : le garder pour tous, ou le cacher derrière un code / en dev seulement ?
-8. **Monétisation / pub** : jamais (recommandé vu le §6.7) ?
+### 8.1 Réponses aux 8 questions de l'audit
+
+| # | Question | Réponse | Conséquence |
+|---|---|---|---|
+| 1 | Garder Svelte 5 + Vite + PWA ? | **Non** : reconstruction **de zéro en TypeScript/JavaScript pur**, sans moteur de rendu. On garde **Vite et la PWA**. | Plus de Svelte. On écrit nous-mêmes quelques briques (DOM, store, routeur, i18n). → `REBUILD_PLAN.md` §2 |
+| 2 | Origine des images ? | Prises sur un GitHub ; beaucoup de formes et de Pokémon manquants ; **pas la volonté de tout re-récupérer à la main** | Solution automatisée (script). → §8.2 et `REBUILD_PLAN.md` §4 |
+| 3 | Repartir d'un dépôt propre ? | **Oui** | Fait en dernier, avec confirmation (destructif). → `REBUILD_PLAN.md` §8 |
+| 4 | Jour local ? | **Oui**, minuit heure locale | Corrige A7 ; clé de jour `YYYY-MM-DD` locale |
+| 5 | Données existantes ? | « 3 à 5 utilisateurs » : **on peut tout écraser** | **Aucune migration** (code plus simple) ; prévenir via la Note de Diamant |
+| 6 | Langues ? | **Français + anglais** | i18n à deux langues, clés typées |
+| 7 | Mode développeur ? | **Gardé** : « partie intégrante du système » | Reste dans la v4, pour tout le monde |
+| 8 | Monétisation ? | **Jamais** : projet fun entre amis | Principe non négociable (aussi dans `AGENTS.md`) : ni pub, ni achat, ni suivi |
+
+### 8.2 Ce que l'audit a mesuré sur les images (réponse à « formes et Pokémon manquants »)
+
+- **Ton dossier actuel** : 1025/1025 images normales ✅ et 1024/1025 shiny ✅ (il manque seulement `774S.png`). Pour les *espèces*, il ne manque donc presque rien. Ce qui manque massivement, ce sont les **formes** (Alola, Galar, Méga…) : le dossier n'en contient **aucune** (seuls les ids ≤ 1025 existent).
+- **PokéAPI** compte **1 351** entrées « pokémon » : **1 025 espèces + 326 formes** (ids `10001`–`10326`) ✅ ([API](https://pokeapi.co/api/v2/pokemon?limit=1)).
+- **Source `PokeAPI/sprites`, rendus Home 512×512** : sur 1 351 × 2 (normal + shiny) = **2 700 fichiers testés** ✅ (requêtes HEAD), **2 661 existent** ; les **39 absents sont tous des formes**. **Aucune image d'espèce 1–1025 ne manque** (le shiny de Minior existe chez eux).
+- **Conclusion** : un **script automatique** peut reconstituer l'ensemble complet sans aucune manipulation manuelle. Détail et options : `REBUILD_PLAN.md` §4.
+
+### 8.3 Questions restantes
+
+9. **Formes** : les inclure dans le tirage et le Pokédex (et lesquelles) ?
+10. **Dépôt propre** : nouveau dépôt ou branche vide dans le même dépôt ?
+11. **Images** : générées au build et non commitées (recommandé), en 256 px ou 512 px ?
+12. **Essai « sans framework »** : valider la démarche (écran « carte du jour » d'abord) ?
+13. **Ancienne base de données** des 3–5 utilisateurs : on la laisse dormir ou on la supprime ?
+
+(Détail et recommandations : `REBUILD_PLAN.md` §10.)
 
 ---
 
 ## 9. Méthode et limites de cet audit
 
-**Ce que j'ai fait** : lecture intégrale des 5 scripts, du service worker, du `App.svelte` et des 13 composants (code + markup) ; lecture de toute la config et de la doc ; analyse de l'historique git (63 commits) ; exécution de `pnpm install`, `pnpm check`, `pnpm build`, `pnpm audit`, `pnpm outdated` ; scripts d'expérience (couverture des 2 050 images, comptes à rebours des événements sur dates simulées, simulation Monte-Carlo du boost, mesure WebP) ; recherches web pour sourcer les points PokéAPI et propriété intellectuelle.
+**Ce que j'ai fait** : lecture intégrale des 5 scripts, du service worker, du `App.svelte` et des 13 composants (code + markup) ; lecture de toute la config et de la doc ; analyse de l'historique git (63 commits) ; exécution de `pnpm install`, `pnpm check`, `pnpm build`, `pnpm audit`, `pnpm outdated` ; scripts d'expérience (couverture des 2 050 images, comptes à rebours des événements sur dates simulées, simulation Monte-Carlo du boost, mesure WebP, vérification de 2 700 URL de la source d'images `PokeAPI/sprites`, comptage des Pokémon/formes dans PokéAPI) ; recherches web pour sourcer les points PokéAPI et propriété intellectuelle.
 
 **Ce que je n'ai PAS pu faire** :
 - Lancer l'app dans un navigateur et la tester visuellement (le rendu, l'animation et le partage canvas sont jugés **à la lecture du code**, pas à l'écran).
@@ -283,4 +307,4 @@ Points relevés par `svelte-check` et la lecture : popups `role="dialog"` sans `
 - Tester sur iPhone/Safari réel (A11, quotas de stockage), avec un lecteur d'écran, ou avec de vraies données v2 pour la migration.
 - Mesurer les contrastes de couleurs ou lancer Lighthouse.
 
-**Sources web utilisées** : [PokéAPI — documentation et politique d'usage équitable](https://pokeapi.co/docs/v2) · [The Pokémon Company International — Media Usage Guidelines](https://pokemon.gamespress.com/Media-Usage-Guidelines) · [MDN — BeforeInstallPromptEvent](https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent).
+**Sources web utilisées** : [PokeAPI/sprites](https://github.com/PokeAPI/sprites) (contenu, `LICENCE.txt`) · [PokéAPI — documentation et politique d'usage équitable](https://pokeapi.co/docs/v2) · [The Pokémon Company International — Media Usage Guidelines](https://pokemon.gamespress.com/Media-Usage-Guidelines) · [MDN — BeforeInstallPromptEvent](https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent).

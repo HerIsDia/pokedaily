@@ -7,6 +7,21 @@
 
 **Pokédaily** — PWA « Quel Pokémon es-tu aujourd'hui ? » : un Pokémon (1–1025) avec nature, niveau et 1/69 de shiny, tiré une fois par jour. Tout est **local** (IndexedDB), aucun serveur à nous, aucun compte. Interface FR/EN, thème sombre Écarlate/Violet. Déployé sur Vercel (`pokedaily.vercel.app`).
 
+## Décisions de direction (Diamant, 5 oct. 2026) — à respecter
+
+Le code actuel (v3.1, Svelte) est **destiné à être remplacé** par une **v4 reconstruite de zéro** (plan : `docs/REBUILD_PLAN.md`). Décisions prises :
+
+1. **TypeScript/JavaScript pur, sans moteur de rendu** : n'introduis **ni Svelte, ni React, ni Vue, ni équivalent (lit, etc.)** dans la v4. On garde **Vite** et la **PWA**.
+2. **Jour local** : le Pokémon change à **minuit heure locale** du joueur (clé `YYYY-MM-DD` locale), plus de minuit UTC dans la v4.
+3. **Pas de migration** de données : la v4 repart d'une base vide (3–5 utilisateurs seulement).
+4. **Langues : français + anglais uniquement.**
+5. **Mode développeur conservé** pour tout le monde, il fait partie du système.
+6. **Jamais de monétisation** : ni publicité, ni achat, ni statistiques de suivi/analytics, ni service tiers qui voit les joueurs. Projet fun entre amis, non commercial. Refuse toute proposition contraire, même « discrète ».
+7. **Images** : pas de récupération manuelle ; elles viennent d'un script automatisé (source `PokeAPI/sprites`, rendus Home 512 px) — `docs/REBUILD_PLAN.md` §4. Elles restent la propriété de The Pokémon Company.
+8. **Dépôt propre** (sans les 294 Mo d'historique) : décidé, mais l'exécution est **destructive** → ne le fais **jamais** sans nouvelle confirmation explicite de Diamant.
+
+**Pendant la transition** : ne développe pas de nouvelles fonctionnalités dans la base Svelte sauf demande explicite (les correctifs critiques restent bienvenus) — elles seraient à refaire en v4.
+
 ## Pour la propriétaire du projet
 
 La propriétaire (elle, **Diamant**) est écrivaine, **pas développeuse** : elle pilote le produit, l'IA écrit le code. Donc :
@@ -28,7 +43,7 @@ pnpm preview                     # sert dist/
 Pas de tests, pas de linter pour l'instant. **Définition de « terminé »** : `pnpm check` sans nouvelle erreur **et** `pnpm build` vert **et**, pour tout changement visible, une description de ce qui a été vérifié dans le navigateur.
 Node ≥ 24 est demandé (`.nvmrc`) ; le projet build aussi sous Node 22.
 
-## Stack
+## Stack (v3.1 actuelle — sera remplacée, voir ci-dessus)
 
 Svelte **5** (runes : `$state`, `$derived`, `$props` — pas de syntaxe Svelte 4) · TypeScript `strict` · Vite 5 · `vite-plugin-pwa` (stratégie `injectManifest`) + Workbox · `pokenode-ts` (client PokéAPI). Pas de routeur : routage par `location.hash`. Pas de bibliothèque UI : CSS scopé par composant + tokens dans `src/app.css`.
 
@@ -45,7 +60,7 @@ Svelte **5** (runes : `$state`, `$derived`, `$props` — pas de syntaxe Svelte 4
 | `src/sw.ts` | Service worker (précache shell, cache images, pré-cache total sur message) |
 | `public/images/` | 2 050 PNG 512×512 : `025.png` (normal), `025S.png` (shiny), `000.png` |
 
-## Conventions à respecter
+## Conventions à respecter (code v3.1 actuel ; la v4 suit les décisions ci-dessus)
 
 - **Dates = jour UTC** : le « jour » commence à minuit UTC (`Date.now() - Date.now() % 86400000`). Reste cohérent ; ne mélange pas avec l'heure locale (c'est déjà le cas à deux endroits, c'est un bug connu, A7).
 - **Pokédex = 1025** (constante dispersée) ; si tu touches à cette valeur, cherche *tous* les `1025` : `grep -rn 1025 src`.
@@ -76,6 +91,7 @@ Règles complètes : `docs/CHANGELOG_GUIDE.md` (tutoiement, **zéro jargon techn
 
 - Ne pas modifier/supprimer/recompresser `public/images/*` en masse sans demande explicite (95 Mo ; l'historique git pèse déjà 294 Mo : chaque version binaire l'alourdit).
 - Ne pas committer `dist/`, `node_modules/`, clés ou secrets (il n'y en a pas : n'en introduis pas).
+- Ne pas ajouter de framework de rendu dans la v4 (voir décision 1).
 - Ne pas ajouter de dépendance sans la justifier (poids du bundle : 218 Ko aujourd'hui) ni de service tiers qui voit les utilisateurs (pub, analytics, polices distantes supplémentaires).
 - Ne pas présenter ce projet comme affilié à Nintendo/Game Freak. Les images Pokémon appartiennent à leurs ayants droit : projet **non commercial** uniquement.
 - Ne pas créer de Pull Request sans qu'on te le demande.

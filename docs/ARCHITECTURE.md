@@ -1,5 +1,7 @@
 # Architecture actuelle de Pokédaily (v3.1)
 
+> ⚠️ **Ce document décrit la v3.1 (Svelte), destinée à être remplacée** par une v4 en TypeScript pur (décision du 5 oct. 2026, voir `REBUILD_PLAN.md` §0). Il sert de référence fonctionnelle pour la reconstruction (règles, événements, données), pas de modèle technique à copier.
+
 > Document **descriptif** : il explique comment l'application fonctionne **aujourd'hui** (commit `b4ba73c`), pour qu'on puisse la reconstruire sans rien oublier. Ce n'est pas la cible : pour la cible, voir [`REBUILD_PLAN.md`](REBUILD_PLAN.md). Les problèmes sont listés dans [`AUDIT.md`](AUDIT.md) et référencés ici par leur code (B-3, A2…).
 
 ---

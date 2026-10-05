@@ -1,199 +1,285 @@
 # Plan de reconstruction — Pokédaily v4
 
-> Proposition issue de l'[audit](AUDIT.md). Rien ici n'est décidé : ce sont des **recommandations argumentées**, à valider (voir les questions ouvertes de l'audit, §8). L'idée directrice : **on garde ce qui plaît aux joueurs, on refait ce qui rend le code fragile.**
+> Mis à jour le 5 octobre 2026 avec les **décisions de Diamant** (§0). Le reste reste des *recommandations argumentées* : les points encore ouverts sont listés au §10.
+> Contexte : [`AUDIT.md`](AUDIT.md) (problèmes de la v3.1) · [`ARCHITECTURE.md`](ARCHITECTURE.md) (fonctionnement de la v3.1).
+
+---
+
+## 0. Décisions actées
+
+| Sujet | Décision |
+|---|---|
+| Technologie | **Reconstruction de zéro en TypeScript/JavaScript pur**, sans moteur de rendu (donc **ni Svelte, ni React, ni équivalent**). On **garde Vite et la PWA**. |
+| Images | Solution **automatisée** (aucune récupération manuelle) pour couvrir tous les Pokémon **et leurs formes** → §4. |
+| Historique git | On **repart propre** (sans les 294 Mo). Exécution à la fin (§8), avec une dernière confirmation car c'est destructif. |
+| Changement de jour | **Minuit heure locale** de chaque joueur. |
+| Données existantes | Environ 3 à 5 utilisateurs : **aucune migration**, on peut tout écraser. |
+| Langues | **Français + anglais**, pas d'autre. |
+| Mode développeur | **Conservé**, pour tout le monde : « il fait partie intégrante du système ». |
+| Monétisation | **Jamais** : ni pub, ni achat, ni statistiques de suivi. Projet fun entre amis. |
 
 ---
 
 ## 1. Principes
 
-1. **Refaire la structure, pas la techno.** Svelte 5 + Vite + PWA conviennent très bien. On les garde (en mettant à jour).
-2. **Zéro serveur, zéro compte, tout local** — c'est la promesse du projet et sa simplicité.
-3. **Hors-ligne d'abord** : après la 1ʳᵉ visite, plus aucune requête réseau nécessaire pour jouer.
+1. **Zéro dépendance de rendu.** On écrit le DOM avec du TypeScript standard (voir §2). Le code doit pouvoir se lire sans connaître un framework.
+2. **Local d'abord, hors-ligne d'abord** : aucun serveur à nous, aucun compte ; après la 1ʳᵉ visite plus aucune requête n'est nécessaire pour jouer.
+3. **Aucun suivi** : pas d'analytics, pas de polices distantes, pas de service tiers qui voit les joueurs. (Cohérent avec « jamais monétisé » ; à écrire noir sur blanc dans le README.)
 4. **Une seule source de vérité** pour l'état, **une seule fonction** pour fabriquer un Pokémon.
 5. **La logique pure est testée** (tirage, événements, dates) ; l'interface est fine.
-6. **Les contenus sont des données** (événements, textes, changelog) et non du code.
-7. **Ne perdre aucune donnée de joueur** : migration depuis le schéma IndexedDB actuel + export/import.
-8. **Petites étapes livrables**, chacune vérifiable (`pnpm check`, tests, build) — adapté à une propriétaire qui n'est pas développeuse : chaque étape doit pouvoir être relue en langage clair.
+6. **Les contenus sont des données** (événements, textes, changelog), pas du code.
+7. **Petites étapes livrables**, chacune vérifiable (`check`, tests, build), relisibles en langage clair.
+8. **L'ancienne app reste en ligne** jusqu'à la parité fonctionnelle (§7).
 
 ---
 
-## 2. Architecture cible (proposition)
+## 2. Construire l'interface sans framework : l'approche proposée
+
+> Honnêteté : sans framework, **on écrit et on maintient à la main ce que Svelte faisait pour nous** (mise à jour de l'écran quand les données changent, échappement du texte, organisation du CSS). C'est faisable à cette taille (l'app v3.1 = 6 750 lignes, dont 52 % de CSS) et le gain est réel : **aucune dépendance de rendu, aucune montée de version imposée, un code qu'on comprend en entier**. Mais le coût est réel aussi : plus de code « de plomberie » et plus de discipline. C'est pourquoi je propose de **valider l'approche par un petit essai** (§6, phase 1) avant de construire le reste.
+
+### 2.1 Les 4 briques maison (≈ 300 lignes au total, à écrire et tester)
+
+| Brique | Rôle | Idée |
+|---|---|---|
+| `ui/dom.ts` | Créer des éléments : `h('div', { class: 'card' }, enfants…)` | Le texte passe **toujours** par `textContent` (jamais `innerHTML` avec une donnée du joueur) → pas de faille XSS, y compris pour le surnom |
+| `ui/store.ts` | Petit store réactif : `get()`, `set()`, `subscribe()` | Remplace `data` + `window.location.reload()` (bug B-7) |
+| `ui/router.ts` | Routage par hash **avec** `hashchange` | Corrige B-6 |
+| `i18n/` | `t('card.level')` typé : le compilateur **refuse** une clé présente en FR mais pas en EN | Fin des `lang === 'fr' ? … : …` |
+
+### 2.2 Organisation des vues
+
+- Une vue = **une fonction** `renderX(ctx): HTMLElement` ; une mise à jour = on **abonne** la partie concernée au store, on ne reconstruit pas toute la page.
+- Pour les gros blocs réutilisables (fenêtres modales), on peut utiliser les **Custom Elements natifs** du navigateur (standard web, aucune lib).
+- **CSS** : un fichier par fonctionnalité, classes préfixées (`card-…`, `roulette-…`), variables communes dans `ui/tokens.css`. Une seule feuille pour les **couleurs de types** (aujourd'hui dupliquées 3 fois, D-3) et **une seule Modal** (D-10).
+
+### 2.3 Critères de réussite de l'essai (spike)
+
+Reconstruire **l'écran « carte du jour »** (affichage, renommage, partage) et vérifier : (1) code lisible ; (2) renommage sans perte de focus ni de défilement ; (3) aucun `innerHTML` avec une donnée utilisateur ; (4) changement de langue sans rechargement ; (5) < ~300 lignes de plomberie. Si un critère échoue, on en discute **avant** d'aller plus loin (autre option : Custom Elements partout).
+
+---
+
+## 3. Architecture cible
 
 ```
+index.html
+vite.config.ts                  Vite + PWA (injectManifest) — conservés
 src/
-├── main.ts
-├── App.svelte                 coquille minimale (routeur, popups globales)
-├── core/                      ⭐ logique pure, SANS Svelte ni navigateur → testable
-│   ├── constants.ts           DEX_SIZE, SHINY_RATE, LEVEL_MIN/MAX, VICTINI_ID…
-│   ├── rng.ts                 aléatoire injectable (Math.random en prod, graine en test)
-│   ├── dates.ts               UNE convention de jour (UTC ou local, à décider) + helpers
-│   ├── pokemon.ts             createEntry(id, opts) ← remplace les 5 copies
-│   ├── draw.ts                tirage du jour = pokemon + événements
-│   └── events/                moteur d'événements (schéma validé, occurrences)
-├── data/
-│   ├── dex.json               généré : id → { fr, en, types[] } pour 1025 (≈ 100 Ko)
-│   ├── natures.json           25 natures FR/EN
-│   └── events.json            (existant, enrichi : version de schéma, `repeats: yearly|once`)
+├── main.ts                     point d'entrée : charge, monte, enregistre le SW
+├── app/                        coquille : barre du bas, vues, popups globales
+├── core/                       ⭐ logique pure, SANS navigateur → testable
+│   ├── constants.ts            DEX_SIZE, SHINY_RATE, LEVEL_MIN/MAX, VICTINI_ID…
+│   ├── rng.ts                  aléatoire injectable (Math.random en prod, graine en test)
+│   ├── dates.ts                UNE convention : jour local au format 'YYYY-MM-DD'
+│   ├── pokemon.ts              createEntry(id, opts) ← remplace les 5 copies
+│   ├── draw.ts                 tirage du jour = pokemon + événements
+│   └── events/                 moteur d'événements (schéma validé, once/yearly)
+├── data/                       GÉNÉRÉ par script (voir §4) — pas écrit à la main
+│   ├── dex.json                id → { fr, en, types[], speciesId… }
+│   ├── natures.json            25 natures FR/EN
+│   └── events.json            (existant, enrichi)
 ├── storage/
-│   ├── schema.ts              types des données persistées + version de schéma
-│   ├── repository.ts          API unique (getToday, saveDraw, addTickets…) en TRANSACTIONS
-│   └── migrations.ts          v2 localStorage → v3 → v4
-├── state/
-│   └── app.svelte.ts          store réactif (runes) — remplace `data` + `window.location.reload()`
-├── i18n/
-│   ├── index.ts               t('key') + langue persistée + sélecteur
-│   └── fr.ts, en.ts
-├── features/                  une dossier par fonctionnalité (UI + logique propre)
-│   ├── card/  history/  stats/  pokedex/  vroulette/  team/  events/  changelog/  dev/
-├── pwa/
-│   ├── sw.ts                  service worker
-│   └── register.ts            enregistrement unique + mise à jour avec confirmation
-└── ui/                        briques communes : Modal, Badge, TypeBadge, ProgressBar, tokens CSS
+│   ├── schema.ts               types persistés + version
+│   └── repository.ts           API unique (getToday, saveDraw, addTickets…) en TRANSACTIONS
+├── state/store.ts              état global (vues abonnées)
+├── i18n/                       fr.ts, en.ts, index.ts
+├── features/                   un dossier par fonctionnalité (vue + logique + css)
+│   └── card/ history/ stats/ pokedex/ roulette/ team/ events/ changelog/ dev/
+├── pwa/                        sw.ts, register.ts (UNE seule inscription)
+└── ui/                         dom.ts, store.ts, router.ts, modal.ts, tokens.css, types.css
 scripts/
-└── build-dex.mjs              télécharge PokéAPI UNE FOIS (en local/CI) → data/dex.json + images WebP
-tests/                         Vitest (core + storage avec fake-indexeddb)
-.github/workflows/ci.yml       check + test + build à chaque push
+├── build-dex.ts                PokéAPI → data/dex.json (UNE fois, hors navigateur)
+└── sync-sprites.ts             PokeAPI/sprites → public/sprites/*.webp (voir §4)
+tests/                          Vitest (core + storage via fake-indexeddb)
+.github/workflows/ci.yml        install → check → test → build
 ```
 
 ### Choix techniques recommandés
 
 | Sujet | Recommandation | Pourquoi |
 |---|---|---|
-| Données Pokémon | **Fichier embarqué généré par script** (`build-dex.mjs`), plus d'appel PokéAPI à l'exécution | Hors-ligne total, −`axios`/`pokenode-ts`, −36 alertes prod, respect de la [politique de cache de PokéAPI](https://pokeapi.co/docs/v2), tirage instantané |
-| Modèle d'entrée | Stocker seulement `id, natureId, level, isShiny, date, rename` ; **noms résolus à l'affichage** | Ajouter une langue ou corriger un nom = 0 migration |
-| Stockage | IndexedDB avec **vrais stores** (`entries`, `meta`, `roulette`, `team`) + **transactions** ; lib légère type [`idb`](https://github.com/jakearchibald/idb) (❓ à valider) | Atomicité (A5), code plus court |
-| État | Store runes `$state` partagé + repository | Fin du `reload()` (B-7, A.1) |
-| i18n | Dictionnaires + `t()`, sélecteur FR/EN persistant | D-2, D-5 |
-| Tests | **Vitest** (core) + **fake-indexeddb** (storage) ; 1 ou 2 parcours **Playwright** plus tard | Filet de sécurité avant d'ajouter des fonctions fun |
-| Qualité | **Prettier + ESLint** (ou **Biome** seul, plus simple ❓) + `svelte-check` | Cohérence, relectures plus courtes |
-| CI | GitHub Actions : install → check → test → build | Plus de régression silencieuse |
-| Dépendances | Mises à jour **par paliers** (voir §4 phase 0) + Dependabot/Renovate | Éviter 3 versions majeures de retard |
-| Images | **WebP** (256 px suffit pour l'UI, 512 px si on veut le partage HD), nommage conservé (`025.webp`, `025s.webp`), **manquants corrigés (#774 shiny)** | −65 à −75 % (mesuré), pré-cache ~25 Mo au lieu de ~91 Mo |
-| Police | Auto-hébergée (`@fontsource/roboto-condensed`) | Hors-ligne + RGPD |
-| Version | Une seule source (`package.json`) injectée à la build (`__APP_VERSION__`) | D-7 |
-| Changelog | `changelog.json` (ou `.md` structuré) lu par l'app **et** par `CHANGELOG.md` généré | D-4 |
-
-### Décisions de produit à trancher avant de coder
-
-- **Heure du nouveau jour** : minuit UTC (1 h/2 h du matin en France) ou **minuit local** ? (Recommandé : local, plus intuitif — cela impose de stocker la date en `YYYY-MM-DD` locale plutôt qu'en millisecondes UTC.)
-- **Niveau max** : 99 ou 100 ? **Boost** : 25 % réel (corriger la formule) ou ~30 % (corriger le texte) ?
-- **Événements ponctuels vs annuels** : ajouter un champ explicite (`repeats: 'yearly' | 'once'`).
-- **Boîtes spéciales** : durée de validité (la journée ? 7 jours ?) et nombre d'utilisations.
-- **Statut du mode dev** : réservé à `pnpm dev`, ou activable par un code secret en production.
+| Données Pokémon | **Fichier embarqué** généré par script ; **plus d'appel PokéAPI** à l'exécution | Hors-ligne total, plus d'`axios`/`pokenode-ts` (−36 alertes prod), respecte la [politique de cache de PokéAPI](https://pokeapi.co/docs/v2), tirage instantané |
+| Modèle d'entrée | Stocker seulement `id, natureId, level, isShiny, day, rename` ; noms résolus à l'affichage | Zéro migration pour corriger un nom |
+| Stockage | IndexedDB avec **vrais stores** + **transactions** ; nouvelle base (pas de lecture de l'ancienne) | Atomicité (A5) |
+| Jour | Clé `'YYYY-MM-DD'` **locale** ; événements évalués sur cette même date | Décision « minuit local » ; plus de mélange UTC/local (A7) |
+| Tests | **Vitest** (`core/`, `storage/`) ; 1–2 parcours Playwright plus tard | Filet de sécurité |
+| Qualité | `tsc --noEmit` strict + **ESLint + Prettier** (ou Biome ❓) | Cohérence |
+| CI | GitHub Actions + Dependabot | Fin des régressions silencieuses |
+| Police | Auto-hébergée (`@fontsource/roboto-condensed`) | Hors-ligne + vie privée |
+| Version | Une source (`package.json`) injectée au build (`__APP_VERSION__`) | D-7 |
+| Changelog | `changelog.json` lu par l'app **et** utilisé pour générer `CHANGELOG.md` (la note de Diamant y reste **sa** voix) | D-4 |
 
 ---
 
-## 3. Stratégie de migration des données joueurs
+## 4. Images : la solution automatisée
 
-On ne casse pas la collection de quelqu'un :
+### 4.1 Ce que j'ai mesuré (5 oct. 2026)
 
-1. **Conserver le nom de base `pokedaily`** et passer à `DB_VERSION = 2` avec un `onupgradeneeded` qui convertit `state/today/history` vers les nouveaux stores, **sans supprimer** les anciens avant validation.
-2. Ajouter dès la première étape un **export/import JSON** (« Sauvegarder ma collection ») : filet de sécurité de la migration *et* fonctionnalité utile.
-3. Tester la migration avec : a) un jeu de données v3.1 synthétique ; b) un export `localStorage` v2 réel si tu en as un (❓ à fournir).
-4. Garder `migrateFromLocalStorage` tant qu'il peut rester des utilisateurs v2 (❓ à décider après avoir regardé les stats d'usage).
+- Ton dossier actuel contient **1025/1025** images normales et **1024/1025** shiny (il manque seulement `774S`). Pour les **espèces**, il ne manque donc presque rien ; ce qui manque massivement, ce sont les **formes** (Alola, Galar, Méga, etc.) : ton dossier n'en contient **aucune**.
+- PokéAPI compte **1 351** entrées « pokémon » = **1 025 espèces + 326 formes** (identifiants `10001` à `10326`).
+- Le dépôt **[`PokeAPI/sprites`](https://github.com/PokeAPI/sprites)** propose des rendus **Home 512×512** (`sprites/pokemon/other/home/`, et `shiny/`) : même taille que tes images, donc très probablement leur source (❓ non prouvée : je n'ai pas comparé visuellement).
+- Test sur **2 700 fichiers** (1 351 × normal + shiny) : **2 661 existent**. Les **39 absents sont tous des formes**. **Aucune des 2 050 images d'espèces ne manque** (y compris le shiny de Minior).
+- Leur `LICENCE.txt` dit : *« All image contents within are Copyright The Pokémon Company. This repository is distributed under CC0 »* → le CC0 couvre la structure du dépôt, **pas les images**.
+
+### 4.2 Les options (et ma recommandation)
+
+| Option | Principe | Avantages | Inconvénients |
+|---|---|---|---|
+| **B — Générer au build (recommandée)** | Un script télécharge, convertit en WebP et écrit dans `public/sprites/`, **non commité** ; lancé automatiquement avant le build | Dépôt léger, **zéro manipulation manuelle**, reproductible (commit source épinglé), mise à jour = relancer | Le build dépend de GitHub (un échec **fait échouer le build visiblement**, jamais en silence) ; build un peu plus long |
+| A — Commiter les WebP | Le script tourne en local, on commit le résultat | Simple, build sans réseau | Redevient lourd (~30–40 Mo, ❓ extrapolé), l'historique regonfle à chaque régénération |
+| C — Lien direct vers un CDN (jsDelivr/raw GitHub) | L'app charge les images chez eux, le SW les met en cache | Aucun hébergement | Dépendance externe en direct, ❓ limites et conditions de jsDelivr non vérifiées, 1ʳᵉ visite hors-ligne impossible |
+| D — Stockage d'objets (R2, Blob…) | On héberge les fichiers ailleurs | Léger | Un service + un compte de plus à gérer |
+
+### 4.3 Fonctionnement de l'option B
+
+`pnpm sprites` (idempotent, reprend où il s'est arrêté, cache local) :
+1. lit la liste des 1 351 Pokémon (PokéAPI) ;
+2. télécharge `home/{id}.png` et `home/shiny/{id}.png` depuis `PokeAPI/sprites` **à un commit épinglé** ;
+3. convertit en **WebP 256 px** (UI) — ou 512 px si on veut une carte de partage HD — avec un outil d'image en `devDependency` (`sharp` ❓ à valider) ;
+4. écrit `public/sprites/{id}.webp` / `{id}s.webp` + un **`sprites-manifest.json`** (quels ids ont une image, un shiny…) ;
+5. affiche un **rapport des manquants** (39 attendus, tous des formes).
+
+Dans l'app : `getSprite(id, shiny)` consulte le manifeste → **repli propre** (shiny absent → image normale + étincelle ✦ ; image absente → silhouette `000`) : le bug « image cassée » de Minior ne peut plus exister. Un **test CI** échoue si une espèce 1–1025 n'a pas d'image.
+
+**Poids estimé** (extrapolé depuis un échantillon de 30 images, ❓) : 2 702 fichiers × ~11 Ko (256 px) ≈ **30 Mo**, ou × ~15 Ko (512 px) ≈ **41 Mo**, contre **95 Mo** aujourd'hui, et **0 Mo** dans le dépôt.
+
+### 4.4 Les formes dans le jeu : une vraie décision de produit (voir §10)
+
+Les 326 formes contiennent des variantes très différentes (régionales, Méga, Gigamax, genres, costumes…). Pour les utiliser il faut décider **lesquelles** comptent dans le tirage / le Pokédex, et vérifier que leurs noms FR existent dans PokéAPI (❓ souvent incomplets). Le modèle de données prévoit dès le départ `id` (identifiant PokéAPI) **et** `speciesId`, pour pouvoir activer les formes plus tard **sans refonte**.
 
 ---
 
-## 4. Phases (chaque phase se termine par un état qui build et qui marche)
+## 5. Données du joueur (sans migration)
 
-### Phase 0 — Assainir sans rien casser (≈ petite)
-- Un seul gestionnaire de paquets (supprimer `package-lock.json`, ajouter `"packageManager": "pnpm@…"`).
-- Renommer `robot.txt` → `robots.txt` ; harmoniser le nom (Pokédaily) dans `index.html`/manifeste.
-- Corriger les bugs triviaux : **B-1** (créer/obtenir `774S`), **B-4** (flag `once`), **B-5** (texte ou formule), **B-6** (`hashchange`), **B-2** (ne débiter le ticket qu'après succès), **B-3** (valider la date de la boîte).
-- Ajouter `.github/workflows/ci.yml` (check + build) et Dependabot.
-- Mettre à jour les dépendances « sûres » (patchs/mineures) ; décider du saut Vite/plugins plus tard.
-- **Critère de sortie** : `pnpm check` = 0 avertissement, build vert en CI.
+- **Nouvelle base IndexedDB** (nom/version distincts) : l'ancienne n'est simplement plus lue. Suppression automatique de l'ancienne : à décider (par défaut : on ne touche à rien).
+- Pas de `migrateFromLocalStorage`, pas de conversion v3 → v4 : le code est donc **plus simple**.
+- **Prévenir les 3–5 personnes concernées** : une ligne dans la **Note de Diamant** du changelog 4.0 (rédigée par toi, avec ta voix) pour annoncer que la collection repart de zéro.
+- **Export / import** de la collection : plus un filet de sécurité de migration, mais toujours une bonne **fonctionnalité** (changer de téléphone, sauvegarde, fun) → dans le backlog (§9), plus tôt si tu le souhaites.
 
-### Phase 1 — Le noyau (`core/`, `data/`, tests)
-- `constants.ts`, `rng.ts`, `dates.ts`, `pokemon.ts` (`createEntry`), `draw.ts`, moteur d'événements migré **tel quel** puis durci (schéma validé, mêmes résultats).
-- `scripts/build-dex.mjs` → `data/dex.json` + `natures.json` (vérifier les noms FR contre PokéAPI).
-- **Tests** : événements (toutes les dates clés), tirage avec RNG graine, `createEntry`, probabilité de boost.
-- **Critère de sortie** : l'ancien code appelle déjà le nouveau noyau (strangler pattern), PokéAPI n'est plus utilisée pour le tirage.
+---
 
-### Phase 2 — Stockage + état
-- `storage/` avec migrations et transactions ; export/import ; store réactif ; fin des `reload()`.
-- **Critère de sortie** : tickets/Pokédex/Stats se mettent à jour en direct après une roulette ; migration testée.
+## 6. Phases
 
-### Phase 3 — Interface par fonctionnalité
-- Recréer les vues dans `features/` en s'appuyant sur `ui/` (Modal unique, TypeBadge unique, tokens CSS).
-- i18n complète, sélecteur de langue, `lang` du document dynamique, accessibilité des popups (focus, Échap, `aria`).
-- **Critère de sortie** : parité fonctionnelle avec la v3.1 (checklist ci-dessous).
+Chaque phase se termine par un état qui **build, passe les tests et se déploie**.
 
-### Phase 4 — PWA et poids
-- Images WebP, précache correct (`events.json`, police), enregistrement SW unique, mise à jour **avec confirmation**, découpage de code (DevPanel/Changelog en *lazy*), parcours iOS (instructions « Ajouter à l'écran d'accueil »).
-- **Critère de sortie** : Lighthouse PWA/perf relevés avant/après, bundle mesuré.
+### Phase 1 — Fondations + essai « sans framework »
+- Nouveau dépôt/branche propre (§8), Vite + PWA, TypeScript strict, ESLint/Prettier, Vitest, CI, Dependabot, un seul gestionnaire de paquets (pnpm).
+- `ui/dom.ts`, `ui/store.ts`, `ui/router.ts`, `i18n/` + **essai** de l'écran « carte du jour » (§2.3).
+- **Sortie** : verdict sur l'approche ; CI verte.
 
-### Phase 5 — Lancement
-- README + disclaimers (code MIT / assets réservés), changelog 4.0 rédigé selon `CHANGELOG_GUIDE.md`, décision sur l'historique git (§8 audit), mise en prod.
+### Phase 2 — Données et images
+- `scripts/build-dex.ts` (dex + natures FR/EN, **vérifiés** contre PokéAPI) et `scripts/sync-sprites.ts` (§4), manifeste, test de complétude.
+- **Sortie** : `pnpm sprites` et `pnpm dex` produisent tout sans intervention ; l'app n'appelle plus jamais PokéAPI.
 
-### Checklist de parité (à cocher avant de remplacer la v3.1)
-- [ ] Pokémon du jour (nature, niveau, shiny, surnom) · [ ] Carte partager/copier/télécharger
+### Phase 3 — Noyau testé (`core/`)
+- `constants`, `rng`, `dates` (jour local), `createEntry`, `draw`, moteur d'événements (mêmes 12 événements, mêmes résultats, durcis).
+- **Tests** : toutes les dates clés des événements (y compris ponctuel vs annuel), tirage avec graine, probabilité de boost, passage de minuit et changement de fuseau.
+- **Sortie** : le « tirage du jour » complet est testé sans navigateur.
+
+### Phase 4 — Stockage + état
+- Repository transactionnel, store global, tickets/boîtes avec **dates de validité**.
+- **Sortie** : tickets, Pokédex et Stats se mettent à jour **en direct** (plus de rechargement).
+
+### Phase 5 — Fonctionnalités (parité)
+- Carte + partage, historique, Pokédex/Shinydex, stats, événements, Pokékit (V-Roulette, Team du mois), changelog, **mode dev**, FR/EN, accessibilité des fenêtres (focus, Échap, `aria`).
+- **Sortie** : checklist §7 cochée.
+
+### Phase 6 — PWA, poids, lancement
+- SW unique, précache correct (`events.json`, police, manifeste), mise à jour **avec confirmation**, pré-cache progressif des images, parcours iOS (aide « Ajouter à l'écran d'accueil »), mesures Lighthouse avant/après.
+- README (code/images/non-commercial), changelog 4.0, bascule (§8).
+
+---
+
+## 7. Cahier de non-régression
+
+### 7.1 Parité fonctionnelle (à cocher avant de remplacer la v3.1)
+- [ ] Pokémon du jour (nature, niveau, shiny, surnom 16 car.) · [ ] Carte : partager / copier / télécharger
 - [ ] Historique mensuel + points d'événements · [ ] Pokédex + Shinydex · [ ] Stats
 - [ ] 12 événements + bandeau + calendrier · [ ] Tickets Victini · [ ] V-Roulette + boîtes spéciales
-- [ ] Team du mois · [ ] Changelog intégré · [ ] FR/EN · [ ] PWA installable + hors-ligne
-- [ ] Migration des données v3.1 (et v2) · [ ] Mode dev (dev seulement)
+- [ ] Team du mois · [ ] Changelog intégré · [ ] FR/EN · [ ] PWA installable + hors-ligne · [ ] **Mode dev**
 
----
-
-## 5. Risques de la reconstruction
-
-| Risque | Parade |
+### 7.2 Bugs de la v3.1 à ne **pas** reproduire (chacun devient un test)
+| Réf. | Test d'acceptation |
 |---|---|
-| Perdre des données joueurs | Export/import d'abord, migration non destructive, tests sur jeux de données |
-| « Tout refaire » s'éternise | Strangler : on remplace module par module, l'app reste livrable à chaque phase |
-| Régressions invisibles (pas de tests aujourd'hui) | Phase 1 écrit les tests **avant** de déplacer la logique |
-| Images : droits d'auteur | Décision explicite (audit §6.7) avant publication de la v4 |
-| Dépendre de l'IA pour tout | Documents lisibles (ce dossier), `AGENTS.md`, étapes petites relues par toi |
+| B-1 | Chaque espèce 1–1025 a une image (normale et shiny, ou repli propre) |
+| B-2 | Un tour de roulette qui échoue **ne consomme pas** de ticket |
+| B-3 | Une boîte spéciale **expire** et deux boîtes ne s'écrasent pas |
+| B-4 | Un événement ponctuel passé n'affiche **aucun** compte à rebours |
+| B-5 | Le boost affiché = le boost réel |
+| B-6 | « Retour » du navigateur change bien de vue |
+| B-7 | Les compteurs se mettent à jour sans recharger |
+| B-8 / B-9 | Série en cours correcte ; un seul compte de shiny cohérent partout |
+| A7 | Un seul fuseau de référence : le jour **local** |
+| A10 | `events.json` et la police disponibles hors-ligne |
 
 ---
 
-## 6. Idées « fun » (backlog à piocher une fois la base saine)
+## 8. Dépôt propre : comment et quand
 
-> Classées par **effort** (S/M/L) et par **fit** avec l'esprit du projet. Ce sont des *idées*, pas des engagements.
+Tu as dit oui pour repartir sans les 294 Mo. Comme c'est **destructif et irréversible**, on le fait **en dernier** et je te demande une dernière confirmation à ce moment-là. Deux voies :
+
+1. **Nouveau dépôt** (recommandé ❓) : l'ancien est archivé (renommé `pokedaily-legacy`) et le nouveau reprend le nom `pokedaily`. À reconnecter côté Vercel. Garantit un dépôt **léger**. Raison : GitHub conserve les références des Pull Requests (`refs/pull/*`) : supprimer des branches ne suffit pas toujours à faire disparaître les anciens fichiers du dépôt hébergé (❓ à vérifier au moment de décider).
+2. **Même dépôt, branche vide (orpheline)** puis bascule de la branche par défaut : on garde l'adresse, les étoiles et les tickets, mais l'ancien poids peut rester côté GitHub.
+
+Dans les deux cas, on **garde une copie de l'ancienne v3.1** (archive du dépôt) tant que la v4 n'est pas validée. Au passage : une branche par défaut **sans emoji** (`main`).
+
+---
+
+## 9. Idées « fun » (backlog à piocher une fois la base saine)
+
+> Classées par **effort** (S/M/L). Ce sont des *idées*, pas des engagements. Toutes respectent « local, sans suivi, sans argent ».
 
 ### Rendre le quotidien plus vivant
 | Idée | Effort | Note |
 |---|---|---|
-| 🔔 **Notification « ton Pokémon du jour est arrivé »** (PWA, opt-in) | M | Dépend du support navigateur ; ❓ limité sur iOS |
-| 🔥 **Vraie série en cours + badges** (7 jours, 30 jours, 100 jours…) | S | Corrige B-8 au passage |
-| 🎖️ **Succès** (premier shiny, 10 types différents, tous les types Feu…) | M | Totalement local |
-| 🧬 **Descriptions de natures et « horoscope » du jour** (petit texte drôle selon nature + type) | S | Données statiques FR/EN, ton léger |
-| 🎨 **Thème par type** (la carte et l'UI prennent la couleur du type du jour) | S | Les couleurs existent déjà |
-| 🎁 **Calendrier de l'Avent / événements saisonniers** supplémentaires | S | Juste du JSON |
+| 🔔 **Notification « ton Pokémon du jour est arrivé »** (opt-in) | M | ❓ support limité selon navigateur (iOS) |
+| 🔥 **Vraie série en cours + badges** (7, 30, 100 jours…) | S | Corrige B-8 |
+| 🎖️ **Succès** (premier shiny, 10 types différents…) | M | 100 % local |
+| 🧬 **Descriptions de natures + « horoscope » du jour** (petit texte drôle selon nature + type) | S | Textes FR/EN statiques |
+| 🎨 **Thème par type** (l'interface prend la couleur du type du jour) | S | Les couleurs existent |
+| 🎁 **Événements saisonniers** supplémentaires | S | Juste du JSON |
 
-### Collection & partage
+### Collection & partage entre amis
 | Idée | Effort | Note |
 |---|---|---|
-| 💾 **Sauvegarde/restauration** de la collection (fichier ou lien) | S–M | Prévu phase 2 : devient une feature |
-| 📊 **Récap annuel « Pokédaily Wrapped »** (type le plus fréquent, plus beau shiny…) | M | Images partageables en canvas (déjà maîtrisé) |
-| 🖼️ **Cartes de partage thématisées** (variantes, cadre shiny animé) | S–M | Étend `generateCardBlob` |
-| 🤝 **Comparer avec un·e ami·e** (lien contenant les IDs du jour, sans serveur) | M | Fun : « on a le même Pokémon ! » |
-| 🏷️ **Titres / surnoms suggérés** générés à partir du Pokémon | S | |
+| 💾 **Export / import de la collection** (fichier ou lien) | S–M | Utile pour changer de téléphone |
+| 🤝 **Comparer avec un·e ami·e** (lien contenant les Pokémon du jour, sans serveur) | M | « On a le même Pokémon ! » — colle à l'esprit « rigoler entre amis » |
+| 📊 **Récap annuel « Pokédaily Wrapped »** | M | Image partageable (canvas) |
+| 🖼️ **Cartes de partage thématisées** (cadre shiny animé) | S–M | Étend la carte existante |
+| 🏷️ **Surnoms suggérés** | S | |
 
 ### Jeux autour des tickets
 | Idée | Effort | Note |
 |---|---|---|
-| 🎯 **Mini-jeu « Quel est ce Pokémon ? »** pour gagner un ticket Victini | M | Silhouettes via CSS `filter` sur les images existantes |
-| 🔮 **V-Roulette : animation réelle sur la grille**, effets sonores optionnels | M | Aujourd'hui les sauts sont aléatoires |
-| 🛡️ **Team du mois : mini-défis** (« bats la team d'un ami » sur des types) | L | À cadrer |
-| 🗓️ **Événements communautaires** pilotés par `events.json` à distance | M | Sans serveur : fichier statique mis à jour par déploiement |
+| 🎯 **« Quel est ce Pokémon ? »** pour gagner un ticket | M | Silhouettes en CSS sur les images existantes |
+| 🔮 **V-Roulette : vraie animation séquentielle**, sons optionnels | M | Aujourd'hui les sauts sont aléatoires |
+| 🗓️ **Événements entre amis** pilotés par `events.json` | M | Fichier statique mis à jour par déploiement |
+| 🧩 **Formes spéciales** (Alola, Galar, Méga…) dans la collection | M–L | Dépend de la décision §4.4 |
 
-### Spécial écriture ✍️ (idée pour toi qui écris)
+### Spécial écriture ✍️
 | Idée | Effort | Note |
 |---|---|---|
-| **« Amorce d'écriture du jour »** : à partir du Pokémon, de sa nature et de son type, proposer une *amorce* (un lieu, un dilemme, un trait de caractère) — jamais un texte écrit à ta place | S–M | Tu gardes la plume ; l'outil ne fait que lancer l'étincelle. Banque de phrases rédigée par toi → ton style |
-| **« Fiche personnage »** exportable du Pokémon du jour | S | Utile pour du worldbuilding |
+| **« Amorce d'écriture du jour »** : à partir du Pokémon, de sa nature et de son type, une *amorce* (lieu, dilemme, trait de caractère), jamais un texte écrit à ta place | S–M | Tu gardes la plume ; banque de phrases rédigée par toi → ton style |
+| **« Fiche personnage »** exportable du Pokémon du jour | S | Pour du worldbuilding |
 
 ### Fun « méta »
 | Idée | Effort | Note |
 |---|---|---|
-| 🥚 **Easter eggs** (codes secrets, Konami code, Pokémon qui fait une blague) | S | Ton léger, comme le Diamant Day |
-| 🧾 **Écran « À propos / dev log »** avec ta Note de Diamant | S | Existe déjà dans le changelog |
+| 🥚 **Easter eggs** (codes secrets, blagues de Pokémon) | S | Dans l'esprit du Diamant Day |
+| 🛠️ **Mode dev enrichi** (simuler une date, déclencher n'importe quel événement) | S | Très utile pour tester les fêtes sans attendre le 31 octobre |
 
 ---
 
-## 7. Prochaine action concrète proposée
+## 10. Questions encore ouvertes
 
-1. Tu réponds aux **questions ouvertes** (audit §8) — même en 1 ligne chacune.
-2. On lance la **Phase 0** (une petite branche, un seul sujet par commit), car elle corrige des bugs réels sans risque.
-3. On enchaîne Phase 1 (noyau + tests), qui débloque tout le reste.
+1. **Les formes dans le jeu** : tirage sur 1 025 espèces seulement, ou aussi (une sélection de) formes ? Le Pokédex compte-t-il les formes à part ?
+2. **Dépôt** : nouveau dépôt (recommandé) ou branche orpheline dans le même dépôt (§8) ?
+3. **Images** : OK pour l'**option B** (générées au build, non commitées) ? Et résolution **256 px** (léger) ou **512 px** (carte de partage HD) ?
+4. **Essai « sans framework »** (§2.3) : OK pour démarrer par là, avec la possibilité de réajuster si un critère échoue ?
+5. **Ancienne base de données** : on la laisse dormir sur les appareils, ou on la supprime automatiquement au premier lancement de la v4 ?
+6. **Export/import** : en début de projet (phase 4) ou plus tard ?
+
+## 11. Prochaine action concrète proposée
+
+1. Tu réponds aux questions du §10 (même en un mot).
+2. On démarre la **Phase 1** : fondations (outillage, CI) + l'essai de l'écran « carte du jour » sans framework.
+3. On enchaîne avec les données/images (phase 2) : c'est elle qui règle ton problème d'images une fois pour toutes.
