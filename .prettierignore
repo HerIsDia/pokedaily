@@ -1,0 +1,9 @@
+dist
+node_modules
+coverage
+pnpm-lock.yaml
+public
+.cache
+# La documentation est rédigée à la main (tableaux larges) : on ne la reformate pas.
+docs
+*.md

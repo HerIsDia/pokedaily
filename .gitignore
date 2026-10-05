@@ -1,0 +1,8 @@
+/node_modules/
+/dist/
+/coverage/
+/.vscode/
+/.cache/
+/public/sprites/
+.DS_Store
+*.log
