@@ -85,7 +85,8 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 4. **Service worker** : après un changement de `src/pwa/sw.ts`, désenregistre-le/vide les caches dans le navigateur avant de déboguer.
 5. **Avertissement du build** `inlineDynamicImports option is deprecated` : vient de `vite-plugin-pwa` 2 avec Vite 8, sans effet.
 6. **`docs/CHANGELOG_GUIDE.md`** décrit encore l'ancien `Changelog.svelte` : à réécrire en phase 5. Ses **règles éditoriales** (tutoiement, zéro jargon, « Note de Diamant » = sa voix, ne jamais l'inventer) restent valables.
-7. **Branche par défaut de l'ancien dépôt** : `🏡master` (emoji) — cite-la entre guillemets dans un script shell.
+7. **PokéAPI refuse (403) les requêtes sans `User-Agent` propre** (constaté avec l'agent par défaut de Python ; `curl` passe). Tout script qui l'interroge doit envoyer un `User-Agent` qui nous identifie, mettre les réponses en cache local (`.cache/`) et rester poli (peu de requêtes en parallèle).
+8. **Branche par défaut de l'ancien dépôt** : `🏡master` (emoji) — cite-la entre guillemets dans un script shell.
 
 ## Ne pas faire
 
