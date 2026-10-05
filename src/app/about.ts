@@ -1,4 +1,5 @@
 import { createBackupPanel } from '../features/backup/backup-panel';
+import { createOfflinePanel } from '../features/offline/offline-panel';
 import type { I18n } from '../i18n';
 import type { Game } from '../state/game';
 import { bindText, h } from '../ui/dom';
@@ -41,6 +42,7 @@ export function createAboutView({
         text(() => t('about.version', { version: __APP_VERSION__ })),
       ),
       createBackupPanel({ i18n, game, scope }),
+      createOfflinePanel({ i18n, scope }),
       h(
         'p',
         { class: 'about-version' },

@@ -1,4 +1,5 @@
-.backup-panel {
+.backup-panel,
+.offline-panel {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -9,7 +10,8 @@
   border: 1px solid var(--border-subtle);
 }
 
-.backup-panel h2 {
+.backup-panel h2,
+.offline-panel h2 {
   font-size: 17px;
   color: var(--text-primary);
 }
@@ -49,4 +51,38 @@
 
 .backup-feedback.is-error {
   color: #ff8a80;
+}
+
+.offline-progress {
+  width: 100%;
+  height: 10px;
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  background: var(--bg-main);
+  overflow: hidden;
+}
+
+.offline-progress::-webkit-progress-bar {
+  background: var(--bg-main);
+}
+
+.offline-progress::-webkit-progress-value {
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.offline-progress::-moz-progress-bar {
+  background: var(--accent);
+}
+
+.offline-progress[hidden],
+.backup-actions [hidden] {
+  display: none;
+}
+
+.offline-status {
+  min-height: 1.4em;
+  font-size: 13px;
+  color: var(--text-secondary);
 }

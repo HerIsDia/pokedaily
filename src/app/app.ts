@@ -7,6 +7,7 @@ import { createChangelogUi } from '../features/changelog/changelog';
 import { createHistoryView } from '../features/history/history';
 import { createHomeView } from '../features/home/home';
 import { createPokedexView } from '../features/pokedex/pokedex';
+import type { Updater } from '../pwa/register';
 import type { Game } from '../state/game';
 import { createKitView } from '../features/kit/kit';
 import { createRouletteView } from '../features/kit/roulette';
@@ -18,10 +19,12 @@ import { icon, type IconName } from './icons';
 export interface AppDeps {
   i18n: I18n;
   game: Game;
+  /** Mise à jour de l'application (absente en développement et dans les tests). */
+  updater?: Updater | null;
 }
 
 /** Monte l'application dans `root` et renvoie une fonction pour tout démonter. */
-export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void {
+export function mountApp(root: HTMLElement, { i18n, game, updater }: AppDeps): () => void {
   const scope = new Scope();
   const { t, lang, setLang } = i18n;
 
@@ -123,10 +126,37 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
   );
   bindAttr(scope, tabBar, 'aria-label', [lang], () => t('nav.main'));
 
+  // Bandeau « nouvelle version » : on propose, on n'impose jamais.
+  const updateBanner = h(
+    'div',
+    { class: 'update-banner', role: 'status' },
+    h(
+      'span',
+      null,
+      bindText(scope, [lang], () => t('update.available')),
+    ),
+    h(
+      'button',
+      { class: 'update-apply', type: 'button', onclick: () => updater?.apply() },
+      bindText(scope, [lang], () => t('update.apply')),
+    ),
+    h(
+      'button',
+      { class: 'update-later', type: 'button', onclick: () => updater?.dismiss() },
+      bindText(scope, [lang], () => t('update.later')),
+    ),
+  );
+  if (updater) {
+    bindAttr(scope, updateBanner, 'hidden', [updater.available], () => !updater.available.get());
+  } else {
+    updateBanner.hidden = true;
+  }
+
   const shell = h(
     'div',
     { class: 'app-shell' },
     header,
+    updateBanner,
     outlet,
     tabBar,
     changelog.modal.element,

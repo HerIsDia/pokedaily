@@ -12,6 +12,8 @@ import { createIndexedDbRepository } from '../storage/indexeddb';
 import { cleanupLegacy } from '../storage/legacy';
 import { createMemoryRepository } from '../storage/memory';
 import type { Repository } from '../storage/repository';
+import { requestPersistence } from '../pwa/persist';
+import { createBrowserUpdater, type Updater } from '../pwa/register';
 import { mountApp } from './app';
 
 export interface BootDeps {
@@ -21,6 +23,8 @@ export interface BootDeps {
   /** Aperçu de développement (`?preview=…`), lu dans l'adresse par défaut. */
   preview?: PokemonEntry | null;
   cleanup?: () => Promise<void>;
+  /** Mise à jour de l'application ; par défaut le vrai (absent en développement). */
+  updater?: Updater | null;
 }
 
 function stateWithToday(entry: PokemonEntry): GameState {
@@ -56,6 +60,7 @@ export async function boot(
     indexedDB = browserIndexedDb(),
     preview = createPreviewEntry(),
     cleanup = cleanupLegacy,
+    updater = createBrowserUpdater(),
   }: BootDeps,
 ): Promise<{ game: Game; stop: () => void }> {
   const repository = preview
@@ -70,15 +75,19 @@ export async function boot(
     sync: preview ? undefined : createBroadcastSync(),
   });
 
-  const unmount = mountApp(root, { i18n, game });
+  const unmount = mountApp(root, { i18n, game, updater });
   await game.start();
   const stopWatching = game.watch();
 
-  if (game.status.get() === 'ready' && repository.persistent) void cleanup();
+  if (game.status.get() === 'ready' && repository.persistent) {
+    void cleanup();
+    void requestPersistence(); // application installée : on protège la collection de l'effacement automatique
+  }
 
   return {
     game,
     stop: () => {
+      updater?.stop();
       stopWatching();
       unmount();
       game.close();

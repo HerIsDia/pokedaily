@@ -145,6 +145,29 @@ export const fr = {
   'dev.done': '✓ Fait',
   'dev.open': 'Mode développeur',
 
+  'update.available': 'Une nouvelle version de Pokédaily est prête.',
+  'update.apply': 'Mettre à jour',
+  'update.later': 'Plus tard',
+
+  'offline.title': 'Hors-ligne',
+  'offline.intro':
+    "L'application marche déjà sans connexion. Les images se gardent au fur et à mesure que tu les vois ; tu peux aussi les télécharger toutes d'un coup (de préférence en Wi-Fi).",
+  'offline.unsupported': 'Ton navigateur ne permet pas de garder les images pour le hors-ligne.',
+  'offline.small': 'Miniatures (≈ {mb} Mo)',
+  'offline.large': 'Grandes images (≈ {mb} Mo)',
+  'offline.cancel': 'Annuler',
+  'offline.clear': "Libérer l'espace",
+  'offline.confirmClear':
+    "Supprimer toutes les images gardées sur cet appareil ? Tu pourras les retélécharger (ta collection n'est pas touchée).",
+  'offline.cached': 'Images gardées sur cet appareil : {count}',
+  'offline.progress': 'Téléchargement : {done} / {total}',
+  'offline.done': '✓ Images téléchargées.',
+  'offline.cancelled': 'Téléchargement annulé (les images déjà reçues sont gardées).',
+  'offline.someFailed':
+    'Terminé, mais {count} images n’ont pas pu être téléchargées. Réessaie plus tard.',
+  'offline.failed': 'Le téléchargement a échoué. Vérifie ta connexion et réessaie.',
+  'offline.cleared': '✓ Espace libéré.',
+
   'home.loading': 'Ouverture de ta collection…',
   'home.error.too_new':
     "Ta sauvegarde a été créée par une version plus récente de Pokédaily. Mets l'application à jour (recharge la page) pour la lire.",

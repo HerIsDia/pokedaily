@@ -176,3 +176,43 @@
     letter-spacing: 0;
   }
 }
+
+.update-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 16px;
+  background: var(--accent-subtle);
+  border-bottom: 1px solid var(--border-accent);
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.update-banner[hidden] {
+  display: none;
+}
+
+.update-banner span {
+  flex: 1;
+  min-width: 160px;
+}
+
+.update-apply,
+.update-later {
+  padding: 5px 12px;
+  border: 1px solid var(--border-accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.update-apply {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}

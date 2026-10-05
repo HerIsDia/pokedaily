@@ -16,9 +16,10 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src/pwa',
       filename: 'sw.ts',
-      injectRegister: 'auto',
+      // L'enregistrement est fait par `src/pwa/register.ts` (mise à jour avec confirmation).
+      injectRegister: false,
       injectManifest: {
-        // Le « shell » de l'app uniquement. Les sprites sont gérés à part (phase 2/6).
+        // Le « shell » de l'app uniquement. Les images passent par un cache à la demande (sw.ts).
         globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
         globIgnores: ['**/sprites/**'],
       },

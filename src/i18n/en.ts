@@ -147,6 +147,28 @@ export const en: Record<MessageKey, string> = {
   'dev.done': '✓ Done',
   'dev.open': 'Developer mode',
 
+  'update.available': 'A new version of Pokédaily is ready.',
+  'update.apply': 'Update',
+  'update.later': 'Later',
+
+  'offline.title': 'Offline',
+  'offline.intro':
+    'The app already works without a connection. Images are kept as you view them; you can also download them all at once (preferably on Wi-Fi).',
+  'offline.unsupported': "Your browser can't keep images for offline use.",
+  'offline.small': 'Thumbnails (≈ {mb} MB)',
+  'offline.large': 'Large images (≈ {mb} MB)',
+  'offline.cancel': 'Cancel',
+  'offline.clear': 'Free up space',
+  'offline.confirmClear':
+    'Delete all images kept on this device? You can download them again (your collection is not affected).',
+  'offline.cached': 'Images kept on this device: {count}',
+  'offline.progress': 'Downloading: {done} / {total}',
+  'offline.done': '✓ Images downloaded.',
+  'offline.cancelled': 'Download cancelled (images already received are kept).',
+  'offline.someFailed': 'Finished, but {count} images could not be downloaded. Try again later.',
+  'offline.failed': 'The download failed. Check your connection and try again.',
+  'offline.cleared': '✓ Space freed.',
+
   'home.loading': 'Opening your collection…',
   'home.error.too_new':
     'Your save was created by a newer version of Pokédaily. Update the app (reload the page) to read it.',
