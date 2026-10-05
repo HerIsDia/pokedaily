@@ -15,7 +15,7 @@
   },
   "packageManager": "pnpm@10.28.0",
   "engines": {
-    "node": ">=22.12"
+    "node": ">=22.18"
   },
   "scripts": {
     "dev": "vite --host",
@@ -26,7 +26,10 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --check .",
-    "format:write": "prettier --write ."
+    "format:write": "prettier --write .",
+    "dex": "node scripts/build-dex.ts",
+    "sprites": "node scripts/sync-sprites.ts",
+    "sprites:gaps": "node scripts/fill-gaps.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -34,6 +37,7 @@
     "eslint": "^10.12.0",
     "happy-dom": "^20.14.5",
     "prettier": "^3.9.9",
+    "sharp": "^0.35.5",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.71.0",
     "vite": "^8.3.2",

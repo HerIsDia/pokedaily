@@ -7,3 +7,4 @@ public
 # La documentation est rédigée à la main (tableaux larges) : on ne la reformate pas.
 docs
 *.md
+/src/data/
