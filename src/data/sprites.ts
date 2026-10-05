@@ -7,8 +7,8 @@ import sprites from './sprites.json';
 
 export type SpriteSource = 'home' | 'official-artwork' | 'scarlet-violet' | 'extra';
 
-/** Tailles générées (px). La taille de la carte et des vignettes se choisit ici. */
-export const SPRITE_SIZES = [128, 256, 512] as const;
+/** Tailles générées (px) : 512 pour la carte et le partage, 128 pour les grilles. */
+export const SPRITE_SIZES = [128, 512] as const;
 export type SpriteSize = (typeof SPRITE_SIZES)[number];
 
 const missingNormal = new Set<number>(sprites.missing.normal);

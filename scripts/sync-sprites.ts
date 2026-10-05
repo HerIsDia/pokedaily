@@ -160,6 +160,16 @@ await Promise.all(
 let pruned = 0;
 if (!only) {
   await writeFile(path('src/data/sprites.json'), stringifyAvailability(availability));
+  // Dossiers de tailles abandonnées (ex. 256 px) : supprimés.
+  const spritesDir = path('public/sprites');
+  if (await exists(spritesDir)) {
+    for (const name of await readdir(spritesDir)) {
+      if (!sizes.includes(Number(name))) {
+        await rm(`${spritesDir}/${name}`, { recursive: true, force: true });
+        pruned++;
+      }
+    }
+  }
   for (const size of sizes) {
     const dir = path(`public/sprites/${size}`);
     if (!(await exists(dir))) continue;

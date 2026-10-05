@@ -40,7 +40,7 @@ describe('sprites : adresses et noms', () => {
 
 describe('arguments', () => {
   it('parseSizes : défaut, tri, doublons, validation', () => {
-    expect(parseSizes(undefined)).toEqual([128, 256, 512]);
+    expect(parseSizes(undefined)).toEqual([128, 512]);
     expect(parseSizes('512, 128,512')).toEqual([128, 512]);
     expect(() => parseSizes('10')).toThrow(/invalide/);
     expect(() => parseSizes('abc')).toThrow(/invalide/);

@@ -22,7 +22,8 @@ const SOURCE_PATHS: Record<SpriteSource, string> = {
   'scarlet-violet': 'sprites/pokemon/versions/generation-ix/scarlet-violet',
 };
 
-export const DEFAULT_SIZES = [128, 256, 512] as const;
+/** 512 px : carte et image de partage ; 128 px : vignettes des grilles (décision de Diamant). */
+export const DEFAULT_SIZES = [128, 512] as const;
 
 /** Adresse d'une image dans l'une des sources (normal ou shiny). */
 export function sourceUrl(id: number, shiny: boolean, source: SpriteSource = 'home'): string {

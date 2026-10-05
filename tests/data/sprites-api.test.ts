@@ -32,7 +32,7 @@ describe('accès aux images', () => {
 
   it("spriteUrl retombe sur l'image normale quand le shiny n'existe pas", () => {
     expect(spriteUrl(25, false, 512)).toBe('/sprites/512/25.webp');
-    expect(spriteUrl(25, true, 256)).toBe('/sprites/256/25s.webp');
+    expect(spriteUrl(25, true, 128)).toBe('/sprites/128/25s.webp');
     expect(spriteUrl(10096, true, 512)).toBe('/sprites/512/10096.webp');
   });
 });
