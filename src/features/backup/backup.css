@@ -1,0 +1,52 @@
+.backup-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+}
+
+.backup-panel h2 {
+  font-size: 17px;
+  color: var(--text-primary);
+}
+
+.backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.backup-actions .btn {
+  padding: 8px 14px;
+  border: 1px solid var(--border-accent);
+  border-radius: 10px;
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.backup-actions .btn:hover {
+  background: var(--accent);
+}
+
+.backup-actions .backup-file[hidden] {
+  display: none;
+}
+
+.backup-feedback {
+  min-height: 1.4em;
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.backup-feedback.is-error {
+  color: #ff8a80;
+}

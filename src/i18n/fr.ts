@@ -20,6 +20,42 @@ export const fr = {
     "Pokédaily n'est pas affilié à Nintendo, Game Freak ou The Pokémon Company. Pokémon et ses personnages sont des marques déposées de leurs propriétaires.",
   'about.version': 'Version {version}',
 
+  'home.loading': 'Ouverture de ta collection…',
+  'home.error.too_new':
+    "Ta sauvegarde a été créée par une version plus récente de Pokédaily. Mets l'application à jour (recharge la page) pour la lire.",
+  'home.error.load_failed':
+    "Impossible de lire ta sauvegarde pour l'instant. Recharge la page ; si ça persiste, ne vide pas les données du site : écris à Diamant.",
+
+  'notice.volatile':
+    "Mode sans sauvegarde : rien n'est conservé quand tu fermes l'onglet (ton navigateur refuse le stockage, ou c'est un aperçu).",
+  'notice.saveFailed':
+    "⚠️ Ta dernière modification n'a pas pu être enregistrée. Elle reste visible ici ; on réessaie à la prochaine action.",
+  'notice.warnings': "Certaines données abîmées ont été ignorées à l'ouverture.",
+  'notice.warningsDetails': 'Voir le détail',
+  'notice.dismiss': 'Fermer',
+
+  'backup.title': 'Ma collection',
+  'backup.intro':
+    "Tout est enregistré sur cet appareil. Pour la garder en sécurité ou la passer sur un autre appareil, exporte-la dans un fichier, puis importe-la ailleurs. Le fichier reste chez toi : rien n'est envoyé sur Internet.",
+  'backup.export': 'Exporter ma collection',
+  'backup.exported': 'Fichier « {filename} » prêt : cherche-le dans tes téléchargements.',
+  'backup.import': 'Importer une collection…',
+  'backup.confirm':
+    'Remplacer ta collection actuelle (jours enregistrés : {current}) par celle du fichier (jours enregistrés : {incoming}, Pokémon différents : {caught}) ?\n\nTa collection actuelle sera définitivement perdue. Exporte-la d’abord si tu veux la garder.',
+  'backup.imported':
+    'Collection importée (jours enregistrés : {incoming}, Pokémon différents : {caught}).',
+  'backup.cancelled': 'Import annulé : ta collection n’a pas changé.',
+  'backup.failure.too_big': 'Ce fichier est trop gros pour être une sauvegarde Pokédaily.',
+  'backup.failure.not_json': "Ce fichier n'est pas lisible (ce n'est pas du JSON).",
+  'backup.failure.not_pokedaily': "Ce fichier n'est pas une sauvegarde Pokédaily.",
+  'backup.failure.too_new':
+    'Ce fichier vient d’une version plus récente de Pokédaily : mets l’application à jour.',
+  'backup.failure.damaged':
+    'Ce fichier est abîmé ; rien n’a été importé. Premier problème : {first}',
+  'backup.failure.save_failed':
+    "L'enregistrement a échoué : ta collection n'a pas changé. Réessaie.",
+  'backup.failure.read_failed': 'Impossible de lire ce fichier.',
+
   'footer.madeBy': 'Fait par {author}',
 
   'form.mega': 'Méga',

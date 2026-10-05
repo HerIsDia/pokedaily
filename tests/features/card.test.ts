@@ -1,19 +1,30 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clampName } from '../../src/core/names';
 import { createCardView, spritePath } from '../../src/features/card/card';
-import { createSampleEntry } from '../../src/features/card/sample-entry';
+import type { PokemonEntry } from '../../src/core/model';
 import { createI18n } from '../../src/i18n';
 import { Scope } from '../../src/ui/scope';
 import { createStore } from '../../src/ui/store';
 
+const pikachu: PokemonEntry = {
+  id: 25,
+  natureKey: 'jolly',
+  level: 42,
+  isShiny: false,
+  day: '2026-05-01',
+  rename: '',
+};
+
+/** La carte ne modifie rien elle-même : ici, `onRename` joue le rôle de l'état du jeu. */
 function mount(lang: 'fr' | 'en' = 'fr') {
   const i18n = createI18n(lang);
-  const entry = createStore(createSampleEntry());
+  const entry = createStore(pikachu);
+  const onRename = vi.fn((rename: string) => entry.update((e) => ({ ...e, rename })));
   const scope = new Scope();
-  const root = createCardView({ i18n, entry })({ scope });
+  const root = createCardView({ i18n, entry, onRename })({ scope });
   document.body.replaceChildren(root);
   const q = <T extends Element>(selector: string) => root.querySelector<T>(selector)!;
-  return { i18n, entry, scope, root, q };
+  return { i18n, entry, scope, root, q, onRename };
 }
 
 const press = (el: Element, key: string) =>

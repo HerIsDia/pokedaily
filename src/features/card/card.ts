@@ -2,7 +2,7 @@ import type { PokemonEntry } from '../../core/model';
 import type { I18n, MessageKey } from '../../i18n';
 import { appendChildren, bindAttr, bindChildren, bindText, effect, h, svg } from '../../ui/dom';
 import type { View } from '../../ui/router';
-import { createStore, type Store } from '../../ui/store';
+import { createStore, type ReadStore } from '../../ui/store';
 import { NAME_MAX_LENGTH } from '../../core/constants';
 import { clampName } from '../../core/names';
 import { getEntry, getNature } from '../../data';
@@ -10,7 +10,10 @@ import { spriteUrl, type SpriteSize } from '../../data/sprites';
 
 export interface CardDeps {
   i18n: I18n;
-  entry: Store<PokemonEntry>;
+  /** Le Pokémon affiché (lecture seule : la carte ne modifie rien elle-même). */
+  entry: ReadStore<PokemonEntry>;
+  /** Appelée avec le nouveau surnom (déjà borné ; vide = revenir au nom de l'espèce). */
+  onRename: (name: string) => void;
 }
 
 /** Taille de l'image de la carte : 512 px reste net sur les écrans denses ; à confirmer à l'œil. */
@@ -38,7 +41,7 @@ function formatDay(day: string, locale: string): string {
  * « liés » aux états. Ainsi un changement de langue ne recrée pas le champ de surnom
  * (le focus, la sélection et le défilement sont conservés).
  */
-export function createCardView({ i18n, entry }: CardDeps): View {
+export function createCardView({ i18n, entry, onRename }: CardDeps): View {
   return ({ scope }) => {
     const { t, lang } = i18n;
     const editing = createStore(false);
@@ -108,7 +111,7 @@ export function createCardView({ i18n, entry }: CardDeps): View {
       if (!editing.get()) return; // déjà validé ou annulé (évite le double envoi via blur)
       const name = clampName(input.value);
       editing.set(false);
-      entry.update((current) => ({ ...current, rename: name === speciesName() ? '' : name }));
+      onRename(name === speciesName() ? '' : name);
     }
 
     const editButton = h(

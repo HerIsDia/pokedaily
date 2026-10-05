@@ -1,23 +1,20 @@
-import { createStore } from '../ui/store';
 import { LANGS, type I18n, type Lang } from '../i18n';
 import { bindAttr, bindText, effect, h } from '../ui/dom';
 import { createRouter, type Route } from '../ui/router';
 import { Scope } from '../ui/scope';
-import { createCardView } from '../features/card/card';
-import { createSampleEntry } from '../features/card/sample-entry';
+import { createHomeView } from '../features/home/home';
+import type { Game } from '../state/game';
 import { createAboutView } from './about';
 
 export interface AppDeps {
   i18n: I18n;
+  game: Game;
 }
 
 /** Monte l'application dans `root` et renvoie une fonction pour tout démonter. */
-export function mountApp(root: HTMLElement, { i18n }: AppDeps): () => void {
+export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void {
   const scope = new Scope();
   const { t, lang, setLang } = i18n;
-
-  // ⚠️ Essai de la phase 1 : l'entrée vient d'un jeu de données temporaire, en mémoire.
-  const entry = createStore(createSampleEntry());
 
   // <html lang="…"> suit la langue choisie (corrige le `lang="fr"` figé de la v3).
   effect(scope, [lang], () => {
@@ -26,8 +23,8 @@ export function mountApp(root: HTMLElement, { i18n }: AppDeps): () => void {
 
   const outlet = h('main', { class: 'app-main' });
   const routes: Route[] = [
-    { path: '', view: createCardView({ i18n, entry }) },
-    { path: 'about', view: createAboutView({ i18n }) },
+    { path: '', view: createHomeView({ i18n, game }) },
+    { path: 'about', view: createAboutView({ i18n, game }) },
   ];
   const router = createRouter(outlet, routes, { fallback: '' });
 

@@ -1,19 +1,20 @@
 /**
- * ⚠️ ENTRÉE D'ESSAI (temporaire, jusqu'aux phases 3 et 4 : vrai tirage + sauvegarde).
- *
- * Pour voir n'importe quel Pokémon pendant le développement :
- *   /?id=10034            une forme (Méga-Dracaufeu X)
- *   /?id=25&shiny=1       en shiny
- *   /?id=6&level=88&nature=timid
+ * Aperçu de DÉVELOPPEMENT : voir n'importe quel Pokémon sans toucher à la vraie sauvegarde.
+ * Rien n'est enregistré (l'application tourne alors « en mémoire »). Exemples :
+ *   /?preview=10034                       une forme (Méga-Dracaufeu X)
+ *   /?preview=25&shiny=1                  en shiny
+ *   /?preview=6&level=88&nature=timid
+ * Sans paramètre `preview`, rien ne change : on joue normalement.
  */
 import { localDay } from '../../core/dates';
 import type { PokemonEntry } from '../../core/model';
 import { getEntry, getNature } from '../../data';
 import { canBeShiny } from '../../data/sprites';
 
-export function createSampleEntry(search: string = window.location.search): PokemonEntry {
+export function createPreviewEntry(search: string = window.location.search): PokemonEntry | null {
   const params = new URLSearchParams(search);
-  const wantedId = Number(params.get('id'));
+  if (!params.has('preview')) return null;
+  const wantedId = Number(params.get('preview'));
   const id = getEntry(wantedId) ? wantedId : 25;
   const level = Number(params.get('level'));
   const nature = params.get('nature') ?? '';

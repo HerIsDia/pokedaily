@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { forms, species } from '../../src/data';
 import { canBeShiny, hasSprite, isDrawable, spriteSource, spriteUrl } from '../../src/data/sprites';
-import { createSampleEntry } from '../../src/features/card/sample-entry';
+import { createPreviewEntry } from '../../src/features/card/preview';
 
 describe('accès aux images', () => {
   it('toute espèce a une image normale ET shiny, issues du rendu de référence « home »', () => {
@@ -37,15 +37,20 @@ describe('accès aux images', () => {
   });
 });
 
-describe("entrée d'essai (paramètres d'adresse, développement)", () => {
+describe("aperçu de développement (paramètres d'adresse)", () => {
+  it('sans paramètre « preview », on joue normalement', () => {
+    expect(createPreviewEntry('')).toBeNull();
+    expect(createPreviewEntry('?id=25')).toBeNull();
+  });
+
   it('valeurs par défaut et paramètres valides', () => {
-    expect(createSampleEntry('')).toMatchObject({
-      id: 25,
+    expect(createPreviewEntry('?preview=1')).toMatchObject({
+      id: 1,
       level: 42,
       natureKey: 'jolly',
       isShiny: false,
     });
-    expect(createSampleEntry('?id=10034&shiny=1&level=88&nature=timid')).toMatchObject({
+    expect(createPreviewEntry('?preview=10034&shiny=1&level=88&nature=timid')).toMatchObject({
       id: 10034,
       level: 88,
       natureKey: 'timid',
@@ -54,7 +59,7 @@ describe("entrée d'essai (paramètres d'adresse, développement)", () => {
   });
 
   it('ignore les valeurs invalides', () => {
-    expect(createSampleEntry('?id=99999&level=500&nature=nope')).toMatchObject({
+    expect(createPreviewEntry('?preview=99999&level=500&nature=nope')).toMatchObject({
       id: 25,
       level: 42,
       natureKey: 'jolly',
@@ -62,6 +67,6 @@ describe("entrée d'essai (paramètres d'adresse, développement)", () => {
   });
 
   it('refuse un shiny impossible', () => {
-    expect(createSampleEntry('?id=10096&shiny=1').isShiny).toBe(false);
+    expect(createPreviewEntry('?preview=10096&shiny=1')?.isShiny).toBe(false);
   });
 });
