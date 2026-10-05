@@ -13,12 +13,13 @@ Le code actuel (v3.1, Svelte) est **destiné à être remplacé** par une **v4 r
 
 1. **TypeScript/JavaScript pur, sans moteur de rendu** : n'introduis **ni Svelte, ni React, ni Vue, ni équivalent (lit, etc.)** dans la v4. On garde **Vite** et la **PWA**.
 2. **Jour local** : le Pokémon change à **minuit heure locale** du joueur (clé `YYYY-MM-DD` locale), plus de minuit UTC dans la v4.
-3. **Pas de migration** de données : la v4 repart d'une base vide (3–5 utilisateurs seulement).
+3. **Pas de migration** de données : la v4 repart d'une base vide (3–5 utilisateurs seulement). L'**ancienne base est supprimée** au premier lancement de la v4 (garde-fous : seulement après ouverture réussie de la nouvelle base, jamais sur les prévisualisations). **Export/import** de la collection : tôt (phase 4).
 4. **Langues : français + anglais uniquement.**
 5. **Mode développeur conservé** pour tout le monde, il fait partie du système.
 6. **Jamais de monétisation** : ni publicité, ni achat, ni statistiques de suivi/analytics, ni service tiers qui voit les joueurs. Projet fun entre amis, non commercial. Refuse toute proposition contraire, même « discrète ».
-7. **Images** : pas de récupération manuelle ; elles viennent d'un script automatisé (source `PokeAPI/sprites`, rendus Home 512 px) — `docs/REBUILD_PLAN.md` §4. Elles restent la propriété de The Pokémon Company.
-8. **Dépôt propre** (sans les 294 Mo d'historique) : décidé, mais l'exécution est **destructive** → ne le fais **jamais** sans nouvelle confirmation explicite de Diamant.
+7. **Images** : pas de récupération manuelle ; elles viennent d'un script automatisé (source `PokeAPI/sprites`, rendus Home 512 px), **générées au build et non commitées** — `docs/REBUILD_PLAN.md` §4. Taille finale (256/512 px) à trancher après essai visuel. Elles restent la propriété de The Pokémon Company.
+   - **Formes alternatives voulues** (Alola, Galar, Méga…) : choisies via `forms.json` (champ `enabled`), modèle de données avec `id` PokéAPI **et** `speciesId`.
+8. **Dépôt propre** : **branche vide (orpheline)** dans le même dépôt, bascule en dernier. L'exécution est **destructive** (suppression de l'ancien historique) → ne la fais **jamais** sans nouvelle confirmation explicite de Diamant ; ne crée/pousse aucune nouvelle branche sans son accord.
 
 **Pendant la transition** : ne développe pas de nouvelles fonctionnalités dans la base Svelte sauf demande explicite (les correctifs critiques restent bienvenus) — elles seraient à refaire en v4.
 

@@ -10,10 +10,13 @@
 | Sujet | Décision |
 |---|---|
 | Technologie | **Reconstruction de zéro en TypeScript/JavaScript pur**, sans moteur de rendu (donc **ni Svelte, ni React, ni équivalent**). On **garde Vite et la PWA**. |
-| Images | Solution **automatisée** (aucune récupération manuelle) pour couvrir tous les Pokémon **et leurs formes** → §4. |
-| Historique git | On **repart propre** (sans les 294 Mo). Exécution à la fin (§8), avec une dernière confirmation car c'est destructif. |
+| Essai « sans framework » | **Validé** : on commence par l'écran « carte du jour » (§2.3). |
+| Images | **Script automatisé**, images **générées au build et non commitées** (option B, §4). Résolution (256 ou 512 px) : **à trancher après un essai visuel** (« à voir comment ça rend »). |
+| Formes alternatives | **Oui, on les veut** (Alola, Galar, Méga…). Reste à choisir lesquelles (§4.4). |
+| Dépôt | **Branche vide (orpheline)** dans le même dépôt (§8). Exécution avec confirmation, car on ne peut pas revenir en arrière. |
 | Changement de jour | **Minuit heure locale** de chaque joueur. |
-| Données existantes | Environ 3 à 5 utilisateurs : **aucune migration**, on peut tout écraser. |
+| Données existantes | 3 à 5 utilisateurs : **aucune migration**. L'ancienne base est **supprimée** au premier lancement de la v4 (§5). |
+| Export / import de la collection | **Tôt** dans le projet (phase 4). |
 | Langues | **Français + anglais**, pas d'autre. |
 | Mode développeur | **Conservé**, pour tout le monde : « il fait partie intégrante du système ». |
 | Monétisation | **Jamais** : ni pub, ni achat, ni statistiques de suivi. Projet fun entre amis. |
@@ -140,20 +143,46 @@ tests/                          Vitest (core + storage via fake-indexeddb)
 
 Dans l'app : `getSprite(id, shiny)` consulte le manifeste → **repli propre** (shiny absent → image normale + étincelle ✦ ; image absente → silhouette `000`) : le bug « image cassée » de Minior ne peut plus exister. Un **test CI** échoue si une espèce 1–1025 n'a pas d'image.
 
+**Essai visuel avant de choisir la taille** : la phase 2 génère les deux tailles et une page de comparaison (carte du jour, grille du Pokédex 56 px, image de partage). Ma lecture *a priori* : 256 px suffit pour la grille et l'affichage à l'écran, mais l'image de partage (carte de 400×560 px, jusqu'à 2× sur écran dense) pourrait paraître un peu douce ; je ne peux pas juger le rendu à ta place, c'est pour ça qu'on regarde. Le script prend la taille en paramètre : changer d'avis ne coûte qu'une régénération.
+
 **Poids estimé** (extrapolé depuis un échantillon de 30 images, ❓) : 2 702 fichiers × ~11 Ko (256 px) ≈ **30 Mo**, ou × ~15 Ko (512 px) ≈ **41 Mo**, contre **95 Mo** aujourd'hui, et **0 Mo** dans le dépôt.
 
-### 4.4 Les formes dans le jeu : une vraie décision de produit (voir §10)
+### 4.4 Les formes alternatives : ce qu'il y a et ce que je propose
 
-Les 326 formes contiennent des variantes très différentes (régionales, Méga, Gigamax, genres, costumes…). Pour les utiliser il faut décider **lesquelles** comptent dans le tirage / le Pokédex, et vérifier que leurs noms FR existent dans PokéAPI (❓ souvent incomplets). Le modèle de données prévoit dès le départ `id` (identifiant PokéAPI) **et** `speciesId`, pour pouvoir activer les formes plus tard **sans refonte**.
+**Décision : on veut des formes.** Voici ce que contiennent les 326 formes de PokéAPI (comptage fait sur les noms ✅ ; les « recommandations » sont **mes suggestions**, pas des faits) :
+
+| Catégorie | Nb | Exemples | Suggestion |
+|---|---|---|---|
+| **Régionales** (Alola 20, Galar 20, Hisui 16, Paldea 4) | 60 | Raichu d'Alola, Zorua de Hisui | ✅ oui : de vrais Pokémon à part entière |
+| **Méga** | 97 | Méga-Dracaufeu X | 🤔 à toi : spectaculaires, mais ce sont des états de combat temporaires |
+| **Gigamax** | 34 | Dracaufeu Gigamax | 🤔 à toi (même remarque) |
+| **Primo** | 2 | `groudon-primal`, `kyogre-primal` | 🤔 à toi |
+| **Formes permanentes distinctes** (parmi les 108 « autres ») | ~50 ❓ | `deoxys-attack`, `rotom-wash`, `giratina-origin`, `kyurem-black`, `tornadus-therian` | ✅ à trier ensemble |
+| **États de combat / cosmétiques** (parmi les 108 « autres ») | ~60 ❓ | `aegislash-blade`, `wishiwashi-school`, `castform-sunny`, **Minior ×14** (`minior-red`…), `pumpkaboo-small` | ❌ par défaut (quasi des doublons ou des états temporaires) |
+| **Totem** | 11 | versions « boss » de Pokémon d'Alola (`-totem`) | ❌ par défaut |
+| **Pikachu casquettes / costumes** | 14 | `pikachu-sinnoh-cap`, `pikachu-rock-star` | 🎉 idée pour les événements (Pokémon Day !) ; plusieurs sans image shiny |
+
+(Total : 60 + 97 + 34 + 2 + 108 + 11 + 14 = 326 ✅. Les 108 « autres » ne sont pas encore triés à la main ; le « ~50 / ~60 » est une estimation à confirmer.)
+
+**Comment on l'organise (sans coder à chaque changement)** : un fichier de données **`forms.json`** liste chaque forme avec un champ `enabled` (oui/non) et sa catégorie. Tu peux changer d'avis en modifiant le fichier. Le script de génération le lit ; l'app ne charge que les formes activées.
+
+**Règles proposées (à valider)**
+- **Tirage** : pool = espèces + formes activées, tirage uniforme (simple, testable). Avec ~150 formes activées, ≈ 13 % de chances d'obtenir une forme ; réglable plus tard. Les **événements** peuvent forcer des formes (idée : Halloween avec des formes spectrales).
+- **Pokédex** : il reste à **1 025 espèces** (obtenir n'importe quelle forme d'une espèce la compte), et un **onglet « Formes »** suit la collection de formes à part. Évite que la barre « x/1025 » devienne mouvante à chaque ajout.
+- **Noms FR/EN** : PokéAPI ne fournit pas toujours le nom français d'une forme (❓ à mesurer). Le script les **fabrique** à partir du nom de l'espèce + un petit dictionnaire (« Méga- », « de Galar », « Gigamax »…) et signale ceux à relire : **risque d'erreurs de nom FR, à vérifier**.
+- **Images manquantes** (39 chez la source, ✅ vérifiées) : costumes/casquettes de Pikachu, Pikachu et Évoli « partenaires », modes de Koraidon/Miraidon. Un shiny absent s'explique parfois par un shiny impossible dans le jeu (❓ non vérifié). Le manifeste d'images fait que l'app **n'affiche jamais** une image cassée : repli propre ou forme désactivée.
+- **Modèle de données** : `id` (identifiant PokéAPI, jusqu'à `10326`) **et** `speciesId` dès le départ.
 
 ---
 
-## 5. Données du joueur (sans migration)
+## 5. Données du joueur (sans migration, ancienne base supprimée)
 
-- **Nouvelle base IndexedDB** (nom/version distincts) : l'ancienne n'est simplement plus lue. Suppression automatique de l'ancienne : à décider (par défaut : on ne touche à rien).
-- Pas de `migrateFromLocalStorage`, pas de conversion v3 → v4 : le code est donc **plus simple**.
-- **Prévenir les 3–5 personnes concernées** : une ligne dans la **Note de Diamant** du changelog 4.0 (rédigée par toi, avec ta voix) pour annoncer que la collection repart de zéro.
-- **Export / import** de la collection : plus un filet de sécurité de migration, mais toujours une bonne **fonctionnalité** (changer de téléphone, sauvegarde, fun) → dans le backlog (§9), plus tôt si tu le souhaites.
+- **Nouvelle base IndexedDB** (nom/version distincts). Pas de `migrateFromLocalStorage`, pas de conversion : le code est plus simple.
+- **Au premier lancement de la v4** (décision : on supprime) : une petite routine **nettoie l'ancienne installation** : base `pokedaily` (v3), clés `localStorage` (`data`, `_devNextId`), clé `sessionStorage` (`done`), et le cache d'images `pokemon-images-v1` (qui peut peser jusqu'à ~91 Mo sur l'appareil).
+  - **Garde-fous** : on ne supprime **qu'après** avoir ouvert la nouvelle base avec succès ; on gère le cas « un autre onglet garde l'ancienne base ouverte » (suppression bloquée) en réessayant au lancement suivant ; la routine ne s'exécute **que sur le site de production** (les prévisualisations n'ont pas d'ancienne base) et est **testée** avant la bascule.
+  - **Irréversible** : c'est écrit dans le changelog 4.0.
+- **Prévenir les 3–5 personnes** : une ligne dans la **Note de Diamant** du changelog 4.0 (rédigée par toi, avec ta voix) : la collection repart de zéro.
+- **Export / import de la collection** : **dès la phase 4**. Fichier JSON versionné (`{ app, schemaVersion, exportedAt, données }`), **validé avant import**, avec confirmation avant d'écraser quoi que ce soit. Pratique pour changer de téléphone et pour se protéger d'un vidage du navigateur.
 
 ---
 
@@ -168,6 +197,7 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 ### Phase 2 — Données et images
 - `scripts/build-dex.ts` (dex + natures FR/EN, **vérifiés** contre PokéAPI) et `scripts/sync-sprites.ts` (§4), manifeste, test de complétude.
+- `forms.json` (tri des formes avec toi, §4.4) et **page de comparaison 256/512 px** pour choisir la taille.
 - **Sortie** : `pnpm sprites` et `pnpm dex` produisent tout sans intervention ; l'app n'appelle plus jamais PokéAPI.
 
 ### Phase 3 — Noyau testé (`core/`)
@@ -175,8 +205,9 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 - **Tests** : toutes les dates clés des événements (y compris ponctuel vs annuel), tirage avec graine, probabilité de boost, passage de minuit et changement de fuseau.
 - **Sortie** : le « tirage du jour » complet est testé sans navigateur.
 
-### Phase 4 — Stockage + état
+### Phase 4 — Stockage, état, export/import
 - Repository transactionnel, store global, tickets/boîtes avec **dates de validité**.
+- **Export / import** de la collection (§5) et **routine de nettoyage** de l'ancienne installation (testée, non activée avant le lancement).
 - **Sortie** : tickets, Pokédex et Stats se mettent à jour **en direct** (plus de rechargement).
 
 ### Phase 5 — Fonctionnalités (parité)
@@ -213,14 +244,19 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 ---
 
-## 8. Dépôt propre : comment et quand
+## 8. Dépôt propre : la branche vide
 
-Tu as dit oui pour repartir sans les 294 Mo. Comme c'est **destructif et irréversible**, on le fait **en dernier** et je te demande une dernière confirmation à ce moment-là. Deux voies :
+**Décision : branche vide (orpheline) dans le même dépôt.** On garde l'adresse, les étoiles et le lien avec Vercel.
 
-1. **Nouveau dépôt** (recommandé ❓) : l'ancien est archivé (renommé `pokedaily-legacy`) et le nouveau reprend le nom `pokedaily`. À reconnecter côté Vercel. Garantit un dépôt **léger**. Raison : GitHub conserve les références des Pull Requests (`refs/pull/*`) : supprimer des branches ne suffit pas toujours à faire disparaître les anciens fichiers du dépôt hébergé (❓ à vérifier au moment de décider).
-2. **Même dépôt, branche vide (orpheline)** puis bascule de la branche par défaut : on garde l'adresse, les étoiles et les tickets, mais l'ancien poids peut rester côté GitHub.
+**Déroulé**
+1. **Sauvegarde de l'ancien** : une copie complète de la v3.1 hors du dépôt (`git bundle create pokedaily-v3.bundle --all`, ≈ 300 Mo, à ranger sur ton disque) : on ne perd rien, même après le nettoyage.
+2. **Création** d'une branche sans aucun historique (`git checkout --orphan …`), qui démarre avec uniquement `docs/` et `AGENTS.md` (la mémoire du projet). Toute la v4 se construit dessus.
+3. **Prévisualisation** : pendant le chantier, la v3.1 reste en production sur la branche par défaut. Vercel crée en général une adresse de prévisualisation par branche (❓ à confirmer dans ton tableau de bord Vercel, rien n'est versionné) : tu pourras tester la v4 sans toucher à la v3.1.
+4. **Bascule** (en dernier, avec ta confirmation explicite) : la branche v4 devient la branche par défaut (nom sans emoji : `main`), puis on **supprime l'ancienne branche `🏡master`** et les branches de travail anciennes.
 
-Dans les deux cas, on **garde une copie de l'ancienne v3.1** (archive du dépôt) tant que la v4 n'est pas validée. Au passage : une branche par défaut **sans emoji** (`main`).
+**Poids après nettoyage** : un `git clone` classique ne récupère que les branches et étiquettes, pas les références des Pull Requests (`refs/pull/*`) ; une fois les anciennes branches supprimées, le clone devrait donc redevenir léger (❓ à vérifier au moment de la bascule). GitHub peut en revanche conserver l'ancien contenu côté serveur à cause des PR #16–18 : ça n'affecte pas les joueurs ni les clones.
+
+> ⚙️ Contrainte de cette session : je travaille sur la branche `claude/ecstatic-edison-vsuq66` et ne pousse nulle part ailleurs sans ton autorisation explicite. Créer la branche vide demande donc un « oui » de ta part (voir §11).
 
 ---
 
@@ -241,7 +277,7 @@ Dans les deux cas, on **garde une copie de l'ancienne v3.1** (archive du dépôt
 ### Collection & partage entre amis
 | Idée | Effort | Note |
 |---|---|---|
-| 💾 **Export / import de la collection** (fichier ou lien) | S–M | Utile pour changer de téléphone |
+| 💾 **Export / import de la collection** (fichier ; lien plus tard) | S–M | **Décidé : tôt, phase 4** |
 | 🤝 **Comparer avec un·e ami·e** (lien contenant les Pokémon du jour, sans serveur) | M | « On a le même Pokémon ! » — colle à l'esprit « rigoler entre amis » |
 | 📊 **Récap annuel « Pokédaily Wrapped »** | M | Image partageable (canvas) |
 | 🖼️ **Cartes de partage thématisées** (cadre shiny animé) | S–M | Étend la carte existante |
@@ -253,7 +289,8 @@ Dans les deux cas, on **garde une copie de l'ancienne v3.1** (archive du dépôt
 | 🎯 **« Quel est ce Pokémon ? »** pour gagner un ticket | M | Silhouettes en CSS sur les images existantes |
 | 🔮 **V-Roulette : vraie animation séquentielle**, sons optionnels | M | Aujourd'hui les sauts sont aléatoires |
 | 🗓️ **Événements entre amis** pilotés par `events.json` | M | Fichier statique mis à jour par déploiement |
-| 🧩 **Formes spéciales** (Alola, Galar, Méga…) dans la collection | M–L | Dépend de la décision §4.4 |
+| 🧩 **Formes alternatives** (Alola, Galar, Méga…) dans la collection | M–L | **Décidé : oui** ; catégories à choisir (§4.4) |
+| 🎃 **Événements avec des formes** (Halloween spectral, Pokémon Day avec Pikachu à casquette) | S | Une fois les formes en place |
 
 ### Spécial écriture ✍️
 | Idée | Effort | Note |
@@ -271,15 +308,16 @@ Dans les deux cas, on **garde une copie de l'ancienne v3.1** (archive du dépôt
 
 ## 10. Questions encore ouvertes
 
-1. **Les formes dans le jeu** : tirage sur 1 025 espèces seulement, ou aussi (une sélection de) formes ? Le Pokédex compte-t-il les formes à part ?
-2. **Dépôt** : nouveau dépôt (recommandé) ou branche orpheline dans le même dépôt (§8) ?
-3. **Images** : OK pour l'**option B** (générées au build, non commitées) ? Et résolution **256 px** (léger) ou **512 px** (carte de partage HD) ?
-4. **Essai « sans framework »** (§2.3) : OK pour démarrer par là, avec la possibilité de réajuster si un critère échoue ?
-5. **Ancienne base de données** : on la laisse dormir sur les appareils, ou on la supprime automatiquement au premier lancement de la v4 ?
-6. **Export/import** : en début de projet (phase 4) ou plus tard ?
+1. **Quelles formes ?** Les **régionales (60)** sont proposées d'office. Pour Méga (97), Gigamax (34), Primo (2) et les formes permanentes, dis-moi ce que tu veux ; on trie les 108 « autres » ensemble dans `forms.json`.
+2. **Compter les formes** : ma proposition (Pokédex à 1 025 espèces + onglet « Formes » séparé) te convient-elle ?
+3. **Fréquence des formes** au tirage : ≈ 13 % (pool uniforme) te va, ou tu veux les rendre plus rares/plus fréquentes ?
+4. **Nom de la branche vide** (par ex. `v4`) et **autorisation** de la créer et de la pousser (§8).
+5. **Sauvegarde de l'ancien** : OK pour que tu ranges toi-même la copie `pokedaily-v3.bundle` sur ton disque avant la bascule ?
+
+Réglé : taille d'image (256/512 → après essai visuel), ancienne base (supprimée), export/import (tôt), essai sans framework (validé), branche vide.
 
 ## 11. Prochaine action concrète proposée
 
-1. Tu réponds aux questions du §10 (même en un mot).
-2. On démarre la **Phase 1** : fondations (outillage, CI) + l'essai de l'écran « carte du jour » sans framework.
-3. On enchaîne avec les données/images (phase 2) : c'est elle qui règle ton problème d'images une fois pour toutes.
+1. Tu réponds aux questions du §10 (même en un mot), en particulier **le « oui » pour créer la branche vide**.
+2. **Phase 1** : fondations (outillage, tests, CI) + essai de l'écran « carte du jour » sans framework.
+3. **Phase 2** : données et images (c'est elle qui règle ton problème d'images ; on y trie les formes et on choisit 256/512 px à l'œil).

@@ -285,15 +285,22 @@ Points relevés par `svelte-check` et la lecture : popups `role="dialog"` sans `
 - **Source `PokeAPI/sprites`, rendus Home 512×512** : sur 1 351 × 2 (normal + shiny) = **2 700 fichiers testés** ✅ (requêtes HEAD), **2 661 existent** ; les **39 absents sont tous des formes**. **Aucune image d'espèce 1–1025 ne manque** (le shiny de Minior existe chez eux).
 - **Conclusion** : un **script automatique** peut reconstituer l'ensemble complet sans aucune manipulation manuelle. Détail et options : `REBUILD_PLAN.md` §4.
 
-### 8.3 Questions restantes
+### 8.3 Deuxième série de réponses (5 octobre 2026)
 
-9. **Formes** : les inclure dans le tirage et le Pokédex (et lesquelles) ?
-10. **Dépôt propre** : nouveau dépôt ou branche vide dans le même dépôt ?
-11. **Images** : générées au build et non commitées (recommandé), en 256 px ou 512 px ?
-12. **Essai « sans framework »** : valider la démarche (écran « carte du jour » d'abord) ?
-13. **Ancienne base de données** des 3–5 utilisateurs : on la laisse dormir ou on la supprime ?
+| # | Question | Réponse | Conséquence |
+|---|---|---|---|
+| 9 | Formes dans le tirage et le Pokédex ? | **Oui, on veut des formes alternatives** | 326 formes à trier par catégorie ; `forms.json`. → `REBUILD_PLAN.md` §4.4 |
+| 10 | Dépôt propre : nouveau dépôt ou branche vide ? | **Branche vide** | Branche orpheline, bascule en dernier. → `REBUILD_PLAN.md` §8 |
+| 11 | Images générées au build, 256 ou 512 px ? | « Pourquoi pas, à voir comment ça rend » | Option B retenue ; taille tranchée **après un essai visuel** en phase 2 |
+| 12 | Essai « sans framework » ? | **Oui** | Démarrage par l'écran « carte du jour » |
+| 13 | Ancienne base de données ? | **On la supprime** | Routine de nettoyage au 1ᵉʳ lancement v4 (avec garde-fous). → `REBUILD_PLAN.md` §5 |
+| 14 | Export/import de la collection ? | **Tôt** | Phase 4 |
 
-(Détail et recommandations : `REBUILD_PLAN.md` §10.)
+### 8.4 Ce que l'audit a mesuré sur les formes
+
+- PokéAPI : **326 formes**, soit 97 Méga, 34 Gigamax, 60 régionales (Alola 20, Galar 20, Hisui 16, Paldea 4), 2 Primo, 11 Totem, 14 Pikachu à casquettes/costumes et **108 « autres »** (états de combat, genres, tailles, couleurs…) ✅ (comptage sur les noms).
+- Les **39 images absentes** de la source concernent : costumes et casquettes de Pikachu, Pikachu et Évoli « partenaires », modes de Koraidon/Miraidon ✅.
+- Restent ouvertes : **quelles** formes activer, comment les compter, à quelle fréquence → `REBUILD_PLAN.md` §10.
 
 ---
 
