@@ -15,7 +15,7 @@
 | Tirage des formes | **Pourcentage progressif** : 1 % par défaut, +1 % par jour sans forme, retour à 1 % dès qu'une forme sort (§4.5). |
 | Pokédex | **Séparé** : 1 025 espèces + un onglet « Formes » (validé). |
 | Noms français des formes | Pris dans **PokéAPI** (326/326 vérifiés, §4.4). Pokémon DB ne fournit que les noms d'**espèces**. |
-| Images | **`PokeAPI/sprites` avec chaîne de repli** (Pokémon DB essayé : il ne comble rien, §4.2 bis). Générées au build, non commitées. Tailles : **recommandation 512 + 128 px**, à valider (§4.6). |
+| Images | **`PokeAPI/sprites` avec chaîne de repli** (Pokémon DB essayé : il ne comble rien, §4.2 bis). Générées au build, non commitées. **Tailles décidées : 512 px (carte, partage) + 128 px (grilles)**. **Images de repli 2D : gardées** (« toutes les formes, sans exception »). |
 | Dépôt | **Branche vide nommée `v4`** dans le même dépôt. Copie de sauvegarde de la v3.1 **déjà faite par Diamant**. La bascule (suppression de l'ancien) reste en dernier, avec confirmation. |
 | Changement de jour | **Minuit heure locale** de chaque joueur. |
 | Données existantes | 3 à 5 utilisateurs : **aucune migration**. L'ancienne base est **supprimée** au premier lancement de la v4 (§5). |
@@ -269,7 +269,7 @@ Dans l'app : `getSprite(id, shiny)` consulte le manifeste → **repli propre** (
 **Résultat côté application** : l'écran « carte du jour » utilise maintenant les vraies données (noms FR/EN, types, natures, images, **badge de forme**, numéro de l'espèce pour les formes). Vérifié dans Chromium sur 6 cas (espèce, Méga en shiny, repli 2D, repli Écarlate/Violet, anglais, forme sans image) : aucune erreur, aucune image cassée. Paramètres d'adresse de développement : `/?id=10034&shiny=1&level=88&nature=timid`.
 
 **Essai visuel 256 px / 512 px** (écran ×3, comme un iPhone) : à taille normale la différence est **discrète** ; en zoom, les contours en 256 px sont **nettement plus flous** ; pour les **vignettes de 56 px**, 128 px et 256 px sont **indiscernables**.
-**Ma recommandation (à valider par Diamant)** : **512 px pour la carte** (et l'image de partage) + **128 px pour les grilles** ; on **abandonne 256 px** (−29,6 Mo à générer et héberger). Cela donne ≈ **59 Mo** au total (13,1 + 46,2) contre 89 Mo pour les trois tailles. Les vignettes (13 Mo) seraient mises en cache pour le hors-ligne ; les grandes images seulement quand on les affiche.
+**Décision de Diamant (5 oct.)** : **512 px pour la carte** (et l'image de partage) + **128 px pour les grilles** ; **256 px abandonné** (−29,6 Mo). Total ≈ **59 Mo** (13,1 + 46,2) contre 89 Mo pour trois tailles. Les vignettes (13 Mo) seront mises en cache pour le hors-ligne ; les grandes images seulement quand on les affiche. Les **images 2D de repli sont conservées**.
 
 **Limites connues** : (1) `dex.json` est pour l'instant **inclus dans le JavaScript principal** (+ ≈ 35 Ko compressés ; bundle total 133 Ko / 35 Ko compressés) : le chargement différé est prévu en phase 6 ; (2) les 2 sprites Écarlate/Violet sont **petits** (256 px, contenu ≈ 110 px) : ils paraissent flous une fois étirés ; (3) les images de repli 2D ont un style **différent** des rendus 3D (voir la planche envoyée à Diamant) ; (4) **non fait** : déploiement des images (le build de prod devra lancer `pnpm sprites`, voir phase 6) ; (5) **non testé** : iPhone/Safari réel.
 
@@ -299,10 +299,9 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 - Reste ouvert : **choix final des tailles** (recommandation : 512 + 128 px, §4.6).
 - **Sortie atteinte** : `pnpm dex` et `pnpm sprites` produisent tout sans intervention ; l'app n'appelle plus jamais PokéAPI.
 
-### Phase 3 — Noyau testé (`core/`)
-- `constants`, `rng`, `dates` (jour local), `createEntry`, `draw`, moteur d'événements (mêmes 12 événements, mêmes résultats, durcis).
-- **Tests** : tirage des formes (pourcentage progressif, §4.5), toutes les dates clés des événements (y compris ponctuel vs annuel), tirage avec graine, probabilité de boost, passage de minuit et changement de fuseau.
-- **Sortie** : le « tirage du jour » complet est testé sans navigateur.
+### Phase 3 — Noyau testé (`core/`) ✅ FAIT (voir §6.1)
+- `constants`, `rng` (aléa injectable), `dates` (jour local `AAAA-MM-JJ`), `pokemon` (**une seule** fabrique), `form-pity` (pourcentage progressif), `draw` (tirage du jour), `events/` (moteur + effets + validation), `boxes` (boîtes spéciales qui expirent), `roulette` (boîtes du mois, boost exact), `team`.
+- **Sortie atteinte** : le « tirage du jour » complet, la roulette et la team sont testés **sans navigateur** (321 tests au total).
 
 ### Phase 4 — Stockage, état, export/import
 - Repository transactionnel, store global, tickets/boîtes avec **dates de validité**.
@@ -319,6 +318,33 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 ---
 
+### 6.1 Ce qui a été réalisé en phase 3 (5 oct. 2026) ✅
+
+**Le noyau (`src/core/`) est pur** : aucun navigateur, aucun fichier, aucun `Math.random()` direct. Le hasard est « injecté » : en production c'est le vrai hasard, dans les tests c'est un hasard à graine (même graine = même résultat), donc tout est reproductible. `src/data/pool.ts` est le seul pont avec les vraies données (« réserve de tirage » : 1 025 espèces, 324 formes, 25 natures).
+
+| Domaine | Ce qui est fait | Vérifié par |
+|---|---|---|
+| **Dates** | Jour **local** `AAAA-MM-JJ` (texte, jamais des millisecondes) ; ajout de jours, jour de semaine, comparaison ; **pas de nouveau tirage si l'horloge recule** | 21 tests, **rejoués sous 5 fuseaux** (Paris, Los Angeles, Auckland, Kolkata, UTC) : minuit, heure d'été, années bissextiles |
+| **Fabrique de Pokémon** | `createPokemon` : nature, niveau 1–99 (100 seulement par événement), shiny 1/69 ; un Pokémon **sans image shiny n'est jamais shiny**, même un jour « shiny garanti » | fréquences mesurées sur 200 000 tirages |
+| **Pourcentage progressif** | 1 % → +1 % par tirage sans forme → retour à 1 % ; garanti au 100ᵉ | calcul exact + simulation de **60 000 cycles** : moyenne ≈ **12,2 jours**, médiane 12, 25 % en 7 jours, 66,9 % en 14, 99,5 % en 30, **≈ 8,2 % des jours**, jamais plus de 100 ; avec la pire malchance : forme **exactement** au 100ᵉ jour |
+| **Tirage du jour** | Événements → Pokémon (imposé / forme / espèce) → nature, niveau, shiny → tickets Victini → boîtes spéciales ; fonction pure | sur 60 000 jours avec les vraies données : formes ≈ 8,2 %, shiny ≈ 1/69, presque toutes les formes sorties ; une **année entière** jour après jour avec les 12 vrais événements |
+| **Événements** | Les **12 mêmes** événements, désormais importés dans l'app (**fonctionnent hors-ligne**, A10) ; `repeats: once/yearly` ; **validation du fichier** (18 types d'erreurs détectées) | mêmes dates actives et mêmes comptes à rebours que la v3.1 (sauf les bugs corrigés ci-dessous) |
+| **Boîtes spéciales** | Une date de fin (7 jours) et **une boîte par genre** | B-3 |
+| **V-Roulette** | Boîtes du mois (16 espèces **différentes**), tour avec boost **exact** | 400 000 tours : boosté = 25,0 % (±0,4), autres cases 5 % chacune |
+| **Team du mois** | 6 espèces différentes, hors événements | — |
+
+**Bugs de la v3.1 corrigés dans le noyau** : **B-3** (boîtes qui n'expiraient jamais et s'écrasaient), **B-4** (compte à rebours des événements ponctuels : Pokopia affichait « dans 147 j »), **B-5** (boost annoncé 1/4, réel ≈ 29,7 %), **A7** (mélange UTC/local), **A10** (événements non disponibles hors-ligne). *B-2 (ticket consommé avant le résultat) concerne le stockage : phase 4.*
+
+**Deux défauts de MON code trouvés par les tests avant de pousser** : (1) le shiny d'un événement était comparé à 1/69, ce qui **ignorait le Poisson d'avril à 1/100** (moins bon que d'habitude) ; (2) un jeu de test où le « hasard maximal » tombait sur Victini faussait un compte de tickets (c'était mon jeu de test, pas le tirage).
+
+**Règles d'empilement quand plusieurs événements agissent le même jour** (documentées dans le code et testées) : Pokémon imposé = le dernier jet réussi ; shiny = chaque événement **remplace** la chance par défaut et le meilleur gagne (en v3.1 : le dernier écrasait les autres) ; niveau = le plus élevé ; tickets additionnés ; boîtes cumulées.
+
+**Choix par défaut que j'ai faits (à confirmer, voir §10)** : boîtes spéciales valables **7 jours** (jour de réception compris) et utilisables à volonté pendant ce temps (chaque tour coûte un ticket) ; niveau 1–99 au hasard, **100 réservé** à l'événement du Nouvel An.
+
+**Non fait / limites** : le noyau n'est **pas encore branché** à l'écran (l'écran utilise toujours l'exemple de `sample-entry.ts`) : c'est la phase 4 (sauvegarde + état). Les noms de formes ne servent pas au tirage. Aucune de ces fonctions n'a été essayée sur un vrai appareil.
+
+---
+
 ## 7. Cahier de non-régression
 
 ### 7.1 Parité fonctionnelle (à cocher avant de remplacer la v3.1)
@@ -328,18 +354,18 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 - [ ] Team du mois · [ ] Changelog intégré · [ ] FR/EN · [ ] PWA installable + hors-ligne · [ ] **Mode dev**
 
 ### 7.2 Bugs de la v3.1 à ne **pas** reproduire (chacun devient un test)
-| Réf. | Test d'acceptation |
-|---|---|
-| B-1 | Chaque espèce 1–1025 a une image (normale et shiny, ou repli propre) |
-| B-2 | Un tour de roulette qui échoue **ne consomme pas** de ticket |
-| B-3 | Une boîte spéciale **expire** et deux boîtes ne s'écrasent pas |
-| B-4 | Un événement ponctuel passé n'affiche **aucun** compte à rebours |
-| B-5 | Le boost affiché = le boost réel |
-| B-6 | « Retour » du navigateur change bien de vue |
-| B-7 | Les compteurs se mettent à jour sans recharger |
-| B-8 / B-9 | Série en cours correcte ; un seul compte de shiny cohérent partout |
-| A7 | Un seul fuseau de référence : le jour **local** |
-| A10 | `events.json` et la police disponibles hors-ligne |
+| Réf. | Test d'acceptation | Statut |
+|---|---|---|
+| B-1 | Chaque espèce 1–1025 a une image (normale et shiny, ou repli propre) | ✅ phase 2 |
+| B-2 | Un tour de roulette qui échoue **ne consomme pas** de ticket | ⏳ phase 4 (stockage) |
+| B-3 | Une boîte spéciale **expire** et deux boîtes ne s'écrasent pas | ✅ phase 3 |
+| B-4 | Un événement ponctuel passé n'affiche **aucun** compte à rebours | ✅ phase 3 |
+| B-5 | Le boost affiché = le boost réel | ✅ phase 3 |
+| B-6 | « Retour » du navigateur change bien de vue | ✅ phase 1 |
+| B-7 | Les compteurs se mettent à jour sans recharger | ⏳ phase 4 (état) |
+| B-8 / B-9 | Série en cours correcte ; un seul compte de shiny cohérent partout | ⏳ phase 5 |
+| A7 | Un seul fuseau de référence : le jour **local** | ✅ phase 3 |
+| A10 | `events.json` et la police disponibles hors-ligne | ✅ événements (phase 3) et police (phase 1) ; précache complet : phase 6 |
 
 ---
 
@@ -408,13 +434,13 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 ## 10. Questions encore ouvertes
 
-**Réglé (valeurs par défaut validées par Diamant le 5 oct.)** : un « jour » du pourcentage progressif = un **tirage réel** ; la forme est tirée **à égalité parmi les formes disponibles** ; une forme **sans image est mise de côté** (2 aujourd'hui) ; la **V-Roulette** et la **Team du mois** restent sur les **espèces seulement**.
-Réglé aussi : toutes les formes, pourcentage progressif, Pokédex séparé, noms FR/EN depuis PokéAPI, images (PokeAPI/sprites avec repli ; Pokémon DB ne comble rien), branche `v4`, ancienne base supprimée, export/import tôt.
+**Réglé** : tailles d'images **512 + 128 px**, images 2D de repli **gardées** ; toutes les formes, pourcentage progressif, Pokédex séparé ; un « jour » = un tirage réel ; formes tirées à égalité ; formes sans image mises de côté ; V-Roulette et Team du mois sur les espèces seulement ; noms FR/EN depuis PokéAPI ; branche `v4` ; ancienne base supprimée ; export/import tôt.
 
-**Restent à décider**
-1. **Tailles d'images** : recommandation **512 px (carte) + 128 px (grilles)**, sans 256 px (§4.6). Qu'en penses-tu après avoir vu la comparaison ?
-2. **Images de repli au style 2D** (14 formes, dont les costumes de Pikachu et 4 formes de Koraidon/Miraidon) : on les garde (recommandé : « toutes les formes, sans exception ») ou on préfère s'en passer pour garder un style 3D uniforme ?
+**À confirmer (petites décisions de produit, avec une valeur par défaut déjà codée)**
+1. **Durée des boîtes spéciales** (Lucky Day, Poisson d'avril) : **7 jours**, jour de réception compris, utilisables à volonté (1 ticket par tour). Plus court (le jour même) ou plus long ?
+2. **Poisson d'avril : chance shiny de 1/100** (moins bonne que 1/69). C'était déjà le cas en v3.1 ; est-ce voulu, ou préfères-tu une meilleure chance un jour de fête (comme 1/30 pour Halloween) ?
+3. **Niveau 100** : réservé à l'événement du Nouvel An (le hasard va de 1 à 99). OK ?
 
 ## 11. Prochaine action
 
-**Phase 3 — noyau testé (`core/`)** : constantes, aléa injectable, dates (jour local), fabrique de Pokémon, tirage du jour avec le pourcentage progressif, moteur d'événements (mêmes 12 événements), avec tests (dont la simulation de ≈ 12,2 jours entre deux formes).
+**Phase 4 — stockage, état, export/import** : base IndexedDB neuve avec de vrais compartiments et des **transactions** (rien d'écrit à moitié), état partagé qui met l'écran à jour sans recharger (B-7), **branchement du tirage du jour** à l'écran, **tickets débités seulement après succès** (B-2), **export/import** de la collection, et **nettoyage de l'ancienne installation** (avec ses garde-fous).

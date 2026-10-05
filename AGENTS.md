@@ -6,7 +6,7 @@
 ## Le projet en 3 lignes
 
 **Pokédaily** — PWA « Quel Pokémon es-tu aujourd'hui ? » : un Pokémon par jour (espèces 1–1025 **et formes alternatives**), avec nature, niveau et 1/69 de shiny. Tout est **local** (IndexedDB), aucun serveur à nous, aucun compte. Interface FR/EN, thème sombre Écarlate/Violet.
-**État** : phases 1 et 2 faites (outillage, essai « carte du jour », données Pokémon FR/EN, images). L'écran affiche de vraies données mais l'entrée du jour est encore un exemple (`src/features/card/sample-entry.ts`) : vrai tirage (phase 3) et sauvegarde (phase 4) à venir.
+**État** : phases 1, 2 et 3 faites (outillage, essai « carte du jour », données Pokémon FR/EN, images, **noyau de jeu testé** : tirage, pourcentage progressif, événements, boîtes, roulette, team). Le noyau n'est **pas encore branché** à l'écran, qui affiche un exemple (`src/features/card/sample-entry.ts`) : sauvegarde + état + branchement = phase 4.
 
 ## Décisions de direction (Diamant) — à respecter
 
@@ -16,7 +16,7 @@
 4. **Langues : français + anglais uniquement.**
 5. **Mode développeur conservé** pour tout le monde (partie intégrante du système).
 6. **Jamais de monétisation** : ni publicité, ni achat, ni analytics/suivi, ni service tiers qui voit les joueurs. Projet fun entre amis, non commercial. Refuse toute proposition contraire, même « discrète ».
-7. **Images** : script automatisé (source `PokeAPI/sprites`, rendus Home 512 px), **générées au build, non commitées** (`public/sprites/` est ignoré par git) — `docs/REBUILD_PLAN.md` §4. Taille finale (256/512 px) tranchée après essai visuel. Propriété de The Pokémon Company.
+7. **Images** : script automatisé (source `PokeAPI/sprites`, rendus Home 512 px), **générées au build, non commitées** (`public/sprites/` est ignoré par git) — `docs/REBUILD_PLAN.md` §4. **Tailles : 512 px (carte, partage) + 128 px (grilles)**, pas de 256 px. Les **images 2D de repli sont gardées**. Propriété de The Pokémon Company.
    - **Chaîne de repli** : Home 3D 512 px → official-artwork 2D → sprites Écarlate/Violet. Un shiny vient **toujours de la même source que son normal** ; un shiny identique au normal est écarté. Une forme **sans image normale n'est jamais tirée** (`isDrawable`) et un Pokémon **sans image shiny ne sort jamais en shiny** (`canBeShiny`) — `src/data/sprites.ts`.
    - **Pokémon DB** : essayé en phase 2, **ne comble aucun trou valable** (aucun fichier utilisé). Si on y retourne : renfort **ponctuel**, jamais source de masse ; **2 s entre requêtes**, `User-Agent` qui nous identifie, pas de `wget`, fichiers auto-hébergés (pas de lien direct), provenance notée, lien retour dans « À propos ».
    - **Formes alternatives : TOUTES, sans exception** (326). Noms FR/EN depuis **PokéAPI** (`pokemon-form`, 326/326 vérifiés), pas depuis Pokémon DB. Modèle : `id` PokéAPI **et** `speciesId`. Pokédex séparé : 1 025 espèces + onglet « Formes ».
@@ -63,8 +63,8 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `src/ui/router.ts` | Routage par hash **avec** `hashchange` |
 | `src/ui/tokens.css` · `types.css` | Variables de thème · couleurs de types (**source unique**) |
 | `src/i18n/` | `fr.ts` (référence), `en.ts` (mêmes clés, imposé par TypeScript), `index.ts` (`createI18n`, `detectLang`) |
-| `src/core/` | Logique **pure** (sans navigateur), testable : pour l'instant `pokemon-types.ts` |
-| `src/data/` | `dex.json` (1 025 espèces + 326 formes, FR/EN) et `natures.json` : **générés par `pnpm dex`, ne pas modifier à la main** ; `sprites.json` : généré par `pnpm sprites` ; `index.ts`/`sprites.ts` : accès typé (`getEntry`, `getNature`, `hasSprite`, `canBeShiny`, `isDrawable`, `spriteUrl`) |
+| `src/core/` | Logique **pure** du jeu (sans navigateur ni fichier), testée : `constants`, `rng` (aléa injectable), `dates` (jour local), `model` (`PokemonEntry`, `DrawPool`), `pokemon` (**seule** fabrique), `form-pity`, `draw` (tirage du jour), `boxes`, `roulette`, `team`, `events/` (moteur, effets, validation) |
+| `src/data/` | `dex.json` (1 025 espèces + 326 formes, FR/EN) et `natures.json` : **générés par `pnpm dex`, ne pas modifier à la main** ; `sprites.json` : généré par `pnpm sprites` ; `events.json` : **écrit à la main** (validé par `tests/core/events-validate.test.ts`) ; `index.ts`/`sprites.ts`/`events.ts` : accès typé ; `pool.ts` : la « réserve de tirage » (seul pont entre `core/` et les données) |
 | `scripts/` | Scripts Node en TypeScript (`build-dex.ts`, `sync-sprites.ts`), `lib/` (client HTTP poli, logique testée), `dex-overrides.json` (corrections de noms **avec leur source**) |
 | `assets/extra/` | (optionnel, absent pour l'instant) images déposées à la main : `<id>.png`, `<id>s.png` pour le shiny ; à créditer |
 | `src/features/card/` | Écran « carte du jour » (essai) + `sample-entry.ts` (**temporaire** ; paramètres de dev `/?id=10034&shiny=1&level=88&nature=timid`) |
@@ -80,12 +80,14 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 - **CSS** : un fichier par fonctionnalité, classes préfixées ; couleurs de types **uniquement** dans `types.css` (`[data-type]` → `--type-color`). Utilise `var(--type-color, var(--accent))` : une valeur par défaut posée sur `.card` écraserait celle de `types.css` (déjà arrivé).
 - **Données générées** : ne modifie jamais `src/data/*.json` à la main (relance `pnpm dex` / `pnpm sprites`) ; une correction de nom va dans `scripts/dex-overrides.json` avec sa `source`.
 - **Scripts** : Node exécute le TypeScript en « effaçant les types » : pas d'`enum`, de `namespace` ni de raccourci de constructeur (`tsc` le signale grâce à `erasableSyntaxOnly`), imports relatifs **avec l'extension `.ts`**.
-- **Logique dans `src/core/`** : fonctions pures, aléa **injectable** (jamais `Math.random()` direct dans la logique), tests obligatoires.
-- **Dates** : jour local `AAAA-MM-JJ` (`localDay()`), jamais de millisecondes UTC arrondies.
+- **Logique dans `src/core/`** : fonctions pures, aléa **injectable** (reçois un `Rng`, ne tire jamais `Math.random()` toi-même), aucune lecture de fichier ni de `window` (reçois un `DrawPool`) ; tests obligatoires, avec un hasard à graine (`seededRng`). L'ordre des jets de hasard est **figé** (le changer change tous les résultats d'une même graine) : documente tout changement.
+- **Dates** : jour local `AAAA-MM-JJ` (`localDay()` de `core/dates`), **jamais** de millisecondes UTC. On compare les jours comme des textes. Si l'horloge recule, on ne retire pas (`needsNewDraw`).
 - **Style** : Prettier (`pnpm format:write`), 2 espaces, guillemets simples, commentaires de code en français clair (la propriétaire lit le code), messages d'interface FR/EN.
 - **Commits** : `feat:`, `fix:`, `docs:`, `chore:` ; un sujet par commit.
 
 ## Pièges connus
+
+0. **Vérifie les VRAIS codes de sortie** : `pnpm lint | tail` masque l'échec (le code de `tail` l'emporte). Lance `pnpm lint; echo $?` ou chaque commande seule.
 
 1. **Un clic retire le focus d'un champ** : cliquer sur un bouton valide (`blur`) un champ en cours de saisie. C'est normal ; les tests qui changent l'état « par code » ne reproduisent pas ça.
 2. **Les tests happy-dom ne voient ni CSS ni mise en page** : vérifie les écrans dans Chromium.
