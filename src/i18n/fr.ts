@@ -5,6 +5,7 @@ export const fr = {
   'lang.label': 'Langue',
   'nav.card': 'Pokémon du jour',
   'nav.history': 'Historique',
+  'nav.pokedex': 'Pokédex',
   'nav.about': 'À propos',
 
   'card.level': 'Niv.',
@@ -33,6 +34,15 @@ export const fr = {
   'history.empty': "Ton historique est vide pour l'instant : reviens demain !",
   'history.prev': 'Mois précédent',
   'history.next': 'Mois suivant',
+
+  'pokedex.tab.pokedex': 'Pokédex',
+  'pokedex.tab.shinydex': '✦ Shinydex',
+  'pokedex.tab.forms': 'Formes',
+  'pokedex.counter.species': 'Tu as été {count} Pokémon différents',
+  'pokedex.counter.shiny': '{count} Pokémon shiny',
+  'pokedex.counter.forms': '{count} formes alternatives obtenues',
+  'pokedex.allForms': 'Toutes',
+  'pokedex.shinyEmpty': "Aucun Pokémon shiny pour l'instant : à surveiller chaque jour !",
 
   'home.loading': 'Ouverture de ta collection…',
   'home.error.too_new':

@@ -1,0 +1,159 @@
+.pokedex-page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tab-row {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.tab-btn[aria-selected='true'] {
+  background: var(--accent-subtle);
+  border-color: var(--border-accent);
+  color: var(--accent-light);
+}
+
+.tab-shinydex[aria-selected='true'] {
+  background: rgba(255, 215, 0, 0.12);
+  border-color: rgba(255, 215, 0, 0.45);
+  color: var(--shiny-color);
+}
+
+.counter-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--border-accent);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-light);
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+.pokedex-page:has(.tab-shinydex[aria-selected='true']) .progress-fill {
+  background: var(--shiny-color);
+}
+
+.progress-label {
+  margin-top: -4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.form-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.form-filter[hidden] {
+  display: none;
+}
+
+.chip {
+  padding: 4px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chip.active {
+  background: var(--accent-subtle);
+  border-color: var(--border-accent);
+  color: var(--accent-light);
+}
+
+.dex-empty {
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.dex-empty[hidden] {
+  display: none;
+}
+
+.pokemon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 6px;
+}
+
+.grid-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: transparent;
+  overflow: hidden;
+}
+
+.grid-cell img,
+.grid-cell .sprite-missing {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+}
+
+/* Pas encore obtenu : l'image est là mais sombre et discrète. */
+.grid-cell:not(.caught) img {
+  filter: brightness(0) opacity(0.35);
+}
+
+.grid-cell.caught {
+  background: var(--bg-card);
+}
+
+.grid-cell.is-shiny {
+  border-color: rgba(255, 215, 0, 0.45);
+}
+
+.caught-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-light);
+}

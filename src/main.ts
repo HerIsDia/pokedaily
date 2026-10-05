@@ -10,6 +10,7 @@ import './app/app.css';
 import './features/card/card.css';
 import './features/home/home.css';
 import './features/history/history.css';
+import './features/pokedex/pokedex.css';
 import './features/backup/backup.css';
 
 import { createBrowserI18n } from './i18n';

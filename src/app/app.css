@@ -28,6 +28,7 @@
 
 .app-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   order: 3;
   flex-basis: 100%;
@@ -115,4 +116,17 @@
 .about-version {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* Petits écrans : 4 liens de menu tiennent sur une seule ligne à 390 px. */
+@media (max-width: 420px) {
+  .app-header {
+    padding-inline: 12px;
+  }
+
+  .nav-link {
+    padding: 6px 7px;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
 }

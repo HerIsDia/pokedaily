@@ -7,6 +7,7 @@ export const en: Record<MessageKey, string> = {
   'lang.label': 'Language',
   'nav.card': 'Pokémon of the day',
   'nav.history': 'History',
+  'nav.pokedex': 'Pokédex',
   'nav.about': 'About',
 
   'card.level': 'Lv.',
@@ -35,6 +36,15 @@ export const en: Record<MessageKey, string> = {
   'history.empty': 'Your history is empty for now: come back tomorrow!',
   'history.prev': 'Previous month',
   'history.next': 'Next month',
+
+  'pokedex.tab.pokedex': 'Pokédex',
+  'pokedex.tab.shinydex': '✦ Shinydex',
+  'pokedex.tab.forms': 'Forms',
+  'pokedex.counter.species': "You've been {count} different Pokémon",
+  'pokedex.counter.shiny': '{count} shiny Pokémon',
+  'pokedex.counter.forms': '{count} alternate forms obtained',
+  'pokedex.allForms': 'All',
+  'pokedex.shinyEmpty': 'No shiny Pokémon yet: keep an eye out every day!',
 
   'home.loading': 'Opening your collection…',
   'home.error.too_new':

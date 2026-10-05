@@ -4,6 +4,7 @@ import { createRouter, type Route } from '../ui/router';
 import { Scope } from '../ui/scope';
 import { createHistoryView } from '../features/history/history';
 import { createHomeView } from '../features/home/home';
+import { createPokedexView } from '../features/pokedex/pokedex';
 import type { Game } from '../state/game';
 import { createAboutView } from './about';
 
@@ -26,6 +27,7 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
   const routes: Route[] = [
     { path: '', view: createHomeView({ i18n, game }) },
     { path: 'history', view: createHistoryView({ i18n, game }) },
+    { path: 'pokedex', view: createPokedexView({ i18n, game }) },
     { path: 'about', view: createAboutView({ i18n, game }) },
   ];
   const router = createRouter(outlet, routes, { fallback: '' });
@@ -61,6 +63,7 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
       { class: 'app-nav' },
       link('', () => t('nav.card')),
       link('history', () => t('nav.history')),
+      link('pokedex', () => t('nav.pokedex')),
       link('about', () => t('nav.about')),
     ),
     h('div', { class: 'lang-switch', role: 'group' }, ...LANGS.map(langButton)),
