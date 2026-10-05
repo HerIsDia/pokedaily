@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "source": "PokéAPI (https://pokeapi.co)",
+  "natures": [
+    {"id":1,"key":"hardy","fr":"Hardi","en":"Hardy"},
+    {"id":2,"key":"bold","fr":"Assuré","en":"Bold"},
+    {"id":3,"key":"modest","fr":"Modeste","en":"Modest"},
+    {"id":4,"key":"calm","fr":"Calme","en":"Calm"},
+    {"id":5,"key":"timid","fr":"Timide","en":"Timid"},
+    {"id":6,"key":"lonely","fr":"Solo","en":"Lonely"},
+    {"id":7,"key":"docile","fr":"Docile","en":"Docile"},
+    {"id":8,"key":"mild","fr":"Doux","en":"Mild"},
+    {"id":9,"key":"gentle","fr":"Gentil","en":"Gentle"},
+    {"id":10,"key":"hasty","fr":"Pressé","en":"Hasty"},
+    {"id":11,"key":"adamant","fr":"Rigide","en":"Adamant"},
+    {"id":12,"key":"impish","fr":"Malin","en":"Impish"},
+    {"id":13,"key":"bashful","fr":"Pudique","en":"Bashful"},
+    {"id":14,"key":"careful","fr":"Prudent","en":"Careful"},
+    {"id":15,"key":"rash","fr":"Foufou","en":"Rash"},
+    {"id":16,"key":"jolly","fr":"Jovial","en":"Jolly"},
+    {"id":17,"key":"naughty","fr":"Mauvais","en":"Naughty"},
+    {"id":18,"key":"lax","fr":"Lâche","en":"Lax"},
+    {"id":19,"key":"quirky","fr":"Bizarre","en":"Quirky"},
+    {"id":20,"key":"naive","fr":"Naïf","en":"Naive"},
+    {"id":21,"key":"brave","fr":"Brave","en":"Brave"},
+    {"id":22,"key":"relaxed","fr":"Relax","en":"Relaxed"},
+    {"id":23,"key":"quiet","fr":"Discret","en":"Quiet"},
+    {"id":24,"key":"sassy","fr":"Malpoli","en":"Sassy"},
+    {"id":25,"key":"serious","fr":"Sérieux","en":"Serious"}
+  ]
+}

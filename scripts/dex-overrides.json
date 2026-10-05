@@ -1,0 +1,56 @@
+{
+  "names": {
+    "10264": {
+      "en": "Limited Build Koraidon",
+      "source": "nom EN absent de PokéAPI ; « Limited Build » confirmé par Pokémon DB, formulation alignée sur le style PokéAPI (Forme + Espèce)"
+    },
+    "10265": {
+      "en": "Sprinting Build Koraidon",
+      "source": "nom EN absent de PokéAPI ; « Sprinting Build » confirmé par Pokémon DB"
+    },
+    "10266": {
+      "en": "Swimming Build Koraidon",
+      "source": "nom EN absent de PokéAPI ; déduit de l'identifiant PokéAPI koraidon-swimming-build"
+    },
+    "10267": {
+      "en": "Gliding Build Koraidon",
+      "source": "nom EN absent de PokéAPI ; déduit de l'identifiant PokéAPI koraidon-gliding-build"
+    },
+    "10268": {
+      "en": "Low-Power Mode Miraidon",
+      "source": "nom EN absent de PokéAPI ; « Low-Power Mode » confirmé par Pokémon DB"
+    },
+    "10269": {
+      "en": "Drive Mode Miraidon",
+      "source": "nom EN absent de PokéAPI ; déduit de l'identifiant PokéAPI miraidon-drive-mode"
+    },
+    "10270": {
+      "en": "Aquatic Mode Miraidon",
+      "source": "nom EN absent de PokéAPI ; déduit de l'identifiant PokéAPI miraidon-aquatic-mode"
+    },
+    "10271": {
+      "en": "Glide Mode Miraidon",
+      "source": "nom EN absent de PokéAPI ; déduit de l'identifiant PokéAPI miraidon-glide-mode"
+    },
+    "10118": {
+      "fr": "Zygarde Forme 10 % (Rassemblement)",
+      "en": "10% Zygarde (Power Construct)",
+      "source": "doublon de nom dans PokéAPI ; départagé par le talent (noms FR/EN des talents lus dans PokéAPI)"
+    },
+    "10181": {
+      "fr": "Zygarde Forme 10 % (Aura Inversée)",
+      "en": "10% Zygarde (Aura Break)",
+      "source": "doublon de nom dans PokéAPI ; départagé par le talent (noms FR/EN des talents lus dans PokéAPI)"
+    },
+    "10314": {
+      "fr": "Méga-Mistigrix Mâle",
+      "en": "Male Mega Meowstic",
+      "source": "doublon de nom dans PokéAPI ; départagé par le sexe, formulation alignée sur « Femelle »/« Female » déjà utilisés par PokéAPI"
+    },
+    "10326": {
+      "fr": "Méga-Mistigrix Femelle",
+      "en": "Female Mega Meowstic",
+      "source": "doublon de nom dans PokéAPI ; départagé par le sexe, formulation alignée sur « Femelle »/« Female » déjà utilisés par PokéAPI"
+    }
+  }
+}
