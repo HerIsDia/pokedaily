@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { clampName, createCardView, spritePath } from '../../src/features/card/card';
+import { clampName } from '../../src/core/names';
+import { createCardView, spritePath } from '../../src/features/card/card';
 import { createSampleEntry } from '../../src/features/card/sample-entry';
 import { createI18n } from '../../src/i18n';
 import { Scope } from '../../src/ui/scope';

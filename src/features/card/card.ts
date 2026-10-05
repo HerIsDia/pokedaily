@@ -3,10 +3,10 @@ import type { I18n, MessageKey } from '../../i18n';
 import { appendChildren, bindAttr, bindChildren, bindText, effect, h, svg } from '../../ui/dom';
 import type { View } from '../../ui/router';
 import { createStore, type Store } from '../../ui/store';
+import { NAME_MAX_LENGTH } from '../../core/constants';
+import { clampName } from '../../core/names';
 import { getEntry, getNature } from '../../data';
 import { spriteUrl, type SpriteSize } from '../../data/sprites';
-
-const NAME_MAX_LENGTH = 16;
 
 export interface CardDeps {
   i18n: I18n;
@@ -19,11 +19,6 @@ export const CARD_SPRITE_SIZE: SpriteSize = 512;
 /** Chemin de l'image de la carte (un seul endroit à changer). */
 export function spritePath(id: number, shiny: boolean): string {
   return spriteUrl(id, shiny, CARD_SPRITE_SIZE);
-}
-
-/** Limite en caractères réels (et non en unités UTF-16 : on ne coupe pas un emoji en deux). */
-export function clampName(raw: string): string {
-  return Array.from(raw.trim()).slice(0, NAME_MAX_LENGTH).join('');
 }
 
 function formatDay(day: string, locale: string): string {
