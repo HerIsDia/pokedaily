@@ -7,6 +7,8 @@ import { NAME_MAX_LENGTH } from '../../core/constants';
 import { clampName } from '../../core/names';
 import { getEntry, getNature } from '../../data';
 import { spriteUrl, type SpriteSize } from '../../data/sprites';
+import { createShareActions } from './share-actions';
+import { formatDay, localeOf } from './share-image';
 
 export interface CardDeps {
   i18n: I18n;
@@ -22,16 +24,6 @@ export const CARD_SPRITE_SIZE: SpriteSize = 512;
 /** Chemin de l'image de la carte (un seul endroit à changer). */
 export function spritePath(id: number, shiny: boolean): string {
   return spriteUrl(id, shiny, CARD_SPRITE_SIZE);
-}
-
-function formatDay(day: string, locale: string): string {
-  const [year = 0, month = 1, date = 1] = day.split('-').map(Number);
-  const label = new Intl.DateTimeFormat(locale, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(new Date(year, month - 1, date));
-  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 /**
@@ -212,12 +204,10 @@ export function createCardView({ i18n, entry, onRename }: CardDeps): View {
       h(
         'div',
         { class: 'card-footer' },
-        bindText(scope, [entry, lang], () =>
-          formatDay(entry.get().day, lang.get() === 'fr' ? 'fr-FR' : 'en-US'),
-        ),
+        bindText(scope, [entry, lang], () => formatDay(entry.get().day, localeOf(lang.get()))),
       ),
     ]);
 
-    return h('section', { class: 'card-page' }, card);
+    return h('section', { class: 'card-page' }, card, createShareActions({ i18n, entry, scope }));
   };
 }

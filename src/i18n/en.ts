@@ -14,6 +14,14 @@ export const en: Record<MessageKey, string> = {
   'card.rename': 'Rename',
   'card.renamePlaceholder': 'Nickname (16 characters max.)',
   'card.imageMissing': 'Image unavailable',
+  'card.share': 'Share',
+  'card.copy': 'Copy',
+  'card.download': 'Download',
+  'card.copied': '✓ Image copied',
+  'card.downloaded': '✓ Image downloaded',
+  'card.shareFailed': "The image couldn't be created or sent. Try again.",
+  'card.shareTitle': 'I am {name} today!',
+  'card.shareText': 'Discover your Pokémon of the day at pokedaily.vercel.app',
 
   'about.title': 'About',
   'about.principles':

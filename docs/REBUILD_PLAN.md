@@ -364,6 +364,20 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 **Non fait / limites** : pas essayé sur un vrai iPhone/Safari ; l'historique, le Pokédex, les stats, la roulette et la team ne sont **pas encore à l'écran** (phase 5) ; le tirage utilise `Math.random()`, comme la v3.1.
 
+### 6.3 Phase 5 — avancement (écran par écran, chacun vérifié dans Chromium)
+
+| Étape | État | Détail |
+|---|---|---|
+| **5a — Carte + partage en image** | ✅ (5 oct. 2026) | Boutons **Partager** (menu du téléphone, avec le fichier PNG), **Copier** (presse-papiers) et **Télécharger** (`pokedaily-AAAA-MM-JJ.png`). **Partager et Copier n'apparaissent que si le navigateur sait le faire** (sinon ils ne feraient que télécharger). L'image (400×560, nette sur écran dense) est dessinée dans un canvas avec la même police que l'app, la couleur du type **lue dans `types.css`** (pas recopiée), **tous les types** (la v3.1 n'en montrait qu'un), le surnom + nom d'espèce, le shiny, et un repère « ? » si l'illustration manque. Annuler le partage n'est pas une erreur. Vérifié : PNG réel 800×1120 ouvert et regardé (espèce shiny, Méga à 2 types, anglais), presse-papiers relu, menu de partage simulé (fichier PNG + titre « Je suis Pikachu aujourd'hui ! ») |
+| 5b — Historique (calendrier du mois) | ⏳ | |
+| 5c — Pokédex + Shinydex + onglet Formes | ⏳ | |
+| 5d — Statistiques | ⏳ | |
+| 5e — Événements (bandeau + calendrier) | ⏳ | |
+| 5f — Pokékit : V-Roulette, boîtes spéciales, Team du mois | ⏳ | |
+| 5g — Changelog, mode développeur, accessibilité des fenêtres | ⏳ | |
+
+**Correctif de déploiement (5 oct. 2026)** : la prévisualisation Vercel n'affichait **aucune image** (les images ne sont pas dans git et Vercel ne les générait pas). `vercel.json` lance maintenant `pnpm sprites --verify && pnpm build` (≈ 75 s de plus). Simulé sur un clone vierge sans cache : 5 358 fichiers, 69 Mo, disponibilité identique au fichier versionné. `--verify` **arrête le build** si les images obtenues diffèrent de `src/data/sprites.json` (téléchargement incomplet, source modifiée) plutôt que de publier un site incohérent.
+
 ---
 
 ## 7. Cahier de non-régression

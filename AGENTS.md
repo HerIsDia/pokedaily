@@ -6,7 +6,7 @@
 ## Le projet en 3 lignes
 
 **Pokédaily** — PWA « Quel Pokémon es-tu aujourd'hui ? » : un Pokémon par jour (espèces 1–1025 **et formes alternatives**), avec nature, niveau et 1/69 de shiny. Tout est **local** (IndexedDB), aucun serveur à nous, aucun compte. Interface FR/EN, thème sombre Écarlate/Violet.
-**État** : phases 1 à 4 faites (outillage, données Pokémon FR/EN, images, **noyau de jeu testé**, **sauvegarde IndexedDB + état partagé + export/import**). L'écran affiche le **vrai Pokémon du jour**, tiré et sauvegardé, qui change à minuit sans recharger. Il n'y a encore que 2 écrans (carte, À propos) : historique, Pokédex, stats, événements, roulette, team, partage, changelog = phase 5.
+**État** : phases 1 à 4 faites (outillage, données Pokémon FR/EN, images, **noyau de jeu testé**, **sauvegarde IndexedDB + état partagé + export/import**). L'écran affiche le **vrai Pokémon du jour**, tiré et sauvegardé, qui change à minuit sans recharger. Écrans : carte du jour (avec **partage en image**), À propos (export/import). Phase 5 en cours, écran par écran (`docs/REBUILD_PLAN.md` §6.3) : historique, Pokédex, stats, événements, roulette, team, changelog, mode dev.
 
 ## Décisions de direction (Diamant) — à respecter
 
@@ -59,6 +59,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 |---|---|
 | `src/main.ts` | Point d'entrée : polices, CSS, monte l'app |
 | `src/app/` | Coquille (`app.ts` : en-tête, langue, routeur) + page « À propos » |
+| `src/ui/download.ts` | `downloadBlob` (télécharger un fichier construit dans le navigateur) |
 | `src/ui/dom.ts` | `h()`, `svg()`, `bindText`, `bindAttr`, `bindChildren`, `effect` — **seule** façon de construire le DOM |
 | `src/ui/store.ts` · `scope.ts` | État réactif (`createStore`) · nettoyage des abonnements (`Scope`) |
 | `src/ui/router.ts` | Routage par hash **avec** `hashchange` |
@@ -71,7 +72,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `scripts/` | Scripts Node en TypeScript (`build-dex.ts`, `sync-sprites.ts`), `lib/` (client HTTP poli, logique testée), `dex-overrides.json` (corrections de noms **avec leur source**) |
 | `assets/extra/` | (optionnel, absent pour l'instant) images déposées à la main : `<id>.png`, `<id>s.png` pour le shiny ; à créditer |
 | `src/app/boot.ts` | Démarrage : ouvre la sauvegarde (ou le mode mémoire), monte l'écran, tire le Pokémon du jour, nettoie la v3.1 |
-| `src/features/card/` | Carte du jour (reçoit un état en lecture + `onRename`) + `preview.ts` : **aperçu de dev** `/?preview=10034&shiny=1&level=88&nature=timid` (en mémoire, **rien n'est sauvegardé**) |
+| `src/features/card/` | Carte du jour (reçoit un état en lecture + `onRename`) ; `share-image.ts` (image PNG de la carte : contenu / dessin / assemblage séparés) et `share-actions.ts` (Partager / Copier / Télécharger) ; `preview.ts` : **aperçu de dev** `/?preview=10034&shiny=1&level=88&nature=timid` (en mémoire, **rien n'est sauvegardé**) |
 | `src/features/home/` · `backup/` | Accueil (chargement/erreur, bandeaux, carte) · panneau « Ma collection » (export/import avec confirmation) |
 | `src/pwa/sw.ts` | Service worker (shell seulement pour l'instant) |
 | `tests/` | Miroir de `src/` |

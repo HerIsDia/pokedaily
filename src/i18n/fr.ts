@@ -12,6 +12,14 @@ export const fr = {
   'card.rename': 'Renommer',
   'card.renamePlaceholder': 'Surnom (16 caractères max.)',
   'card.imageMissing': 'Image indisponible',
+  'card.share': 'Partager',
+  'card.copy': 'Copier',
+  'card.download': 'Télécharger',
+  'card.copied': '✓ Image copiée',
+  'card.downloaded': '✓ Image téléchargée',
+  'card.shareFailed': "L'image n'a pas pu être créée ou envoyée. Réessaie.",
+  'card.shareTitle': "Je suis {name} aujourd'hui !",
+  'card.shareText': 'Découvre ton Pokémon du jour sur pokedaily.vercel.app',
 
   'about.title': 'À propos',
   'about.principles':

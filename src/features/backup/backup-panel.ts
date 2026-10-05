@@ -4,6 +4,7 @@ import type { Game } from '../../state/game';
 import { MAX_BACKUP_BYTES } from '../../storage/backup';
 import { bindText, h } from '../../ui/dom';
 import type { Scope } from '../../ui/scope';
+import { downloadBlob } from '../../ui/download';
 import { createStore } from '../../ui/store';
 
 export interface BackupPanelDeps {
@@ -15,14 +16,9 @@ export interface BackupPanelDeps {
   download?: (filename: string, content: string) => void;
 }
 
-/** Télécharge un texte comme fichier (le fichier ne quitte jamais l'appareil). */
+/** Télécharge un texte comme fichier JSON. */
 export function downloadTextFile(filename: string, content: string): void {
-  const url = URL.createObjectURL(new Blob([content], { type: 'application/json' }));
-  const link = h('a', { href: url, download: filename });
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadBlob(filename, new Blob([content], { type: 'application/json' }));
 }
 
 const countDays = (state: GameState) => Object.keys(state.entries).length;
