@@ -6,7 +6,7 @@
 ## Le projet en 3 lignes
 
 **Pokédaily** — PWA « Quel Pokémon es-tu aujourd'hui ? » : un Pokémon par jour (espèces 1–1025 **et formes alternatives**), avec nature, niveau et 1/69 de shiny. Tout est **local** (IndexedDB), aucun serveur à nous, aucun compte. Interface FR/EN, thème sombre Écarlate/Violet.
-**État** : phase 1 faite (outillage + essai « carte du jour »). Les données sont encore un jeu temporaire (`src/features/card/spike-data.ts`) ; vrai tirage, stockage et images arrivent en phases 2 à 4.
+**État** : phases 1 et 2 faites (outillage, essai « carte du jour », données Pokémon FR/EN, images). L'écran affiche de vraies données mais l'entrée du jour est encore un exemple (`src/features/card/sample-entry.ts`) : vrai tirage (phase 3) et sauvegarde (phase 4) à venir.
 
 ## Décisions de direction (Diamant) — à respecter
 
@@ -17,7 +17,8 @@
 5. **Mode développeur conservé** pour tout le monde (partie intégrante du système).
 6. **Jamais de monétisation** : ni publicité, ni achat, ni analytics/suivi, ni service tiers qui voit les joueurs. Projet fun entre amis, non commercial. Refuse toute proposition contraire, même « discrète ».
 7. **Images** : script automatisé (source `PokeAPI/sprites`, rendus Home 512 px), **générées au build, non commitées** (`public/sprites/` est ignoré par git) — `docs/REBUILD_PLAN.md` §4. Taille finale (256/512 px) tranchée après essai visuel. Propriété de The Pokémon Company.
-   - **Pokémon DB** : renfort **ponctuel** pour combler les trous (jamais source de masse). Règles : téléchargement unique, **2 s entre requêtes**, `User-Agent` qui nous identifie, pas de `wget`, fichiers auto-hébergés (pas de lien direct), provenance notée, lien retour dans « À propos ».
+   - **Chaîne de repli** : Home 3D 512 px → official-artwork 2D → sprites Écarlate/Violet. Un shiny vient **toujours de la même source que son normal** ; un shiny identique au normal est écarté. Une forme **sans image normale n'est jamais tirée** (`isDrawable`) et un Pokémon **sans image shiny ne sort jamais en shiny** (`canBeShiny`) — `src/data/sprites.ts`.
+   - **Pokémon DB** : essayé en phase 2, **ne comble aucun trou valable** (aucun fichier utilisé). Si on y retourne : renfort **ponctuel**, jamais source de masse ; **2 s entre requêtes**, `User-Agent` qui nous identifie, pas de `wget`, fichiers auto-hébergés (pas de lien direct), provenance notée, lien retour dans « À propos ».
    - **Formes alternatives : TOUTES, sans exception** (326). Noms FR/EN depuis **PokéAPI** (`pokemon-form`, 326/326 vérifiés), pas depuis Pokémon DB. Modèle : `id` PokéAPI **et** `speciesId`. Pokédex séparé : 1 025 espèces + onglet « Formes ».
    - **Tirage des formes progressif** : 1 % le premier jour, +1 % par jour sans forme, retour à 1 % quand une forme sort (garanti au bout de 100 jours) — `docs/REBUILD_PLAN.md` §4.5.
 8. **Dépôt propre** : la branche `v4` est vide d'historique ; la bascule (suppression de l'ancien historique et de `🏡master`) est **destructive** → **jamais** sans nouvelle confirmation explicite de Diamant. Copie de sauvegarde de la v3.1 : déjà faite par Diamant. Toute autre nouvelle branche demande son accord.
@@ -35,6 +36,8 @@ La propriétaire (elle, **Diamant**) est écrivaine, **pas développeuse** : ell
 ```bash
 pnpm install --frozen-lockfile
 pnpm dev            # serveur de développement (--host)
+pnpm dex            # (re)génère src/data/dex.json + natures.json depuis PokéAPI (cache .cache/)
+pnpm sprites        # télécharge/convertit les images -> public/sprites/ (ignoré par git) + src/data/sprites.json
 pnpm test           # Vitest (happy-dom) — tests/**/*.test.ts
 pnpm lint           # ESLint (dont la règle anti-innerHTML)
 pnpm format         # Prettier --check ; `pnpm format:write` pour corriger
@@ -61,7 +64,10 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `src/ui/tokens.css` · `types.css` | Variables de thème · couleurs de types (**source unique**) |
 | `src/i18n/` | `fr.ts` (référence), `en.ts` (mêmes clés, imposé par TypeScript), `index.ts` (`createI18n`, `detectLang`) |
 | `src/core/` | Logique **pure** (sans navigateur), testable : pour l'instant `pokemon-types.ts` |
-| `src/features/card/` | Écran « carte du jour » (essai) + `spike-data.ts` (**temporaire**) |
+| `src/data/` | `dex.json` (1 025 espèces + 326 formes, FR/EN) et `natures.json` : **générés par `pnpm dex`, ne pas modifier à la main** ; `sprites.json` : généré par `pnpm sprites` ; `index.ts`/`sprites.ts` : accès typé (`getEntry`, `getNature`, `hasSprite`, `canBeShiny`, `isDrawable`, `spriteUrl`) |
+| `scripts/` | Scripts Node en TypeScript (`build-dex.ts`, `sync-sprites.ts`), `lib/` (client HTTP poli, logique testée), `dex-overrides.json` (corrections de noms **avec leur source**) |
+| `assets/extra/` | (optionnel, absent pour l'instant) images déposées à la main : `<id>.png`, `<id>s.png` pour le shiny ; à créditer |
+| `src/features/card/` | Écran « carte du jour » (essai) + `sample-entry.ts` (**temporaire** ; paramètres de dev `/?id=10034&shiny=1&level=88&nature=timid`) |
 | `src/pwa/sw.ts` | Service worker (shell seulement pour l'instant) |
 | `tests/` | Miroir de `src/` |
 
@@ -72,6 +78,8 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 - **Traductions** : ajoute la clé dans `fr.ts` **puis** `en.ts` ; TypeScript refuse sinon. Aucun texte visible en dur dans les vues. `<html lang>` suit la langue.
 - **Attributs** : `bindAttr(..., 'hidden', ...)` attend un booléen ; pour un attribut « présent/absent » (`data-shiny`), renvoie `''`/`true` ou `undefined`/`false`, **pas** la chaîne `'true'`.
 - **CSS** : un fichier par fonctionnalité, classes préfixées ; couleurs de types **uniquement** dans `types.css` (`[data-type]` → `--type-color`). Utilise `var(--type-color, var(--accent))` : une valeur par défaut posée sur `.card` écraserait celle de `types.css` (déjà arrivé).
+- **Données générées** : ne modifie jamais `src/data/*.json` à la main (relance `pnpm dex` / `pnpm sprites`) ; une correction de nom va dans `scripts/dex-overrides.json` avec sa `source`.
+- **Scripts** : Node exécute le TypeScript en « effaçant les types » : pas d'`enum`, de `namespace` ni de raccourci de constructeur (`tsc` le signale grâce à `erasableSyntaxOnly`), imports relatifs **avec l'extension `.ts`**.
 - **Logique dans `src/core/`** : fonctions pures, aléa **injectable** (jamais `Math.random()` direct dans la logique), tests obligatoires.
 - **Dates** : jour local `AAAA-MM-JJ` (`localDay()`), jamais de millisecondes UTC arrondies.
 - **Style** : Prettier (`pnpm format:write`), 2 espaces, guillemets simples, commentaires de code en français clair (la propriétaire lit le code), messages d'interface FR/EN.
@@ -81,7 +89,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 
 1. **Un clic retire le focus d'un champ** : cliquer sur un bouton valide (`blur`) un champ en cours de saisie. C'est normal ; les tests qui changent l'état « par code » ne reproduisent pas ça.
 2. **Les tests happy-dom ne voient ni CSS ni mise en page** : vérifie les écrans dans Chromium.
-3. **Images** : `public/sprites/` n'est pas dans git. Tant que le script de la phase 2 n'existe pas, l'app affiche un repère « ? » (comportement voulu quand une image manque).
+3. **Images** : `public/sprites/` n'est pas dans git. Pour voir l'app avec ses images en local : `pnpm sprites` (≈ 75 s la 1ʳᵉ fois, 2,5 s ensuite). Sans image, l'app affiche un repère « ? » (voulu). `pnpm build` copie `public/` dans `dist/` (≈ 100 Mo avec les 3 tailles) ; la CI n'a pas les images, c'est normal.
 4. **Service worker** : après un changement de `src/pwa/sw.ts`, désenregistre-le/vide les caches dans le navigateur avant de déboguer.
 5. **Avertissement du build** `inlineDynamicImports option is deprecated` : vient de `vite-plugin-pwa` 2 avec Vite 8, sans effet.
 6. **`docs/CHANGELOG_GUIDE.md`** décrit encore l'ancien `Changelog.svelte` : à réécrire en phase 5. Ses **règles éditoriales** (tutoiement, zéro jargon, « Note de Diamant » = sa voix, ne jamais l'inventer) restent valables.

@@ -18,6 +18,8 @@ Une application web (PWA) qui t'assigne un Pokémon par jour, avec sa nature, so
 ```bash
 pnpm install --frozen-lockfile   # Node ≥ 22.12, pnpm 10
 pnpm dev                         # serveur de développement
+pnpm sprites                     # télécharge les images (≈ 75 s la 1ʳᵉ fois) pour les voir en local
+pnpm dex                         # régénère les données Pokémon depuis PokéAPI (rarement utile)
 pnpm test                        # tests (Vitest)
 pnpm lint && pnpm format && pnpm check && pnpm build   # ce que vérifie la CI
 ```
