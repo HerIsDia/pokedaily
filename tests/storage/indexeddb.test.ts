@@ -8,7 +8,13 @@ import {
 } from '../../src/core/game-state';
 import type { DrawResult } from '../../src/core/draw';
 import type { PokemonEntry } from '../../src/core/model';
-import { DB_NAME, STORE_DAYS, STORE_META, openGameDb } from '../../src/storage/db';
+import {
+  DB_NAME,
+  STORE_DAYS,
+  STORE_META,
+  browserIndexedDb,
+  openGameDb,
+} from '../../src/storage/db';
 import { createIndexedDbRepository } from '../../src/storage/indexeddb';
 import { createMemoryRepository } from '../../src/storage/memory';
 import {
@@ -216,6 +222,24 @@ describe('ouverture de la base', () => {
 
   it("signale clairement qu'IndexedDB est absent", async () => {
     await expect(openGameDb(null)).rejects.toBeInstanceOf(StorageUnavailableError);
+  });
+});
+
+describe("accès à l'IndexedDB du navigateur", () => {
+  it("ne plante pas si le navigateur lève une erreur rien qu'à la lecture", () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'indexedDB');
+    Object.defineProperty(globalThis, 'indexedDB', {
+      configurable: true,
+      get() {
+        throw new DOMException('refusé', 'SecurityError');
+      },
+    });
+    try {
+      expect(browserIndexedDb()).toBeNull();
+    } finally {
+      if (original) Object.defineProperty(globalThis, 'indexedDB', original);
+      else delete (globalThis as { indexedDB?: unknown }).indexedDB;
+    }
   });
 });
 

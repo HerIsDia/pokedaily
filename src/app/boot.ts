@@ -7,7 +7,7 @@ import { drawPool } from '../data/pool';
 import { createPreviewEntry } from '../features/card/preview';
 import type { I18n } from '../i18n';
 import { createBroadcastSync, createGame, type Game } from '../state/game';
-import { openGameDb } from '../storage/db';
+import { browserIndexedDb, openGameDb } from '../storage/db';
 import { createIndexedDbRepository } from '../storage/indexeddb';
 import { cleanupLegacy } from '../storage/legacy';
 import { createMemoryRepository } from '../storage/memory';
@@ -53,7 +53,7 @@ export async function boot(
   root: HTMLElement,
   {
     i18n,
-    indexedDB = globalThis.indexedDB ?? null,
+    indexedDB = browserIndexedDb(),
     preview = createPreviewEntry(),
     cleanup = cleanupLegacy,
   }: BootDeps,

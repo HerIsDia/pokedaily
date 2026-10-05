@@ -6,13 +6,13 @@
 ## Le projet en 3 lignes
 
 **Pokédaily** — PWA « Quel Pokémon es-tu aujourd'hui ? » : un Pokémon par jour (espèces 1–1025 **et formes alternatives**), avec nature, niveau et 1/69 de shiny. Tout est **local** (IndexedDB), aucun serveur à nous, aucun compte. Interface FR/EN, thème sombre Écarlate/Violet.
-**État** : phases 1, 2 et 3 faites (outillage, essai « carte du jour », données Pokémon FR/EN, images, **noyau de jeu testé** : tirage, pourcentage progressif, événements, boîtes, roulette, team). Le noyau n'est **pas encore branché** à l'écran, qui affiche un exemple (`src/features/card/sample-entry.ts`) : sauvegarde + état + branchement = phase 4.
+**État** : phases 1 à 4 faites (outillage, données Pokémon FR/EN, images, **noyau de jeu testé**, **sauvegarde IndexedDB + état partagé + export/import**). L'écran affiche le **vrai Pokémon du jour**, tiré et sauvegardé, qui change à minuit sans recharger. Il n'y a encore que 2 écrans (carte, À propos) : historique, Pokédex, stats, événements, roulette, team, partage, changelog = phase 5.
 
 ## Décisions de direction (Diamant) — à respecter
 
 1. **TypeScript/JavaScript pur, sans moteur de rendu** : **ni Svelte, ni React, ni Vue, ni équivalent (lit, etc.)**. On garde **Vite** et la **PWA**.
 2. **Jour local** : le Pokémon change à **minuit heure locale** du joueur (clé `AAAA-MM-JJ` locale), jamais UTC.
-3. **Pas de migration** : base neuve ; l'**ancienne base de la v3.1 est supprimée** au premier lancement de la v4 (seulement après ouverture réussie de la nouvelle base, jamais sur les prévisualisations). **Export/import** de la collection : phase 4.
+3. **Pas de migration** : base neuve ; l'**ancienne base de la v3.1 est supprimée** au premier lancement de la v4 (seulement après ouverture réussie de la nouvelle base, jamais sur les prévisualisations). **Export/import** de la collection : fait (phase 4, page « À propos »).
 4. **Langues : français + anglais uniquement.**
 5. **Mode développeur conservé** pour tout le monde (partie intégrante du système).
 6. **Jamais de monétisation** : ni publicité, ni achat, ni analytics/suivi, ni service tiers qui voit les joueurs. Projet fun entre amis, non commercial. Refuse toute proposition contraire, même « discrète ».
@@ -63,11 +63,15 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `src/ui/router.ts` | Routage par hash **avec** `hashchange` |
 | `src/ui/tokens.css` · `types.css` | Variables de thème · couleurs de types (**source unique**) |
 | `src/i18n/` | `fr.ts` (référence), `en.ts` (mêmes clés, imposé par TypeScript), `index.ts` (`createI18n`, `detectLang`) |
-| `src/core/` | Logique **pure** du jeu (sans navigateur ni fichier), testée : `constants`, `rng` (aléa injectable), `dates` (jour local), `model` (`PokemonEntry`, `DrawPool`), `pokemon` (**seule** fabrique), `form-pity`, `draw` (tirage du jour), `boxes`, `roulette`, `team`, `events/` (moteur, effets, validation) |
+| `src/core/` | Logique **pure** du jeu (sans navigateur ni fichier), testée : `constants`, `rng` (aléa injectable), `dates` (jour local), `model` (`PokemonEntry`, `DrawPool`), `pokemon` (**seule** fabrique), `form-pity`, `draw` (tirage du jour), `boxes`, `roulette`, `team`, `events/` (moteur, effets, validation), `names` (surnoms), **`game-state`** (l'état complet du joueur + transitions pures : tirage du jour, surnom, tour de roulette gagné, tickets) |
+| `src/storage/` | Sauvegarde : `repository.ts` (interface + erreurs), `indexeddb.ts` (base `pokedaily4`, **une transaction par sauvegarde**, garde-fou de révision entre onglets), `memory.ts` (secours/tests), `db.ts`, `validate.ts` (lecture **indulgente**), `backup.ts` (export/import **strict**), `legacy.ts` (nettoyage de la v3.1) |
+| `src/state/game.ts` | **Source de vérité** que les écrans lisent : `createGame` (file d'attente, sauvegarde d'abord puis écran, conflits entre onglets, surveillance du changement de jour). **Toute modification du jeu passe par là**, jamais par IndexedDB directement |
 | `src/data/` | `dex.json` (1 025 espèces + 326 formes, FR/EN) et `natures.json` : **générés par `pnpm dex`, ne pas modifier à la main** ; `sprites.json` : généré par `pnpm sprites` ; `events.json` : **écrit à la main** (validé par `tests/core/events-validate.test.ts`) ; `index.ts`/`sprites.ts`/`events.ts` : accès typé ; `pool.ts` : la « réserve de tirage » (seul pont entre `core/` et les données) |
 | `scripts/` | Scripts Node en TypeScript (`build-dex.ts`, `sync-sprites.ts`), `lib/` (client HTTP poli, logique testée), `dex-overrides.json` (corrections de noms **avec leur source**) |
 | `assets/extra/` | (optionnel, absent pour l'instant) images déposées à la main : `<id>.png`, `<id>s.png` pour le shiny ; à créditer |
-| `src/features/card/` | Écran « carte du jour » (essai) + `sample-entry.ts` (**temporaire** ; paramètres de dev `/?id=10034&shiny=1&level=88&nature=timid`) |
+| `src/app/boot.ts` | Démarrage : ouvre la sauvegarde (ou le mode mémoire), monte l'écran, tire le Pokémon du jour, nettoie la v3.1 |
+| `src/features/card/` | Carte du jour (reçoit un état en lecture + `onRename`) + `preview.ts` : **aperçu de dev** `/?preview=10034&shiny=1&level=88&nature=timid` (en mémoire, **rien n'est sauvegardé**) |
+| `src/features/home/` · `backup/` | Accueil (chargement/erreur, bandeaux, carte) · panneau « Ma collection » (export/import avec confirmation) |
 | `src/pwa/sw.ts` | Service worker (shell seulement pour l'instant) |
 | `tests/` | Miroir de `src/` |
 
@@ -98,11 +102,15 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 7. **PokéAPI refuse (403) les requêtes sans `User-Agent` propre** (constaté avec l'agent par défaut de Python ; `curl` passe). Tout script qui l'interroge doit envoyer un `User-Agent` qui nous identifie, mettre les réponses en cache local (`.cache/`) et rester poli (peu de requêtes en parallèle).
 8. **Branche par défaut de l'ancien dépôt** : `🏡master` (emoji) — cite-la entre guillemets dans un script shell.
 
+9. **`window.indexedDB` peut LEVER une erreur rien qu'à sa lecture** (stockage bloqué) : passe par `browserIndexedDb()` (`storage/db.ts`), jamais `globalThis.indexedDB` directement. Cas couvert par un test unitaire **et** vérifié dans Chromium (un `getter` qui lève).
+10. **Transactions IndexedDB** : ne fais **aucun** `await` d'autre chose qu'une requête IndexedDB au milieu d'une transaction (elle se terminerait toute seule). Les tests d'atomicité utilisent `fake-indexeddb` (une valeur non clonable fait échouer la sauvegarde ; il ne doit rien rester).
+11. **Import** : il remplace TOUT, y compris le Pokémon d'aujourd'hui (un fichier ancien redonne un nouveau tirage pour aujourd'hui). C'est voulu et dit dans la confirmation.
+
 ## Ne pas faire
 
 - Ne pas ajouter de framework de rendu, ni de dépendance non justifiée (poids du bundle), ni de service tiers qui voit les joueurs (pub, analytics, polices distantes).
 - Ne pas commiter `dist/`, `node_modules/`, `public/sprites/`, clés ou secrets.
-- Ne pas modifier/supprimer des données joueur sans garde-fou ni message clair.
+- Ne pas modifier/supprimer des données joueur sans garde-fou ni message clair. N'écris jamais dans IndexedDB hors de `src/storage/`, ni ne modifie l'état hors de `src/state/game.ts`.
 - Ne pas présenter le projet comme affilié à Nintendo/Game Freak/The Pokémon Company : projet de fans **non commercial**.
 - Ne pas créer de Pull Request sans qu'on te le demande.
 

@@ -266,7 +266,7 @@ Dans l'app : `getSprite(id, shiny)` consulte le manifeste → **repli propre** (
 **Règle des shiny** : un shiny n'est cherché **que dans la source de son normal** (jamais de mélange 2D/3D pour un même Pokémon : j'avais d'abord laissé passer 17 mélanges, corrigé), et un shiny **identique octet pour octet** au normal est écarté (8 cas : Minior en météore ×6, casquette « partenaire » de Pikachu, Terapagos stellaire).
 **Contrôle de qualité des shiny** : sur 1 330 paires normal/shiny comparées pixel à pixel, aucune n'est visuellement identique en dehors de ces cas ; les 10 shiny issus du repli 2D diffèrent nettement de leur normal.
 
-**Résultat côté application** : l'écran « carte du jour » utilise maintenant les vraies données (noms FR/EN, types, natures, images, **badge de forme**, numéro de l'espèce pour les formes). Vérifié dans Chromium sur 6 cas (espèce, Méga en shiny, repli 2D, repli Écarlate/Violet, anglais, forme sans image) : aucune erreur, aucune image cassée. Paramètres d'adresse de développement : `/?id=10034&shiny=1&level=88&nature=timid`.
+**Résultat côté application** : l'écran « carte du jour » utilise maintenant les vraies données (noms FR/EN, types, natures, images, **badge de forme**, numéro de l'espèce pour les formes). Vérifié dans Chromium sur 6 cas (espèce, Méga en shiny, repli 2D, repli Écarlate/Violet, anglais, forme sans image) : aucune erreur, aucune image cassée. Paramètres d'adresse de développement (renommés en phase 4) : `/?preview=10034&shiny=1&level=88&nature=timid` (aperçu en mémoire, rien n'est sauvegardé).
 
 **Essai visuel 256 px / 512 px** (écran ×3, comme un iPhone) : à taille normale la différence est **discrète** ; en zoom, les contours en 256 px sont **nettement plus flous** ; pour les **vignettes de 56 px**, 128 px et 256 px sont **indiscernables**.
 **Décision de Diamant (5 oct.)** : **512 px pour la carte** (et l'image de partage) + **128 px pour les grilles** ; **256 px abandonné** (−29,6 Mo). Total ≈ **59 Mo** (13,1 + 46,2) contre 89 Mo pour trois tailles. Les vignettes (13 Mo) seront mises en cache pour le hors-ligne ; les grandes images seulement quand on les affiche. Les **images 2D de repli sont conservées**.
@@ -303,10 +303,10 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 - `constants`, `rng` (aléa injectable), `dates` (jour local `AAAA-MM-JJ`), `pokemon` (**une seule** fabrique), `form-pity` (pourcentage progressif), `draw` (tirage du jour), `events/` (moteur + effets + validation), `boxes` (boîtes spéciales qui expirent), `roulette` (boîtes du mois, boost exact), `team`.
 - **Sortie atteinte** : le « tirage du jour » complet, la roulette et la team sont testés **sans navigateur** (321 tests au total).
 
-### Phase 4 — Stockage, état, export/import
+### Phase 4 — Stockage, état, export/import ✅ FAIT (voir §6.2)
 - Repository transactionnel, store global, tickets/boîtes avec **dates de validité**.
-- **Export / import** de la collection (§5) et **routine de nettoyage** de l'ancienne installation (testée, non activée avant le lancement).
-- **Sortie** : tickets, Pokédex et Stats se mettent à jour **en direct** (plus de rechargement).
+- **Export / import** de la collection (§5) et **routine de nettoyage** de l'ancienne installation (testée ; elle s'exécute à chaque démarrage réussi sur une sauvegarde durable, c'est sans effet quand il n'y a rien à nettoyer).
+- **Sortie atteinte** : le Pokémon du jour est tiré, **sauvegardé** et mis à jour **en direct** (changement de jour à minuit, autre onglet) sans rechargement.
 
 ### Phase 5 — Fonctionnalités (parité)
 - Carte + partage, historique, Pokédex/Shinydex, stats, événements, Pokékit (V-Roulette, Team du mois), changelog, **mode dev**, FR/EN, accessibilité des fenêtres (focus, Échap, `aria`).
@@ -341,7 +341,28 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 **Choix par défaut que j'ai faits (à confirmer, voir §10)** : boîtes spéciales valables **7 jours** (jour de réception compris) et utilisables à volonté pendant ce temps (chaque tour coûte un ticket) ; niveau 1–99 au hasard, **100 réservé** à l'événement du Nouvel An.
 
-**Non fait / limites** : le noyau n'est **pas encore branché** à l'écran (l'écran utilise toujours l'exemple de `sample-entry.ts`) : c'est la phase 4 (sauvegarde + état). Les noms de formes ne servent pas au tirage. Aucune de ces fonctions n'a été essayée sur un vrai appareil.
+**Non fait / limites** : (le noyau a été branché à l'écran en phase 4, voir §6.2). Les noms de formes ne servent pas au tirage. Aucune de ces fonctions n'a été essayée sur un vrai appareil.
+
+### 6.2 Ce qui a été réalisé en phase 4 (5 oct. 2026) ✅
+
+**Principe** : une seule « vérité » (`GameState`) ; les écrans la **lisent**, et toute modification passe par des fonctions pures puis par **une file d'attente** qui sauvegarde **d'abord**, met à jour l'écran **ensuite**.
+
+| Domaine | Ce qui est fait | Vérifié par |
+|---|---|---|
+| **État du jeu** (`core/game-state`) | Tout ce que la joueuse possède : un Pokémon par jour, tickets, boîtes, collection, compteur de formes, team du mois. Transitions pures : tirage du jour, surnom, tour de roulette gagné, ticket offert. **B-2** : un tour de roulette n'enlève **qu'un** ticket, **et seulement s'il réussit** | tests unitaires (immuabilité, erreurs, ticket jamais perdu) |
+| **Base IndexedDB neuve** (`pokedaily4`) | Deux compartiments (`days`, `meta`). **Une sauvegarde = une transaction** : tout ou rien (la v3.1 pouvait en écrire la moitié) | test d'atomicité : une valeur impossible à enregistrer au milieu d'une sauvegarde **n'écrit rien** |
+| **Plusieurs onglets** | Compteur de révision : si un autre onglet a sauvegardé entre-temps, on **refuse d'écraser**, on relit, puis on refait. Les onglets se **préviennent** (BroadcastChannel) et se rafraîchissent seuls | tests à deux onglets + vérifié dans Chromium |
+| **Données abîmées** | **À la lecture** : on répare (on ignore ce qui est invalide) et on **prévient** par un bandeau. **À l'import** : **refus en entier** au moindre problème, avec le premier problème cité | 25 tests de validation |
+| **Sauvegarde impossible** | Si le navigateur refuse IndexedDB (ou si l'enregistrement échoue), on **joue quand même** en mémoire avec un bandeau explicite ; la sauvegarde suivante rattrape tout | tests + Chromium avec IndexedDB bloqué |
+| **Jour qui change** | Surveillance toutes les 30 s et au retour sur l'onglet : à minuit, la nouvelle carte arrive **sans recharger** ; horloge qui recule : pas de nouveau tirage | test + Chromium (horloge simulée : 1ᵉʳ mai 23 h → 2 mai) |
+| **Export / import** | Fichier `pokedaily-AAAA-MM-JJ.json` `{ app, schemaVersion, exportedAt, data }`. Import : validation stricte, **confirmation** qui montre ce qui sera remplacé, rien ne change si on refuse | aller-retour exact + Chromium (fichier abîmé refusé, annulation, import accepté) |
+| **Nettoyage de la v3.1** | Supprime la base `pokedaily`, les clés `data`/`_devNextId`/`done` et le cache `pokemon-images-v1`, **après** un démarrage réussi sur une sauvegarde **durable** ; jamais sur l'aperçu `?preview=`, jamais en mode « sans sauvegarde » ; chaque étape est indépendante ; suppression bloquée par un vieil onglet : abandon après 3 s, nouvel essai au lancement suivant | tests + Chromium (traces v3.1 fabriquées puis supprimées, la nouvelle base intacte) |
+
+**Un défaut trouvé par la vérification dans le vrai navigateur** : certains navigateurs **lèvent une erreur rien qu'à la lecture** de `window.indexedDB` (stockage bloqué). Mon code planterait avec un écran vide ; corrigé (`browserIndexedDb()`), avec un test.
+
+**À savoir (comportement voulu, à connaître)** : importer un fichier **remplace tout**, y compris le Pokémon d'aujourd'hui ; si le fichier est plus ancien, un **nouveau** Pokémon est tiré pour aujourd'hui. La fenêtre de confirmation le dit. Le détail du « premier problème » d'un fichier abîmé est en français même en interface anglaise (les 3–5 joueurs lisent le français ; à traduire si besoin).
+
+**Non fait / limites** : pas essayé sur un vrai iPhone/Safari ; l'historique, le Pokédex, les stats, la roulette et la team ne sont **pas encore à l'écran** (phase 5) ; le tirage utilise `Math.random()`, comme la v3.1.
 
 ---
 
@@ -357,12 +378,12 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 | Réf. | Test d'acceptation | Statut |
 |---|---|---|
 | B-1 | Chaque espèce 1–1025 a une image (normale et shiny, ou repli propre) | ✅ phase 2 |
-| B-2 | Un tour de roulette qui échoue **ne consomme pas** de ticket | ⏳ phase 4 (stockage) |
+| B-2 | Un tour de roulette qui échoue **ne consomme pas** de ticket | ✅ phase 4 (transition pure + test) ; l'écran de roulette viendra en phase 5 |
 | B-3 | Une boîte spéciale **expire** et deux boîtes ne s'écrasent pas | ✅ phase 3 |
 | B-4 | Un événement ponctuel passé n'affiche **aucun** compte à rebours | ✅ phase 3 |
 | B-5 | Le boost affiché = le boost réel | ✅ phase 3 |
 | B-6 | « Retour » du navigateur change bien de vue | ✅ phase 1 |
-| B-7 | Les compteurs se mettent à jour sans recharger | ⏳ phase 4 (état) |
+| B-7 | Les compteurs se mettent à jour sans recharger | ✅ phase 4 (état partagé) ; les compteurs eux-mêmes viennent en phase 5 |
 | B-8 / B-9 | Série en cours correcte ; un seul compte de shiny cohérent partout | ⏳ phase 5 |
 | A7 | Un seul fuseau de référence : le jour **local** | ✅ phase 3 |
 | A10 | `events.json` et la police disponibles hors-ligne | ✅ événements (phase 3) et police (phase 1) ; précache complet : phase 6 |
@@ -436,11 +457,8 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 **Réglé** : tailles d'images **512 + 128 px**, images 2D de repli **gardées** ; toutes les formes, pourcentage progressif, Pokédex séparé ; un « jour » = un tirage réel ; formes tirées à égalité ; formes sans image mises de côté ; V-Roulette et Team du mois sur les espèces seulement ; noms FR/EN depuis PokéAPI ; branche `v4` ; ancienne base supprimée ; export/import tôt.
 
-**À confirmer (petites décisions de produit, avec une valeur par défaut déjà codée)**
-1. **Durée des boîtes spéciales** (Lucky Day, Poisson d'avril) : **7 jours**, jour de réception compris, utilisables à volonté (1 ticket par tour). Plus court (le jour même) ou plus long ?
-2. **Poisson d'avril : chance shiny de 1/100** (moins bonne que 1/69). C'était déjà le cas en v3.1 ; est-ce voulu, ou préfères-tu une meilleure chance un jour de fête (comme 1/30 pour Halloween) ?
-3. **Niveau 100** : réservé à l'événement du Nouvel An (le hasard va de 1 à 99). OK ?
+**Confirmé par Diamant (5 oct. 2026, « les valeurs par défaut me vont »)** : boîtes spéciales valables **7 jours** (jour de réception compris), utilisables à volonté (1 ticket par tour) ; **Poisson d'avril : 1/100** ; **niveau 100** réservé au Nouvel An (hasard de 1 à 99).
 
 ## 11. Prochaine action
 
-**Phase 4 — stockage, état, export/import** : base IndexedDB neuve avec de vrais compartiments et des **transactions** (rien d'écrit à moitié), état partagé qui met l'écran à jour sans recharger (B-7), **branchement du tirage du jour** à l'écran, **tickets débités seulement après succès** (B-2), **export/import** de la collection, et **nettoyage de l'ancienne installation** (avec ses garde-fous).
+**Phase 5 — fonctionnalités (parité)** : carte + partage en image, historique (calendrier du mois), Pokédex/Shinydex + onglet « Formes », stats, bandeau et calendrier des événements, V-Roulette + boîtes spéciales, Team du mois, changelog intégré, mode développeur, accessibilité des fenêtres. Le noyau et la sauvegarde sont prêts : ces écrans n'ont plus qu'à lire `game.state` et appeler ses actions. Je propose de la découper en **sous-étapes** (une par écran, chacune vérifiée dans Chromium) plutôt qu'un seul bloc ; à valider avant de commencer.
