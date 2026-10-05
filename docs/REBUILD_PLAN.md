@@ -11,12 +11,15 @@
 |---|---|
 | Technologie | **Reconstruction de zéro en TypeScript/JavaScript pur**, sans moteur de rendu (donc **ni Svelte, ni React, ni équivalent**). On **garde Vite et la PWA**. |
 | Essai « sans framework » | **Validé** : on commence par l'écran « carte du jour » (§2.3). |
-| Images | **Script automatisé**, images **générées au build et non commitées** (option B, §4). Résolution (256 ou 512 px) : **à trancher après un essai visuel** (« à voir comment ça rend »). |
-| Formes alternatives | **Oui, on les veut** (Alola, Galar, Méga…). Reste à choisir lesquelles (§4.4). |
-| Dépôt | **Branche vide (orpheline)** dans le même dépôt (§8). Exécution avec confirmation, car on ne peut pas revenir en arrière. |
+| Formes alternatives | **Toutes, sans aucune exception** (les 326 de PokéAPI). |
+| Tirage des formes | **Pourcentage progressif** : 1 % par défaut, +1 % par jour sans forme, retour à 1 % dès qu'une forme sort (§4.5). |
+| Pokédex | **Séparé** : 1 025 espèces + un onglet « Formes » (validé). |
+| Noms français des formes | Pris dans **PokéAPI** (326/326 vérifiés, §4.4). Pokémon DB ne fournit que les noms d'**espèces**. |
+| Images | **`PokeAPI/sprites` en base + Pokémon DB pour combler les trous**, en respectant leurs règles (§4.2 bis). Générées au build et non commitées. Taille 256/512 px : **à trancher après un essai visuel**. |
+| Dépôt | **Branche vide nommée `v4`** dans le même dépôt. Copie de sauvegarde de la v3.1 **déjà faite par Diamant**. La bascule (suppression de l'ancien) reste en dernier, avec confirmation. |
 | Changement de jour | **Minuit heure locale** de chaque joueur. |
 | Données existantes | 3 à 5 utilisateurs : **aucune migration**. L'ancienne base est **supprimée** au premier lancement de la v4 (§5). |
-| Export / import de la collection | **Tôt** dans le projet (phase 4). |
+| Export / import de la collection | **Tôt** (phase 4). |
 | Langues | **Français + anglais**, pas d'autre. |
 | Mode développeur | **Conservé**, pour tout le monde : « il fait partie intégrante du système ». |
 | Monétisation | **Jamais** : ni pub, ni achat, ni statistiques de suivi. Projet fun entre amis. |
@@ -57,7 +60,7 @@
 
 ### 2.3 Critères de réussite de l'essai (spike)
 
-Reconstruire **l'écran « carte du jour »** (affichage, renommage, partage) et vérifier : (1) code lisible ; (2) renommage sans perte de focus ni de défilement ; (3) aucun `innerHTML` avec une donnée utilisateur ; (4) changement de langue sans rechargement ; (5) < ~300 lignes de plomberie. Si un critère échoue, on en discute **avant** d'aller plus loin (autre option : Custom Elements partout).
+Reconstruire **l'écran « carte du jour »** (affichage, renommage, changement de langue ; le **partage en image** est reporté en phase 5, car il ne dépend pas du choix framework ou pas) et vérifier : (1) code lisible ; (2) renommage sans perte de focus ni de défilement ; (3) aucun `innerHTML` avec une donnée utilisateur ; (4) changement de langue sans rechargement ; (5) < ~300 lignes de plomberie. Si un critère échoue, on en discute **avant** d'aller plus loin (autre option : Custom Elements partout).
 
 ---
 
@@ -146,7 +149,9 @@ Diamant a signalé que [Pokémon DB](https://pokemondb.net/sprites) possède une
 | `robots.txt` | — | `Crawl-delay: 2` pour tous ; `wget` interdit ✅ ([robots.txt](https://pokemondb.net/robots.txt)) |
 | Couverture de nos 39 images manquantes | — | **Peu utile** : sur 12 noms testés (costumes de Pikachu, Koraidon/Miraidon, « partenaires »), seul `pikachu-sinnoh-cap` répond (normal + shiny). Les autres noms essayés renvoient 404, mais **mes noms sont des suppositions** ❓ : résultat non concluant |
 
-**Verdict** : on garde **`PokeAPI/sprites`** comme source du script. Aspirer ~2 700 fichiers sur Pokémon DB à chaque build, à raison d'une requête toutes les 2 s (≈ 1 h 30), serait lent, fragile et peu respectueux d'un site qui vit de la bande passante qu'on lui demanderait.
+**Décision de Diamant (5 oct.)** : `PokeAPI/sprites` reste la base et **Pokémon DB sert à combler les trous**, en respectant leurs règles : téléchargement **ponctuel** (jamais à chaque build), **2 s entre deux requêtes**, `User-Agent` qui nous identifie, pas de `wget`, **fichiers auto-hébergés** (pas de lien direct), provenance notée, **lien retour** dans l'écran « À propos ». Les données PokéAPI et les fichiers Pokémon DB sont gardés dans un **cache local** (`.cache/`, non commité) : on ne retélécharge jamais ce qu'on a déjà, ce qui respecte aussi la [politique d'usage équitable de PokéAPI](https://pokeapi.co/docs/v2).
+
+**Verdict initial (inchangé)** : on garde **`PokeAPI/sprites`** comme source du script. Aspirer ~2 700 fichiers sur Pokémon DB à chaque build, à raison d'une requête toutes les 2 s (≈ 1 h 30), serait lent, fragile et peu respectueux d'un site qui vit de la bande passante qu'on lui demanderait.
 
 **Là où Pokémon DB peut quand même servir** :
 - **Combler quelques trous à la main** (par ex. les shiny de casquettes de Pikachu absents chez PokeAPI) : une seule fois, quelques fichiers, 2 s entre chaque requête, ajoutés dans un petit dossier `assets/extra/` avec la liste de provenance. Qualité à comparer (128/256 px contre 512 px).
@@ -168,31 +173,56 @@ Dans l'app : `getSprite(id, shiny)` consulte le manifeste → **repli propre** (
 
 **Poids estimé** (extrapolé depuis un échantillon de 30 images, ❓) : 2 702 fichiers × ~11 Ko (256 px) ≈ **30 Mo**, ou × ~15 Ko (512 px) ≈ **41 Mo**, contre **95 Mo** aujourd'hui, et **0 Mo** dans le dépôt.
 
-### 4.4 Les formes alternatives : ce qu'il y a et ce que je propose
+### 4.4 Les formes alternatives : toutes, sans exception
 
-**Décision : on veut des formes.** Voici ce que contiennent les 326 formes de PokéAPI (comptage fait sur les noms ✅ ; les « recommandations » sont **mes suggestions**, pas des faits) :
+**Décision : les 326 formes sont dans le jeu.** Pour information, leur composition (comptage sur les noms ✅) :
 
-| Catégorie | Nb | Exemples | Suggestion |
-|---|---|---|---|
-| **Régionales** (Alola 20, Galar 20, Hisui 16, Paldea 4) | 60 | Raichu d'Alola, Zorua de Hisui | ✅ oui : de vrais Pokémon à part entière |
-| **Méga** | 97 | Méga-Dracaufeu X | 🤔 à toi : spectaculaires, mais ce sont des états de combat temporaires |
-| **Gigamax** | 34 | Dracaufeu Gigamax | 🤔 à toi (même remarque) |
-| **Primo** | 2 | `groudon-primal`, `kyogre-primal` | 🤔 à toi |
-| **Formes permanentes distinctes** (parmi les 108 « autres ») | ~50 ❓ | `deoxys-attack`, `rotom-wash`, `giratina-origin`, `kyurem-black`, `tornadus-therian` | ✅ à trier ensemble |
-| **États de combat / cosmétiques** (parmi les 108 « autres ») | ~60 ❓ | `aegislash-blade`, `wishiwashi-school`, `castform-sunny`, **Minior ×14** (`minior-red`…), `pumpkaboo-small` | ❌ par défaut (quasi des doublons ou des états temporaires) |
-| **Totem** | 11 | versions « boss » de Pokémon d'Alola (`-totem`) | ❌ par défaut |
-| **Pikachu casquettes / costumes** | 14 | `pikachu-sinnoh-cap`, `pikachu-rock-star` | 🎉 idée pour les événements (Pokémon Day !) ; plusieurs sans image shiny |
+| Catégorie | Nb |
+|---|---|
+| Méga | 97 |
+| Gigamax | 34 |
+| Régionales (Alola 20, Galar 20, Hisui 16, Paldea 4) | 60 |
+| Primo | 2 |
+| Totem | 11 |
+| Pikachu casquettes / costumes | 14 |
+| Autres (états de combat, genres, tailles, couleurs, « partenaires », Koraidon/Miraidon…) | 108 |
+| **Total** | **326** ✅ |
 
-(Total : 60 + 97 + 34 + 2 + 108 + 11 + 14 = 326 ✅. Les 108 « autres » ne sont pas encore triés à la main ; le « ~50 / ~60 » est une estimation à confirmer.)
+**Noms français et anglais : PokéAPI les fournit pour les 326 formes.** *Vérifié le 5 oct. 2026* en interrogeant le point d'accès `pokemon-form` de chaque forme : **326 sur 326 ont un nom français**. Exemples : `charizard-mega-x` → « Méga-Dracaufeu X », `raichu-alola` → « Raichu d'Alola », `groudon-primal` → « Primo-Groudon », `pikachu-sinnoh-cap` → « Pikachu Casquette de Sinnoh », `eevee-starter` → « Évoli Partenaire ». La relecture rapide de 20 noms donne des résultats cohérents. Deux **doublons** à départager (même nom FR pour deux formes) : `zygarde-10` / `zygarde-10-power-construct` et `meowstic-male-mega` / `meowstic-female-mega`.
+> Correction d'une hypothèse : sur deux pages testées (Raichu, Dracaufeu), **Pokémon DB ne donne que le nom français de l'espèce**, pas celui des formes ✅. Il n'est donc pas la source des noms de formes ; les noms viennent de PokéAPI.
 
-**Comment on l'organise (sans coder à chaque changement)** : un fichier de données **`forms.json`** liste chaque forme avec un champ `enabled` (oui/non) et sa catégorie. Tu peux changer d'avis en modifiant le fichier. Le script de génération le lit ; l'app ne charge que les formes activées.
+**`forms.json`** (généré) contient pour chaque forme : `id`, `speciesId`, catégorie, noms FR/EN, `canBeShiny`, et si une image existe. **Aucun filtre** : tout est actif.
 
-**Règles proposées (à valider)**
-- **Tirage** : pool = espèces + formes activées, tirage uniforme (simple, testable). Avec ~150 formes activées, ≈ 13 % de chances d'obtenir une forme ; réglable plus tard. Les **événements** peuvent forcer des formes (idée : Halloween avec des formes spectrales).
-- **Pokédex** : il reste à **1 025 espèces** (obtenir n'importe quelle forme d'une espèce la compte), et un **onglet « Formes »** suit la collection de formes à part. Évite que la barre « x/1025 » devienne mouvante à chaque ajout.
-- **Noms FR/EN** : PokéAPI ne fournit pas toujours le nom français d'une forme (❓ à mesurer). Le script les **fabrique** à partir du nom de l'espèce + un petit dictionnaire (« Méga- », « de Galar », « Gigamax »…) et signale ceux à relire : **risque d'erreurs de nom FR, à vérifier**.
-- **Images manquantes** (39 chez la source, ✅ vérifiées) : costumes/casquettes de Pikachu, Pikachu et Évoli « partenaires », modes de Koraidon/Miraidon. Un shiny absent s'explique parfois par un shiny impossible dans le jeu (❓ non vérifié). Le manifeste d'images fait que l'app **n'affiche jamais** une image cassée : repli propre ou forme désactivée.
-- **Modèle de données** : `id` (identifiant PokéAPI, jusqu'à `10326`) **et** `speciesId` dès le départ.
+**Images : 39 fichiers manquent chez `PokeAPI/sprites`** (✅ vérifié) : 16 formes n'ont **aucune** image normale (costumes de Pikachu ×6, Pikachu et Évoli « partenaires », modes de Koraidon/Miraidon ×8) et 23 n'ont **pas de shiny** (dont 6 casquettes de Pikachu, les costumes ci-dessus, les modes de Koraidon/Miraidon).
+- **Pour les combler** : script ponctuel `scripts/fill-gaps.ts` qui cherche chez Pokémon DB, avec leurs règles (§4.2 bis). Je n'ai pas encore la certitude qu'ils aient ces formes (mes premiers essais à l'aveugle ont donné 404, **non concluants**).
+- **Image plus petite** (128/256 px) : affichée telle quelle, jamais agrandie artificiellement.
+- **Shiny qui n'existe pas dans le jeu** : on marque `canBeShiny: false` (la forme ne peut alors pas sortir en shiny). ❓ à confirmer forme par forme.
+- **Cas limite** : une forme **sans aucune image nulle part** ne peut pas être affichée ; elle est mise de côté jusqu'à ce qu'on trouve une image (voir §10, question 3), car « toutes sans exception » ne doit pas produire d'image cassée.
+
+**Modèle de données** : `id` (identifiant PokéAPI, jusqu'à `10326`) **et** `speciesId` dès le départ.
+
+### 4.5 Tirage des formes : le « pourcentage progressif »
+
+**Règle voulue par Diamant** : chaque jour, la chance d'obtenir une forme est de **1 %** ; si aucune forme ne sort, elle monte de **+1 % par jour** (2 %, 3 %, 4 %…) jusqu'à ce qu'une forme sorte ; **elle retombe alors à 1 %**.
+
+- **État à sauvegarder** : un compteur `joursSansForme` (0 au départ). Chance du jour = `min(100, joursSansForme + 1)` %. Si une forme sort : compteur à 0 ; sinon : compteur + 1. Au bout de **100 jours** sans forme, c'est **garanti**.
+- **Ce que ça donne** (calcul exact + simulation de 300 000 jours ✅) :
+
+| | |
+|---|---|
+| Nombre de jours moyen entre deux formes | **≈ 12,2 jours** (médiane : 12) |
+| Part des jours avec une forme (long terme) | **≈ 8,2 %** |
+| Forme obtenue dans les 7 premiers jours | 25,0 % |
+| … dans les 14 premiers jours | 66,9 % |
+| … dans les 21 premiers jours | 91,8 % |
+| … dans les 30 premiers jours | 99,5 % |
+
+  C'est un mécanisme « de pitié » : une forme environ toutes les 2 semaines, avec le suspense qui monte chaque jour.
+- **Valeurs par défaut que je propose** (tu les ajustes, §10) : (a) un « jour » = un **tirage réel** (si tu n'ouvres pas l'app un jour, pas de tirage, le compteur ne bouge pas) ; (b) quand une forme sort, elle est choisie **uniformément parmi les 326** (donc ≈ 4 % de chances pour chacune ; des familles nombreuses comme Pikachu ou Minior sortiront un peu plus souvent que Dracaufeu) ; (c) les **événements** qui forcent un Pokémon fonctionnent comme avant, et si le résultat est une forme, le compteur repart à 0 ; (d) la **V-Roulette** et la **Team du mois** n'utilisent pas ce compteur ; (e) le **shiny** reste 1/69 (sauf `canBeShiny: false`).
+- **Dans l'interface** : la chance du jour pourrait s'afficher comme une petite jauge sur la carte (idée §9).
+- **Mode développeur** : afficher et modifier le compteur, pour tester sans attendre 12 jours.
+- **Tests** (phase 3) : avec un aléa à graine, le compteur ne dépasse jamais 100, repart à 0 après une forme, et la moyenne simulée est ≈ 12,2 jours.
+- **Contournement possible** : changer l'horloge de l'appareil permet de tricher ; assumé (jeu entre amis, sans classement).
 
 ---
 
@@ -218,12 +248,12 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 ### Phase 2 — Données et images
 - `scripts/build-dex.ts` (dex + natures FR/EN, **vérifiés** contre PokéAPI) et `scripts/sync-sprites.ts` (§4), manifeste, test de complétude.
-- `forms.json` (tri des formes avec toi, §4.4) et **page de comparaison 256/512 px** pour choisir la taille.
+- `forms.json` (métadonnées des 326 formes, noms FR/EN depuis PokéAPI, §4.4), `scripts/fill-gaps.ts` (trous comblés chez Pokémon DB, §4.2 bis) et **page de comparaison 256/512 px** pour choisir la taille.
 - **Sortie** : `pnpm sprites` et `pnpm dex` produisent tout sans intervention ; l'app n'appelle plus jamais PokéAPI.
 
 ### Phase 3 — Noyau testé (`core/`)
 - `constants`, `rng`, `dates` (jour local), `createEntry`, `draw`, moteur d'événements (mêmes 12 événements, mêmes résultats, durcis).
-- **Tests** : toutes les dates clés des événements (y compris ponctuel vs annuel), tirage avec graine, probabilité de boost, passage de minuit et changement de fuseau.
+- **Tests** : tirage des formes (pourcentage progressif, §4.5), toutes les dates clés des événements (y compris ponctuel vs annuel), tirage avec graine, probabilité de boost, passage de minuit et changement de fuseau.
 - **Sortie** : le « tirage du jour » complet est testé sans navigateur.
 
 ### Phase 4 — Stockage, état, export/import
@@ -270,8 +300,8 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 **Décision : branche vide (orpheline) dans le même dépôt.** On garde l'adresse, les étoiles et le lien avec Vercel.
 
 **Déroulé**
-1. **Sauvegarde de l'ancien** : une copie complète de la v3.1 hors du dépôt (`git bundle create pokedaily-v3.bundle --all`, ≈ 300 Mo, à ranger sur ton disque) : on ne perd rien, même après le nettoyage.
-2. **Création** d'une branche sans aucun historique (`git checkout --orphan …`), qui démarre avec uniquement `docs/` et `AGENTS.md` (la mémoire du projet). Toute la v4 se construit dessus.
+1. **Sauvegarde de l'ancien** : ✅ **déjà faite par Diamant** (copie complète de la v3.1 hors du dépôt) : on ne perd rien, même après le nettoyage.
+2. **Création** de la branche **`v4`**, sans aucun historique (`git checkout --orphan …`), qui démarre avec uniquement `docs/` et `AGENTS.md` (la mémoire du projet). Toute la v4 se construit dessus.
 3. **Prévisualisation** : pendant le chantier, la v3.1 reste en production sur la branche par défaut. Vercel crée en général une adresse de prévisualisation par branche (❓ à confirmer dans ton tableau de bord Vercel, rien n'est versionné) : tu pourras tester la v4 sans toucher à la v3.1.
 4. **Bascule** (en dernier, avec ta confirmation explicite) : la branche v4 devient la branche par défaut (nom sans emoji : `main`), puis on **supprime l'ancienne branche `🏡master`** et les branches de travail anciennes.
 
@@ -310,6 +340,7 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 | 🎯 **« Quel est ce Pokémon ? »** pour gagner un ticket | M | Silhouettes en CSS sur les images existantes |
 | 🔮 **V-Roulette : vraie animation séquentielle**, sons optionnels | M | Aujourd'hui les sauts sont aléatoires |
 | 🗓️ **Événements entre amis** pilotés par `events.json` | M | Fichier statique mis à jour par déploiement |
+| 📈 **Jauge « chance de forme »** sur la carte (le pourcentage du jour qui monte) | S | Rend le mécanisme §4.5 visible et fun |
 | 🧩 **Formes alternatives** (Alola, Galar, Méga…) dans la collection | M–L | **Décidé : oui** ; catégories à choisir (§4.4) |
 | 🎃 **Événements avec des formes** (Halloween spectral, Pokémon Day avec Pikachu à casquette) | S | Une fois les formes en place |
 
@@ -327,18 +358,15 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 ---
 
-## 10. Questions encore ouvertes
+## 10. Questions encore ouvertes (petites, avec une valeur par défaut)
 
-1. **Quelles formes ?** Les **régionales (60)** sont proposées d'office. Pour Méga (97), Gigamax (34), Primo (2) et les formes permanentes, dis-moi ce que tu veux ; on trie les 108 « autres » ensemble dans `forms.json`.
-2. **Compter les formes** : ma proposition (Pokédex à 1 025 espèces + onglet « Formes » séparé) te convient-elle ?
-3. **Fréquence des formes** au tirage : ≈ 13 % (pool uniforme) te va, ou tu veux les rendre plus rares/plus fréquentes ?
-4. **Nom de la branche vide** (par ex. `v4`) et **autorisation** de la créer et de la pousser (§8).
-5. **Sauvegarde de l'ancien** : OK pour que tu ranges toi-même la copie `pokedaily-v3.bundle` sur ton disque avant la bascule ?
+1. **Un « jour » du pourcentage progressif** : compte-t-on les **tirages réels** (par défaut : si tu n'ouvres pas l'app un jour, le compteur ne bouge pas) ou les **jours du calendrier** (le pourcentage monte même si tu ne viens pas) ?
+2. **Quelle forme sort** : **uniformément parmi les 326** (par défaut) ou en choisissant d'abord une espèce ?
+3. **Forme sans aucune image** (jusqu'à 16 aujourd'hui) : par défaut, **mise de côté** tant qu'on n'a pas d'image (jamais d'image cassée). Ça te va ?
+4. **V-Roulette et Team du mois** : par défaut **espèces seulement** (sans formes, sans compteur). Ça te va, ou tu veux des formes aussi ?
 
-Réglé : taille d'image (256/512 → après essai visuel), ancienne base (supprimée), export/import (tôt), essai sans framework (validé), branche vide.
+Réglé : toutes les formes, pourcentage progressif, Pokédex séparé, noms FR (PokéAPI), images (PokeAPI/sprites + trous Pokémon DB), nom `v4`, copie de sauvegarde, ancienne base supprimée, export/import tôt.
 
-## 11. Prochaine action concrète proposée
+## 11. Prochaine action
 
-1. Tu réponds aux questions du §10 (même en un mot), en particulier **le « oui » pour créer la branche vide**.
-2. **Phase 1** : fondations (outillage, tests, CI) + essai de l'écran « carte du jour » sans framework.
-3. **Phase 2** : données et images (c'est elle qui règle ton problème d'images ; on y trie les formes et on choisit 256/512 px à l'œil).
+**Phase 1** sur la branche `v4` : fondations (outillage, tests, CI) + essai « carte du jour » sans framework, en petits commits relisibles. Les questions du §10 ne bloquent pas la phase 1 (elles concernent les phases 2 à 4).

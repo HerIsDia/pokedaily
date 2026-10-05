@@ -303,6 +303,15 @@ Points relevés par `svelte-check` et la lecture : popups `role="dialog"` sans `
 - Les **39 images absentes** de la source concernent : costumes et casquettes de Pikachu, Pikachu et Évoli « partenaires », modes de Koraidon/Miraidon ✅.
 - Restent ouvertes : **quelles** formes activer, comment les compter, à quelle fréquence → `REBUILD_PLAN.md` §10.
 
+### 8.5 Troisième série de réponses (5 octobre 2026)
+
+| # | Sujet | Réponse | Conséquence |
+|---|---|---|---|
+| 15 | Formes | **Toutes, sans exception** ; plan validé | `REBUILD_PLAN.md` §4.4 |
+| 16 | Tirage des formes | **1 % par défaut, +1 % par jour sans forme, retour à 1 % après une forme** ; Pokédex séparé validé | ≈ 12,2 jours entre deux formes (calcul + simulation ✅). → §4.5 |
+| 17 | Nom de la branche | **`v4`** ; copie de sauvegarde déjà faite | Création de la branche vide |
+| 18 | Pokémon DB | Sert à **combler les trous**, en respectant leurs règles ; noms FR attendus de leur part | Trous d'images : oui. **Noms FR de formes : pas chez eux** (espèces seulement) ; **PokéAPI les a pour 326/326** ✅ |
+
 ---
 
 ## 9. Méthode et limites de cet audit
