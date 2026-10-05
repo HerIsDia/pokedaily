@@ -62,6 +62,24 @@
 
 Reconstruire **l'écran « carte du jour »** (affichage, renommage, changement de langue ; le **partage en image** est reporté en phase 5, car il ne dépend pas du choix framework ou pas) et vérifier : (1) code lisible ; (2) renommage sans perte de focus ni de défilement ; (3) aucun `innerHTML` avec une donnée utilisateur ; (4) changement de langue sans rechargement ; (5) < ~300 lignes de plomberie. Si un critère échoue, on en discute **avant** d'aller plus loin (autre option : Custom Elements partout).
 
+### 2.4 Résultat de l'essai « carte du jour » (5 oct. 2026) ✅
+
+L'essai a été réalisé sur la branche `v4` (code : `src/ui/`, `src/i18n/`, `src/features/card/`). **Verdict : l'approche sans framework est viable à cette échelle** ; voici ce qui a été mesuré, critère par critère :
+
+| Critère | Résultat |
+|---|---|
+| 1. Code lisible | ✅ Une vue = une fonction ; la structure est construite une fois, seuls les textes/attributs sont « liés » à des états. `card.ts` : 192 lignes non vides pour tout l'écran. *(Jugement subjectif : à relire par toi.)* |
+| 2. Renommage sans perte de focus | ✅ **avec une nuance.** Le champ n'est jamais recréé : un changement de langue ou de données **par le code** conserve le nœud, le focus et la saisie (test automatique). Mais dans un vrai navigateur, **cliquer sur le bouton de langue retire le focus du champ**, ce qui **valide le surnom** (même comportement que la v3) : c'est le fonctionnement normal d'un clic, pas un défaut. |
+| 3. Aucun `innerHTML` avec une donnée utilisateur | ✅ **Imposé par une règle ESLint** (vérifiée : elle échoue bien sur un fichier de test volontairement fautif) + `h()` n'utilise que des nœuds texte. Surnom hostile `<img onerror=…>` testé dans les tests ET dans Chromium : rien ne s'exécute. |
+| 4. Changement de langue sans rechargement | ✅ Testé en test unitaire et dans Chromium ; `<html lang>` suit la langue ; le choix est mémorisé après rechargement. |
+| 5. Moins de ~300 lignes de plomberie | ✅ **285 lignes** (DOM 102, routeur 66, i18n 54, état 43, nettoyage 20), hors commentaires et lignes vides. C'est **proche de la limite** et ça ne comprend pas encore les fenêtres modales ni les listes longues. |
+
+**Vérifié aussi** dans un vrai Chromium (24 contrôles) : bouton « retour/avancer » du navigateur (bug B-6 de la v3 corrigé), image absente → repère « ? » au lieu d'une image cassée, **aucune requête vers un site externe**, service worker actif et **application qui se charge hors-ligne**, manifeste PWA.
+**Le contrôle visuel a trouvé 2 défauts** que les tests ne voyaient pas (en-tête qui débordait sur mobile ; couleur du type écrasée par une règle CSS), tous deux corrigés.
+**Chiffres** : JavaScript 10,9 Ko (4,6 Ko compressé) pour 1 écran + À propos, contre 218,7 Ko pour la v3.1 entière : **non comparable tant que les autres écrans n'existent pas**.
+**Non testé** : iPhone/Safari réel, lecteur d'écran, déroulement sur plusieurs jours. **Non encore fait** : partage en image (phase 5), persistance des données (phase 4).
+**Coût réel constaté** : on réécrit à la main des choses que Svelte donnait gratuitement (ex. `bindAttr` pour les attributs booléens, `bindChildren` pour les listes) et il faut de la discipline (écrire `data-shiny` présent/absent plutôt que `'true'`). C'est le prix de « zéro dépendance de rendu », que tu as choisi.
+
 ---
 
 ## 3. Architecture cible
@@ -241,7 +259,7 @@ Dans l'app : `getSprite(id, shiny)` consulte le manifeste → **repli propre** (
 
 Chaque phase se termine par un état qui **build, passe les tests et se déploie**.
 
-### Phase 1 — Fondations + essai « sans framework »
+### Phase 1 — Fondations + essai « sans framework » ✅ FAIT (voir §2.4)
 - Nouveau dépôt/branche propre (§8), Vite + PWA, TypeScript strict, ESLint/Prettier, Vitest, CI, Dependabot, un seul gestionnaire de paquets (pnpm).
 - `ui/dom.ts`, `ui/store.ts`, `ui/router.ts`, `i18n/` + **essai** de l'écran « carte du jour » (§2.3).
 - **Sortie** : verdict sur l'approche ; CI verte.
