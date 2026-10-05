@@ -6,12 +6,14 @@ import '@fontsource/roboto-condensed/latin-ext-700.css';
 import '@fontsource/roboto-condensed/latin-ext-900.css';
 import './ui/tokens.css';
 import './ui/types.css';
+import './ui/dialog.css';
 import './app/app.css';
 import './features/card/card.css';
 import './features/home/home.css';
 import './features/history/history.css';
 import './features/pokedex/pokedex.css';
 import './features/stats/stats.css';
+import './features/events/events.css';
 import './features/backup/backup.css';
 
 import { createBrowserI18n } from './i18n';

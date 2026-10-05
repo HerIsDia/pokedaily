@@ -1,21 +1,27 @@
+import { localDay } from '../../core/dates';
+import type { GameEvent } from '../../core/events/types';
 import type { PokemonEntry } from '../../core/model';
+import { events as allEvents } from '../../data/events';
 import type { I18n, MessageKey } from '../../i18n';
 import type { Game } from '../../state/game';
 import { bindAttr, bindChildren, bindText, effect, h } from '../../ui/dom';
 import type { View } from '../../ui/router';
-import { createStore, type Store } from '../../ui/store';
+import { createStore, derived, type Store } from '../../ui/store';
+import { createEventsUi } from '../events/events-ui';
 import { createCardView } from '../card/card';
 
 export interface HomeDeps {
   i18n: I18n;
   game: Game;
+  /** Les événements du jeu (par défaut : ceux de `events.json`). */
+  events?: readonly GameEvent[];
 }
 
 /**
  * L'écran d'accueil : le Pokémon du jour, ou l'état du démarrage (chargement / erreur), avec les
  * bandeaux d'information (sauvegarde en échec, mode sans sauvegarde, données réparées).
  */
-export function createHomeView({ i18n, game }: HomeDeps): View {
+export function createHomeView({ i18n, game, events = allEvents }: HomeDeps): View {
   return ({ scope }) => {
     const { t, lang } = i18n;
 
@@ -69,7 +75,21 @@ export function createHomeView({ i18n, game }: HomeDeps): View {
       }),
     );
 
-    const root = h('section', { class: 'home' }, volatile, failed, warnings, message);
+    // Bandeau d'événement + fenêtre de la liste. Le jour vient du Pokémon du jour : il change
+    // donc exactement quand le jeu passe au lendemain.
+    const todayDay = derived(game.today, (entry) => entry?.day ?? localDay());
+    const { badge, modal } = createEventsUi({ i18n, scope, events, today: todayDay });
+
+    const root = h(
+      'section',
+      { class: 'home' },
+      volatile,
+      failed,
+      warnings,
+      badge,
+      message,
+      modal.element,
+    );
 
     // La carte est construite UNE fois (à la première apparition du Pokémon du jour) puis mise à
     // jour : changer de jour ou de surnom ne recrée pas l'écran.
