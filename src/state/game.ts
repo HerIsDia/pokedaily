@@ -63,6 +63,14 @@ export type SpinOutcome =
   | { ok: true; index: number; prize: PokemonEntry }
   | { ok: false; reason: 'no_tickets' | 'no_pokemon' };
 
+/** Ce que le jeu fournit aux outils du mode développeur (horloge, hasard, données). */
+export interface DevContext {
+  today: string;
+  rng: Rng;
+  pool: DrawPool;
+  events: readonly GameEvent[];
+}
+
 export interface SpinRequest {
   /** Les 16 Pokémon de la boîte choisie. */
   ids: readonly number[];
@@ -101,6 +109,11 @@ export interface Game {
   ensureMonthlyTeam(month: string): Promise<void>;
   /** Le mois (« AAAA-MM ») d'aujourd'hui, avec l'horloge du jeu. */
   currentMonth(): string;
+  /**
+   * Mode développeur : applique une transition quelconque (sauvegardée comme les autres), puis
+   * tire le Pokémon du jour s'il manque. À réserver aux outils de `core/dev-tools`.
+   */
+  devApply(tool: (current: GameState, context: DevContext) => GameState): Promise<void>;
   exportBackup(): { filename: string; json: string };
   /** Lit un fichier d'import SANS rien modifier. */
   readBackup(text: string): BackupResult;
@@ -254,6 +267,15 @@ export function createGame(deps: GameDeps): Game {
     },
 
     currentMonth: () => monthKey(localDay(now())),
+
+    devApply(tool) {
+      return enqueue(() =>
+        commit((current) =>
+          // Après l'outil, on tire le Pokémon du jour s'il manque (ex. après « tout remettre à zéro »).
+          ensureTodayTransition(tool(current, { today: localDay(now()), rng, pool, events })),
+        ),
+      );
+    },
 
     exportBackup() {
       return buildBackup(state.get(), now());

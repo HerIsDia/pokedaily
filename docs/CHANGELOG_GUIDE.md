@@ -45,15 +45,17 @@ La Note de Diamant est un message personnel et optionnel signé *— Diamant*. E
 
 **Ton :** libre, sincère, personnel. Ce n'est pas un communiqué officiel.
 
-**Comment l'ajouter dans le code (`Changelog.svelte`) :**
+**Comment l'ajouter dans le code (`src/data/changelog.ts`) :**
 ```ts
 {
-  version: '3.1_b1',
-  date: 'Juin 2026',
-  note: 'Mon message personnel ici.',  // ← champ optionnel
+  version: '4.1_b1',
+  date: { fr: 'Novembre 2026', en: 'November 2026' },
+  note: { fr: 'Mon message personnel ici.', en: 'My personal message here.' }, // ← optionnel
   sections: [...]
 }
 ```
+
+> ⚠️ **L'IA n'écrit jamais la Note de Diamant.** Tant qu'elle ne l'a pas rédigée, on **omet** le champ `note` (un test le vérifie pour la 4.0). Les anciennes notes (3.x) sont les siennes, reprises mot pour mot.
 
 ---
 
@@ -97,23 +99,21 @@ Ces éléments sont internes et n'ont aucun sens pour les utilisateurs :
 
 ## 6. Comment mettre à jour le changelog
 
-Deux fichiers doivent toujours être mis à jour en cohérence :
-
-### `src/lib/components/Changelog.svelte`
-C'est le fichier affiché dans l'application. Ajouter la nouvelle entrée **en premier** dans le tableau `entries` (la plus récente en haut) :
+Dans la v4, tout est dans **un seul fichier** : `src/data/changelog.ts`. Il alimente la fenêtre « Dernières mises à jour » (qu'on ouvre en touchant le numéro de version, en haut à côté de « Pokédaily »). Ajoute la nouvelle entrée **en premier** dans le tableau `changelog` (la plus récente en haut) :
 
 ```ts
-const entries: ChangeEntry[] = [
+export const changelog: ChangelogEntry[] = [
   {
-    version: '3.1_b1',
-    date: 'Juin 2026',
-    note: 'Message optionnel.',
+    version: '4.1_b1',
+    date: { fr: 'Novembre 2026', en: 'November 2026' },
+    // note: { fr: '…', en: '…' },   ← seulement si Diamant l'a écrite
     sections: [
       {
-        title: lang === 'fr' ? 'Nouveautés' : "What's new",
-        items: lang === 'fr'
-          ? ['Item en français…']
-          : ['Item in English…'],
+        title: { fr: 'Nouveautés', en: "What's new" },
+        items: {
+          fr: ['Item en français…'],
+          en: ['Item in English…'],
+        },
       },
     ],
   },
@@ -121,8 +121,12 @@ const entries: ChangeEntry[] = [
 ];
 ```
 
-### `CHANGELOG.md`
-C'est la version documentaire (texte brut, pour les archives). Ajouter la section en haut du fichier, avant les versions précédentes. Le contenu peut être légèrement plus concis que dans l'app.
+Le français et l'anglais doivent avoir **le même nombre d'items** par section. Des tests (`tests/features/dev-changelog.test.ts`) vérifient : dates et titres présents dans les deux langues, même nombre d'items, **aucun jargon** (IndexedDB, framework, API…), **pas de vouvoiement**, et l'absence de Note de Diamant tant qu'elle n'est pas écrite.
+
+**Le numéro affiché dans l'en-tête** vient de `package.json` (`version`, réduit à « majeur.mineur » : `4.0.0-dev.1` → `4.0`). Pense à le tenir cohérent avec la dernière entrée.
+
+### `CHANGELOG.md` (facultatif)
+Version documentaire en texte brut pour les archives, à la racine du dépôt si on décide d'en tenir un.
 
 ---
 

@@ -2,6 +2,8 @@ import { LANGS, type I18n, type Lang } from '../i18n';
 import { bindAttr, bindText, effect, h } from '../ui/dom';
 import { createRouter, type Route } from '../ui/router';
 import { Scope } from '../ui/scope';
+import { createDevPanel } from '../features/dev/dev-panel';
+import { createChangelogUi } from '../features/changelog/changelog';
 import { createHistoryView } from '../features/history/history';
 import { createHomeView } from '../features/home/home';
 import { createPokedexView } from '../features/pokedex/pokedex';
@@ -28,6 +30,18 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
     document.documentElement.lang = lang.get();
   });
 
+  const devPanel = createDevPanel({ i18n, game, scope });
+  // Raccourci clavier du mode développeur (comme en v3.1) : Ctrl/Cmd + Maj + C.
+  const onKey = (event: KeyboardEvent) => {
+    if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'c') {
+      event.preventDefault();
+      if (devPanel.element.open) devPanel.close();
+      else devPanel.open();
+    }
+  };
+  window.addEventListener('keydown', onKey);
+  scope.add(() => window.removeEventListener('keydown', onKey));
+
   const outlet = h('main', { class: 'app-main' });
   const routes: Route[] = [
     { path: '', view: createHomeView({ i18n, game }) },
@@ -37,7 +51,7 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
     { path: 'kit', view: createKitView({ i18n, game }) },
     { path: 'kit/roulette', view: createRouletteView({ i18n, game }) },
     { path: 'kit/team', view: createTeamView({ i18n, game }) },
-    { path: 'about', view: createAboutView({ i18n, game }) },
+    { path: 'about', view: createAboutView({ i18n, game, openDev: () => devPanel.open() }) },
   ];
   const router = createRouter(outlet, routes, { fallback: '' });
 
@@ -69,13 +83,20 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
     return button;
   };
 
+  const changelog = createChangelogUi({ i18n, scope });
+
   const header = h(
     'header',
     { class: 'app-header' },
     h(
-      'span',
-      { class: 'app-logo' },
-      bindText(scope, [lang], () => t('app.name')),
+      'div',
+      { class: 'app-brand' },
+      h(
+        'span',
+        { class: 'app-logo' },
+        bindText(scope, [lang], () => t('app.name')),
+      ),
+      changelog.badge,
     ),
     link('about', 'about', () => t('nav.about'), 'header-link'),
     h('div', { class: 'lang-switch', role: 'group' }, ...LANGS.map(langButton)),
@@ -102,7 +123,15 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
   );
   bindAttr(scope, tabBar, 'aria-label', [lang], () => t('nav.main'));
 
-  const shell = h('div', { class: 'app-shell' }, header, outlet, tabBar);
+  const shell = h(
+    'div',
+    { class: 'app-shell' },
+    header,
+    outlet,
+    tabBar,
+    changelog.modal.element,
+    devPanel.element,
+  );
   root.replaceChildren(shell);
   router.start();
 

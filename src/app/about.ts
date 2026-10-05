@@ -4,7 +4,16 @@ import type { Game } from '../state/game';
 import { bindText, h } from '../ui/dom';
 import type { View } from '../ui/router';
 
-export function createAboutView({ i18n, game }: { i18n: I18n; game: Game }): View {
+export function createAboutView({
+  i18n,
+  game,
+  openDev,
+}: {
+  i18n: I18n;
+  game: Game;
+  /** Ouvre la fenêtre du mode développeur. */
+  openDev: () => void;
+}): View {
   return ({ scope }) => {
     const { t, lang } = i18n;
     const text = (read: () => string) => bindText(scope, [lang], read);
@@ -36,6 +45,11 @@ export function createAboutView({ i18n, game }: { i18n: I18n; game: Game }): Vie
         'p',
         { class: 'about-version' },
         text(() => t('about.madeBy', { author: 'diamant' })),
+      ),
+      h(
+        'button',
+        { class: 'dev-link', type: 'button', onclick: openDev },
+        text(() => t('dev.open')),
       ),
     );
   };

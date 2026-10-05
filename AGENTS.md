@@ -6,7 +6,7 @@
 ## Le projet en 3 lignes
 
 **Pokédaily** — PWA « Quel Pokémon es-tu aujourd'hui ? » : un Pokémon par jour (espèces 1–1025 **et formes alternatives**), avec nature, niveau et 1/69 de shiny. Tout est **local** (IndexedDB), aucun serveur à nous, aucun compte. Interface FR/EN, thème sombre Écarlate/Violet.
-**État** : phases 1 à 4 faites (outillage, données Pokémon FR/EN, images, **noyau de jeu testé**, **sauvegarde IndexedDB + état partagé + export/import**). L'écran affiche le **vrai Pokémon du jour**, tiré et sauvegardé, qui change à minuit sans recharger. Écrans : carte du jour (avec **partage en image** et bandeau d'événements), historique, Pokédex/Shinydex/Formes, statistiques, Pokékit (V-Roulette, team du mois), À propos (export/import). Phase 5 en cours, écran par écran (`docs/REBUILD_PLAN.md` §6.3) : reste changelog, mode dev.
+**État** : phases 1 à 5 faites (outillage, données Pokémon FR/EN, images, **noyau de jeu testé**, **sauvegarde IndexedDB + état partagé + export/import**). L'écran affiche le **vrai Pokémon du jour**, tiré et sauvegardé, qui change à minuit sans recharger. Écrans : carte du jour (avec **partage en image** et bandeau d'événements), historique, Pokédex/Shinydex/Formes, statistiques, Pokékit (V-Roulette, team du mois), À propos (export/import). Mode développeur et notes de mise à jour compris (`docs/REBUILD_PLAN.md` §6.3). **Reste la phase 6** (PWA, poids, lancement) puis la bascule (destructive : confirmation explicite requise).
 
 ## Décisions de direction (Diamant) — à respecter
 
@@ -73,6 +73,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `assets/extra/` | (optionnel, absent pour l'instant) images déposées à la main : `<id>.png`, `<id>s.png` pour le shiny ; à créditer |
 | `src/app/boot.ts` | Démarrage : ouvre la sauvegarde (ou le mode mémoire), monte l'écran, tire le Pokémon du jour, nettoie la v3.1 |
 | `src/features/card/` | Carte du jour (reçoit un état en lecture + `onRename`) ; `share-image.ts` (image PNG de la carte : contenu / dessin / assemblage séparés) et `share-actions.ts` (Partager / Copier / Télécharger) ; `preview.ts` : **aperçu de dev** `/?preview=10034&shiny=1&level=88&nature=timid` (en mémoire, **rien n'est sauvegardé**) |
+| `src/features/changelog/` · `dev/` | Notes de mise à jour (numéro de version cliquable) · mode développeur (`dev-panel.ts` ; outils purs dans `core/dev-tools.ts`, appliqués via `game.devApply`) ; ouverture : **Ctrl/Cmd+Maj+C** ou lien en bas de « À propos » |
 | `src/features/kit/` | Pokékit : `kit.ts` (menu), `roulette.ts` (V-Roulette), `team.ts` (team du mois), `spin-schedule.ts` (le « film » de l'animation, pur) |
 | `src/features/events/` | Bandeau + liste des événements (`events-ui.ts`), étiquettes des effets (`modifiers.ts`) |
 | `src/ui/dialog.ts` | `createModal` : fenêtre modale accessible (élément natif `<dialog>` : focus, Échap, retour du focus). **À utiliser pour toute fenêtre** |
@@ -106,7 +107,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 3. **Images** : `public/sprites/` n'est pas dans git. Pour voir l'app avec ses images en local : `pnpm sprites` (≈ 75 s la 1ʳᵉ fois, 2,5 s ensuite). Sans image, l'app affiche un repère « ? » (voulu). `pnpm build` copie `public/` dans `dist/` (≈ 69 Mo, 5 358 fichiers) ; la CI n'a pas les images, c'est normal. **Vercel** les génère au déploiement via `vercel.json` (`pnpm sprites --verify && pnpm build`, ≈ 75 s) ; sans ça, une prévisualisation n'affiche aucune image.
 4. **Service worker** : après un changement de `src/pwa/sw.ts`, désenregistre-le/vide les caches dans le navigateur avant de déboguer.
 5. **Avertissement du build** `inlineDynamicImports option is deprecated` : vient de `vite-plugin-pwa` 2 avec Vite 8, sans effet.
-6. **`docs/CHANGELOG_GUIDE.md`** décrit encore l'ancien `Changelog.svelte` : à réécrire en phase 5. Ses **règles éditoriales** (tutoiement, zéro jargon, « Note de Diamant » = sa voix, ne jamais l'inventer) restent valables.
+6. **Notes de mise à jour** : `src/data/changelog.ts` (guide : `docs/CHANGELOG_GUIDE.md`). **Tutoiement, zéro jargon, ne jamais écrire ni inventer la « Note de Diamant »** (sa voix) : on omet le champ `note` tant qu'elle ne l'a pas écrite. Des tests vérifient ces règles.
 7. **PokéAPI refuse (403) les requêtes sans `User-Agent` propre** (constaté avec l'agent par défaut de Python ; `curl` passe). Tout script qui l'interroge doit envoyer un `User-Agent` qui nous identifie, mettre les réponses en cache local (`.cache/`) et rester poli (peu de requêtes en parallèle).
 8. **Branche par défaut de l'ancien dépôt** : `🏡master` (emoji) — cite-la entre guillemets dans un script shell.
 

@@ -1,0 +1,76 @@
+.changelog {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.cl-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cl-entry-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cl-version {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--accent-light);
+}
+
+.cl-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cl-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 12px 12px 0;
+  background: var(--accent-subtle);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.cl-note-label {
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-light);
+}
+
+.cl-note-sign {
+  margin-top: 6px;
+  text-align: right;
+  font-style: italic;
+}
+
+.cl-section h3 {
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cl-section ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}

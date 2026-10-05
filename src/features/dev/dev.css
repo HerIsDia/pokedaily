@@ -1,0 +1,158 @@
+.dev-link {
+  align-self: flex-start;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.dev-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dev-warning {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 170, 0, 0.12);
+  border: 1px solid rgba(255, 170, 0, 0.4);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.dev-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dev-section h3 {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dev-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dev-label {
+  flex: 0 0 38%;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.dev-value {
+  font-weight: 800;
+  color: var(--accent-light);
+}
+
+.dev-input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+}
+
+.dev-btn {
+  padding: 7px 12px;
+  border: 1px solid var(--border-accent);
+  border-radius: 8px;
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dev-btn[aria-pressed='true'] {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.5);
+  color: var(--shiny-color);
+}
+
+.dev-btn.primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.dev-btn.danger {
+  border-color: rgba(255, 90, 90, 0.5);
+  background: rgba(255, 90, 90, 0.1);
+  color: #ff9a9a;
+}
+
+.dev-hint {
+  min-height: 1.2em;
+  font-size: 12px;
+  color: #ff9a9a;
+}
+
+.dev-status {
+  min-height: 1.3em;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-light);
+}
+
+.dev-history {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.dev-history-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  font-size: 12px;
+}
+
+.dev-history-id {
+  width: 44px;
+  font-weight: 800;
+  color: var(--accent-light);
+}
+
+.dev-history-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dev-history-day {
+  color: var(--text-muted);
+}
+
+.dev-remove {
+  padding: 2px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #ff9a9a;
+  cursor: pointer;
+}

@@ -15,6 +15,8 @@ import './features/pokedex/pokedex.css';
 import './features/stats/stats.css';
 import './features/events/events.css';
 import './features/kit/kit.css';
+import './features/changelog/changelog.css';
+import './features/dev/dev.css';
 import './features/backup/backup.css';
 
 import { createBrowserI18n } from './i18n';
