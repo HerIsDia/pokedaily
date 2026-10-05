@@ -6,7 +6,9 @@ import { createHistoryView } from '../features/history/history';
 import { createHomeView } from '../features/home/home';
 import { createPokedexView } from '../features/pokedex/pokedex';
 import type { Game } from '../state/game';
+import { createStatsView } from '../features/stats/stats-view';
 import { createAboutView } from './about';
+import { icon, type IconName } from './icons';
 
 export interface AppDeps {
   i18n: I18n;
@@ -28,12 +30,16 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
     { path: '', view: createHomeView({ i18n, game }) },
     { path: 'history', view: createHistoryView({ i18n, game }) },
     { path: 'pokedex', view: createPokedexView({ i18n, game }) },
+    { path: 'stats', view: createStatsView({ i18n, game }) },
     { path: 'about', view: createAboutView({ i18n, game }) },
   ];
   const router = createRouter(outlet, routes, { fallback: '' });
 
-  const link = (path: string, label: () => string) => {
-    const a = h('a', { class: 'nav-link', href: `#/${path}` }, bindText(scope, [lang], label));
+  /** Un lien du menu : `aria-current="page"` quand on est dessus. */
+  const link = (path: string, name: IconName, label: () => string, className: string) => {
+    const text = h('span', { class: 'nav-label' }, bindText(scope, [lang], label));
+    const a = h('a', { class: className, href: `#/${path}` }, icon(name), text);
+    bindAttr(scope, a, 'aria-label', [lang], label);
     bindAttr(scope, a, 'aria-current', [router.current], () =>
       router.current.get() === path ? 'page' : undefined,
     );
@@ -58,27 +64,25 @@ export function mountApp(root: HTMLElement, { i18n, game }: AppDeps): () => void
       { class: 'app-logo' },
       bindText(scope, [lang], () => t('app.name')),
     ),
-    h(
-      'nav',
-      { class: 'app-nav' },
-      link('', () => t('nav.card')),
-      link('history', () => t('nav.history')),
-      link('pokedex', () => t('nav.pokedex')),
-      link('about', () => t('nav.about')),
-    ),
+    link('about', 'about', () => t('nav.about'), 'header-link'),
     h('div', { class: 'lang-switch', role: 'group' }, ...LANGS.map(langButton)),
   );
   bindAttr(scope, header.querySelector('.lang-switch')!, 'aria-label', [lang], () =>
     t('lang.label'),
   );
 
-  const footer = h(
-    'footer',
-    { class: 'app-footer' },
-    bindText(scope, [lang], () => t('footer.madeBy', { author: 'diamant' })),
+  // Menu du bas, avec le pouce : les écrans principaux.
+  const tabBar = h(
+    'nav',
+    { class: 'tab-bar' },
+    link('', 'card', () => t('nav.card'), 'nav-link'),
+    link('history', 'history', () => t('nav.history'), 'nav-link'),
+    link('pokedex', 'pokedex', () => t('nav.pokedex'), 'nav-link'),
+    link('stats', 'stats', () => t('nav.stats'), 'nav-link'),
   );
+  bindAttr(scope, tabBar, 'aria-label', [lang], () => t('nav.main'));
 
-  const shell = h('div', { class: 'app-shell' }, header, outlet, footer);
+  const shell = h('div', { class: 'app-shell' }, header, outlet, tabBar);
   root.replaceChildren(shell);
   router.start();
 

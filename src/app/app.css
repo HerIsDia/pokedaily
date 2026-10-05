@@ -10,8 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap; /* sur mobile : logo + langue sur la 1re ligne, menu sur la 2e */
-  gap: 8px 12px;
+  gap: 10px;
   padding: 12px 20px;
   background: var(--bg-nav);
   border-bottom: 1px solid var(--border-subtle);
@@ -22,32 +21,73 @@
   font-size: 18px;
   font-weight: 900;
   letter-spacing: 0.15em;
+  margin-right: auto;
   color: var(--accent-light);
   text-shadow: 0 0 20px var(--accent-glow);
 }
 
-.app-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  order: 3;
-  flex-basis: 100%;
+.header-link {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--text-muted);
 }
 
-.app-logo {
-  margin-right: auto;
+.header-link:hover {
+  color: var(--text-secondary);
+}
+
+.header-link[aria-current='page'] {
+  color: var(--accent-light);
+  background: var(--accent-subtle);
+}
+
+.header-link .nav-label {
+  display: none; /* l'icône suffit ; le nom est dans aria-label */
+}
+
+.header-link .nav-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Menu du bas */
+.tab-bar {
+  display: flex;
+  flex-shrink: 0;
+  background: var(--bg-nav);
+  border-top: 1px solid var(--border-subtle);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav-link {
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-size: 13px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 4px 7px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   text-decoration: none;
-  white-space: nowrap;
   color: var(--text-muted);
+}
+
+.nav-link .nav-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.nav-link .nav-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -56,7 +96,7 @@
 
 .nav-link[aria-current='page'] {
   color: var(--accent-light);
-  background: var(--accent-subtle);
+  box-shadow: inset 0 2px 0 var(--accent-light);
 }
 
 .lang-switch {
@@ -88,15 +128,6 @@
   overflow-x: hidden;
 }
 
-.app-footer {
-  flex-shrink: 0;
-  padding: 10px 20px max(10px, env(safe-area-inset-bottom));
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-muted);
-  border-top: 1px solid var(--border-subtle);
-}
-
 .about-page {
   max-width: 520px;
   margin: 0 auto;
@@ -116,17 +147,4 @@
 .about-version {
   font-size: 12px;
   color: var(--text-muted);
-}
-
-/* Petits écrans : 4 liens de menu tiennent sur une seule ligne à 390 px. */
-@media (max-width: 420px) {
-  .app-header {
-    padding-inline: 12px;
-  }
-
-  .nav-link {
-    padding: 6px 7px;
-    font-size: 12px;
-    letter-spacing: 0.02em;
-  }
 }

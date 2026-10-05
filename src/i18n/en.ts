@@ -5,9 +5,11 @@ export const en: Record<MessageKey, string> = {
   'app.name': 'Pokédaily',
   'app.tagline': 'Which Pokémon are you today?',
   'lang.label': 'Language',
-  'nav.card': 'Pokémon of the day',
+  'nav.card': 'Today',
   'nav.history': 'History',
   'nav.pokedex': 'Pokédex',
+  'nav.stats': 'Stats',
+  'nav.main': 'Main navigation',
   'nav.about': 'About',
 
   'card.level': 'Lv.',
@@ -30,6 +32,7 @@ export const en: Record<MessageKey, string> = {
     'Pokédaily is a fan project: free, with no ads and no tracking. Everything stays on your device.',
   'about.disclaimer':
     'Pokédaily is not affiliated with Nintendo, Game Freak or The Pokémon Company. Pokémon and its characters are trademarks of their respective owners.',
+  'about.madeBy': 'Made by {author}',
   'about.version': 'Version {version}',
 
   'history.title': 'History',
@@ -45,6 +48,20 @@ export const en: Record<MessageKey, string> = {
   'pokedex.counter.forms': '{count} alternate forms obtained',
   'pokedex.allForms': 'All',
   'pokedex.shinyEmpty': 'No shiny Pokémon yet: keep an eye out every day!',
+
+  'stats.title': 'Statistics',
+  'stats.total': 'Pokémon obtained',
+  'stats.shiny': 'Shiny',
+  'stats.shinyRate': 'Shiny rate',
+  'stats.avgLevel': 'Average level',
+  'stats.streak': 'Day streak',
+  'stats.bestStreak': 'Best streak',
+  'stats.forms': 'Forms obtained',
+  'stats.tickets': 'Victini tickets',
+  'stats.completion': 'Completion',
+  'stats.types': 'Most frequent types',
+  'stats.top': 'Most obtained Pokémon',
+  'stats.noData': 'No data yet: come back tomorrow!',
 
   'home.loading': 'Opening your collection…',
   'home.error.too_new':
@@ -78,8 +95,6 @@ export const en: Record<MessageKey, string> = {
   'backup.failure.damaged': 'This file is damaged; nothing was imported. First problem: {first}',
   'backup.failure.save_failed': 'Saving failed: your collection is unchanged. Try again.',
   'backup.failure.read_failed': "This file can't be read.",
-
-  'footer.madeBy': 'Made by {author}',
 
   'form.mega': 'Mega',
   'form.gmax': 'Gigantamax',

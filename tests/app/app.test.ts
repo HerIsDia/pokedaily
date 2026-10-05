@@ -50,7 +50,7 @@ describe('application', () => {
     expect(en.getAttribute('aria-pressed')).toBe('false');
     en.click();
     expect(en.getAttribute('aria-pressed')).toBe('true');
-    expect(root.querySelector('.nav-link')?.textContent).toBe('Pokémon of the day');
+    expect(root.querySelector('.nav-link')?.textContent).toBe('Today');
   });
 
   it('navigue vers « À propos » et revient (hashchange)', async () => {

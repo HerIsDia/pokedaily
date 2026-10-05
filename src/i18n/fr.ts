@@ -3,9 +3,11 @@ export const fr = {
   'app.name': 'Pokédaily',
   'app.tagline': "Quel Pokémon es-tu aujourd'hui ?",
   'lang.label': 'Langue',
-  'nav.card': 'Pokémon du jour',
+  'nav.card': "Aujourd'hui",
   'nav.history': 'Historique',
   'nav.pokedex': 'Pokédex',
+  'nav.stats': 'Stats',
+  'nav.main': 'Navigation principale',
   'nav.about': 'À propos',
 
   'card.level': 'Niv.',
@@ -28,6 +30,7 @@ export const fr = {
     'Pokédaily est un projet de fans, gratuit, sans publicité ni suivi. Tout reste sur ton appareil.',
   'about.disclaimer':
     "Pokédaily n'est pas affilié à Nintendo, Game Freak ou The Pokémon Company. Pokémon et ses personnages sont des marques déposées de leurs propriétaires.",
+  'about.madeBy': 'Fait par {author}',
   'about.version': 'Version {version}',
 
   'history.title': 'Historique',
@@ -43,6 +46,20 @@ export const fr = {
   'pokedex.counter.forms': '{count} formes alternatives obtenues',
   'pokedex.allForms': 'Toutes',
   'pokedex.shinyEmpty': "Aucun Pokémon shiny pour l'instant : à surveiller chaque jour !",
+
+  'stats.title': 'Statistiques',
+  'stats.total': 'Pokémon obtenus',
+  'stats.shiny': 'Shiny',
+  'stats.shinyRate': 'Taux de shiny',
+  'stats.avgLevel': 'Niveau moyen',
+  'stats.streak': "Jours d'affilée",
+  'stats.bestStreak': 'Meilleure série',
+  'stats.forms': 'Formes obtenues',
+  'stats.tickets': 'Tickets Victini',
+  'stats.completion': 'Complétion',
+  'stats.types': 'Types les plus fréquents',
+  'stats.top': 'Pokémon les plus obtenus',
+  'stats.noData': 'Pas encore de données : reviens demain !',
 
   'home.loading': 'Ouverture de ta collection…',
   'home.error.too_new':
@@ -79,8 +96,6 @@ export const fr = {
   'backup.failure.save_failed':
     "L'enregistrement a échoué : ta collection n'a pas changé. Réessaie.",
   'backup.failure.read_failed': 'Impossible de lire ce fichier.',
-
-  'footer.madeBy': 'Fait par {author}',
 
   'form.mega': 'Méga',
   'form.gmax': 'Gigamax',

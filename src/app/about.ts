@@ -32,6 +32,11 @@ export function createAboutView({ i18n, game }: { i18n: I18n; game: Game }): Vie
         text(() => t('about.version', { version: __APP_VERSION__ })),
       ),
       createBackupPanel({ i18n, game, scope }),
+      h(
+        'p',
+        { class: 'about-version' },
+        text(() => t('about.madeBy', { author: 'diamant' })),
+      ),
     );
   };
 }
