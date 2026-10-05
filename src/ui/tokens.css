@@ -1,0 +1,94 @@
+/* Design tokens + remise à zéro. Thème « Écarlate/Violet », repris de la v3. */
+:root {
+  --bg-main: #0f0f1a;
+  --bg-card: #1c1c2e;
+  --bg-card-hover: #252540;
+  --bg-nav: #13131f;
+  --accent: #9b4dca;
+  --accent-light: #b76ee0;
+  --accent-glow: rgba(155, 77, 202, 0.35);
+  --accent-subtle: rgba(155, 77, 202, 0.12);
+  --text-primary: #f0f0f5;
+  --text-secondary: #9090b0;
+  --text-muted: #5a5a7a;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-accent: rgba(155, 77, 202, 0.4);
+  --shiny-color: #ffd700;
+  --shiny-glow: rgba(255, 215, 0, 0.4);
+  --nav-height: 72px;
+  --card-radius: 20px;
+  --badge-radius: 8px;
+  --font-main: 'Roboto Condensed', 'Roboto', system-ui, sans-serif;
+}
+
+/* --- Reset --- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* --- Selection --- */
+::selection {
+  background-color: var(--accent);
+  color: #fff;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,161 @@
+/* Badges de types + couleur de type. Source unique pour toute l'app. */
+/* --- Type Badge Colors --- */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 12px;
+  border-radius: var(--badge-radius);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.type-normal {
+  background: rgba(168, 167, 122, 0.18);
+  color: #c8c79a;
+  border-color: rgba(168, 167, 122, 0.4);
+}
+.type-fighting {
+  background: rgba(194, 46, 40, 0.18);
+  color: #e05050;
+  border-color: rgba(194, 46, 40, 0.4);
+}
+.type-flying {
+  background: rgba(169, 143, 243, 0.18);
+  color: #b8a0f8;
+  border-color: rgba(169, 143, 243, 0.4);
+}
+.type-poison {
+  background: rgba(163, 62, 161, 0.18);
+  color: #c060c0;
+  border-color: rgba(163, 62, 161, 0.4);
+}
+.type-ground {
+  background: rgba(226, 191, 101, 0.18);
+  color: #d8c070;
+  border-color: rgba(226, 191, 101, 0.4);
+}
+.type-rock {
+  background: rgba(182, 161, 54, 0.18);
+  color: #c8b048;
+  border-color: rgba(182, 161, 54, 0.4);
+}
+.type-bug {
+  background: rgba(166, 185, 26, 0.18);
+  color: #b8c830;
+  border-color: rgba(166, 185, 26, 0.4);
+}
+.type-ghost {
+  background: rgba(123, 98, 163, 0.18);
+  color: #9878c8;
+  border-color: rgba(123, 98, 163, 0.4);
+}
+.type-steel {
+  background: rgba(183, 183, 206, 0.18);
+  color: #c8c8e0;
+  border-color: rgba(183, 183, 206, 0.4);
+}
+.type-fire {
+  background: rgba(238, 129, 48, 0.18);
+  color: #f0a050;
+  border-color: rgba(238, 129, 48, 0.4);
+}
+.type-water {
+  background: rgba(99, 144, 240, 0.18);
+  color: #80b0f8;
+  border-color: rgba(99, 144, 240, 0.4);
+}
+.type-grass {
+  background: rgba(122, 199, 76, 0.18);
+  color: #90d860;
+  border-color: rgba(122, 199, 76, 0.4);
+}
+.type-electric {
+  background: rgba(247, 208, 44, 0.18);
+  color: #f8d840;
+  border-color: rgba(247, 208, 44, 0.4);
+}
+.type-psychic {
+  background: rgba(249, 85, 135, 0.18);
+  color: #f870a0;
+  border-color: rgba(249, 85, 135, 0.4);
+}
+.type-ice {
+  background: rgba(150, 217, 214, 0.18);
+  color: #a8e8e8;
+  border-color: rgba(150, 217, 214, 0.4);
+}
+.type-dragon {
+  background: rgba(111, 53, 252, 0.18);
+  color: #9068f8;
+  border-color: rgba(111, 53, 252, 0.4);
+}
+.type-dark {
+  background: rgba(112, 87, 70, 0.18);
+  color: #987860;
+  border-color: rgba(112, 87, 70, 0.4);
+}
+.type-fairy {
+  background: rgba(214, 133, 173, 0.18);
+  color: #e898c8;
+  border-color: rgba(214, 133, 173, 0.4);
+}
+
+/* Couleur principale d'un type : UNE seule définition (la v3 en avait trois). */
+[data-type='fire'] {
+  --type-color: #ee8130;
+}
+[data-type='water'] {
+  --type-color: #6390f0;
+}
+[data-type='grass'] {
+  --type-color: #7ac74c;
+}
+[data-type='electric'] {
+  --type-color: #f7d02c;
+}
+[data-type='ice'] {
+  --type-color: #96d9d6;
+}
+[data-type='fighting'] {
+  --type-color: #c22e28;
+}
+[data-type='poison'] {
+  --type-color: #a33ea1;
+}
+[data-type='ground'] {
+  --type-color: #e2bf65;
+}
+[data-type='flying'] {
+  --type-color: #a98ff3;
+}
+[data-type='psychic'] {
+  --type-color: #f95587;
+}
+[data-type='bug'] {
+  --type-color: #a6b91a;
+}
+[data-type='rock'] {
+  --type-color: #b6a136;
+}
+[data-type='ghost'] {
+  --type-color: #7b62a3;
+}
+[data-type='dragon'] {
+  --type-color: #6f35fc;
+}
+[data-type='dark'] {
+  --type-color: #705746;
+}
+[data-type='steel'] {
+  --type-color: #b7b7ce;
+}
+[data-type='fairy'] {
+  --type-color: #d685ad;
+}
+[data-type='normal'] {
+  --type-color: #a8a77a;
+}
