@@ -6,6 +6,8 @@
  *   pnpm sprites --sizes=128,512       # seulement ces tailles
  *   pnpm sprites --only=25,10034       # seulement ces identifiants (essais rapides)
  *   pnpm sprites --force               # reconvertit même ce qui existe déjà
+ *   pnpm sprites --verify              # (déploiement) échoue si la disponibilité des images
+ *                                      #   diffère de `src/data/sprites.json` versionné
  *
  * Les images ne sont PAS commitées (`public/sprites/` est ignoré par git) : elles sont
  * régénérées à la demande. Les téléchargements sont mis en cache dans `.cache/`.
@@ -37,6 +39,7 @@ const { values } = parseArgs({
     sizes: { type: 'string' },
     only: { type: 'string' },
     force: { type: 'boolean', default: false },
+    verify: { type: 'boolean', default: false },
   },
 });
 const sizes = parseSizes(values.sizes);
@@ -159,7 +162,22 @@ await Promise.all(
 // Passage COMPLET uniquement : disponibilité à jour + suppression des fichiers périmés.
 let pruned = 0;
 if (!only) {
-  await writeFile(path('src/data/sprites.json'), stringifyAvailability(availability));
+  const availabilityFile = path('src/data/sprites.json');
+  const fresh = stringifyAvailability(availability);
+  if (values.verify) {
+    // Au déploiement : le code embarque `sprites.json` tel qu'il est versionné. Si les images
+    // réellement obtenues diffèrent (téléchargement incomplet, source modifiée), on ARRÊTE le
+    // build plutôt que de publier un site dont les images ne correspondent pas à ce qu'il croit.
+    const committed = await readFile(availabilityFile, 'utf-8');
+    if (committed !== fresh) {
+      log('✘ La disponibilité des images diffère de src/data/sprites.json (versionné).');
+      log('  Relance `pnpm sprites` en local, vérifie le résultat et commite le fichier.');
+      process.exit(1);
+    }
+    log('✔ Disponibilité des images identique à src/data/sprites.json.');
+  } else {
+    await writeFile(availabilityFile, fresh);
+  }
   // Dossiers de tailles abandonnées (ex. 256 px) : supprimés.
   const spritesDir = path('public/sprites');
   if (await exists(spritesDir)) {

@@ -38,6 +38,7 @@ pnpm install --frozen-lockfile
 pnpm dev            # serveur de développement (--host)
 pnpm dex            # (re)génère src/data/dex.json + natures.json depuis PokéAPI (cache .cache/)
 pnpm sprites        # télécharge/convertit les images -> public/sprites/ (ignoré par git) + src/data/sprites.json
+pnpm sprites --verify  # (déploiement) comme ci-dessus mais ÉCHOUE si la disponibilité diffère de sprites.json versionné
 pnpm test           # Vitest (happy-dom) — tests/**/*.test.ts
 pnpm lint           # ESLint (dont la règle anti-innerHTML)
 pnpm format         # Prettier --check ; `pnpm format:write` pour corriger
@@ -95,7 +96,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 
 1. **Un clic retire le focus d'un champ** : cliquer sur un bouton valide (`blur`) un champ en cours de saisie. C'est normal ; les tests qui changent l'état « par code » ne reproduisent pas ça.
 2. **Les tests happy-dom ne voient ni CSS ni mise en page** : vérifie les écrans dans Chromium.
-3. **Images** : `public/sprites/` n'est pas dans git. Pour voir l'app avec ses images en local : `pnpm sprites` (≈ 75 s la 1ʳᵉ fois, 2,5 s ensuite). Sans image, l'app affiche un repère « ? » (voulu). `pnpm build` copie `public/` dans `dist/` (≈ 100 Mo avec les 3 tailles) ; la CI n'a pas les images, c'est normal.
+3. **Images** : `public/sprites/` n'est pas dans git. Pour voir l'app avec ses images en local : `pnpm sprites` (≈ 75 s la 1ʳᵉ fois, 2,5 s ensuite). Sans image, l'app affiche un repère « ? » (voulu). `pnpm build` copie `public/` dans `dist/` (≈ 69 Mo, 5 358 fichiers) ; la CI n'a pas les images, c'est normal. **Vercel** les génère au déploiement via `vercel.json` (`pnpm sprites --verify && pnpm build`, ≈ 75 s) ; sans ça, une prévisualisation n'affiche aucune image.
 4. **Service worker** : après un changement de `src/pwa/sw.ts`, désenregistre-le/vide les caches dans le navigateur avant de déboguer.
 5. **Avertissement du build** `inlineDynamicImports option is deprecated` : vient de `vite-plugin-pwa` 2 avec Vite 8, sans effet.
 6. **`docs/CHANGELOG_GUIDE.md`** décrit encore l'ancien `Changelog.svelte` : à réécrire en phase 5. Ses **règles éditoriales** (tutoiement, zéro jargon, « Note de Diamant » = sa voix, ne jamais l'inventer) restent valables.
