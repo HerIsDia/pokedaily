@@ -54,3 +54,31 @@ export function createStore<T>(initial: T, equals: (a: T, b: T) => boolean = Obj
     },
   };
 }
+
+/**
+ * Une valeur CALCULÉE à partir d'un autre état (ex. « le Pokémon du jour » depuis tout l'état du
+ * jeu). Les abonnés ne sont prévenus que si le résultat change vraiment : un écran qui n'affiche
+ * que le Pokémon du jour ne se redessine pas quand les tickets bougent.
+ */
+export function derived<T, U>(
+  source: ReadStore<T>,
+  map: (value: T) => U,
+  equals: (a: U, b: U) => boolean = Object.is,
+): ReadStore<U> {
+  return {
+    get: () => map(source.get()),
+    subscribe(listener, options) {
+      let previous = map(source.get());
+      if (options?.immediate ?? true) listener(previous);
+      return source.subscribe(
+        (value) => {
+          const next = map(value);
+          if (equals(previous, next)) return;
+          previous = next;
+          listener(next);
+        },
+        { immediate: false },
+      );
+    },
+  };
+}
