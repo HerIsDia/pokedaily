@@ -6,29 +6,12 @@
  *   /?id=25&shiny=1       en shiny
  *   /?id=6&level=88&nature=timid
  */
+import { localDay } from '../../core/dates';
+import type { PokemonEntry } from '../../core/model';
 import { getEntry, getNature } from '../../data';
 import { canBeShiny } from '../../data/sprites';
 
-export interface CardEntry {
-  /** Identifiant PokéAPI (1–1025 pour les espèces, 10001+ pour les formes). */
-  id: number;
-  natureKey: string;
-  level: number;
-  isShiny: boolean;
-  /** Jour LOCAL au format AAAA-MM-JJ. */
-  day: string;
-  /** Surnom choisi par le joueur ; chaîne vide = nom de l'espèce. */
-  rename: string;
-}
-
-/** Date locale d'aujourd'hui, au format AAAA-MM-JJ. */
-export function localDay(date: Date = new Date()): string {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-export function createSampleEntry(search: string = window.location.search): CardEntry {
+export function createSampleEntry(search: string = window.location.search): PokemonEntry {
   const params = new URLSearchParams(search);
   const wantedId = Number(params.get('id'));
   const id = getEntry(wantedId) ? wantedId : 25;

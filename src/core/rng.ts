@@ -68,3 +68,8 @@ export function sampleDistinct<T>(rng: Rng, items: readonly T[], count: number):
   }
   return picked;
 }
+
+/** Les mêmes éléments dans un ordre aléatoire (la liste d'origine n'est pas modifiée). */
+export function shuffled<T>(rng: Rng, items: readonly T[]): T[] {
+  return sampleDistinct(rng, items, items.length);
+}

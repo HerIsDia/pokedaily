@@ -1,16 +1,16 @@
+import type { PokemonEntry } from '../../core/model';
 import type { I18n, MessageKey } from '../../i18n';
 import { appendChildren, bindAttr, bindChildren, bindText, effect, h, svg } from '../../ui/dom';
 import type { View } from '../../ui/router';
 import { createStore, type Store } from '../../ui/store';
 import { getEntry, getNature } from '../../data';
 import { spriteUrl, type SpriteSize } from '../../data/sprites';
-import type { CardEntry } from './sample-entry';
 
 const NAME_MAX_LENGTH = 16;
 
 export interface CardDeps {
   i18n: I18n;
-  entry: Store<CardEntry>;
+  entry: Store<PokemonEntry>;
 }
 
 /** Taille de l'image de la carte : 512 px reste net sur les écrans denses ; à confirmer à l'œil. */
