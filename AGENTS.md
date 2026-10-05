@@ -6,7 +6,7 @@
 ## Le projet en 3 lignes
 
 **Pokédaily** — PWA « Quel Pokémon es-tu aujourd'hui ? » : un Pokémon par jour (espèces 1–1025 **et formes alternatives**), avec nature, niveau et 1/69 de shiny. Tout est **local** (IndexedDB), aucun serveur à nous, aucun compte. Interface FR/EN, thème sombre Écarlate/Violet.
-**État** : phases 1 à 5 faites (outillage, données Pokémon FR/EN, images, **noyau de jeu testé**, **sauvegarde IndexedDB + état partagé + export/import**). L'écran affiche le **vrai Pokémon du jour**, tiré et sauvegardé, qui change à minuit sans recharger. Écrans : carte du jour (avec **partage en image** et bandeau d'événements), historique, Pokédex/Shinydex/Formes, statistiques, Pokékit (V-Roulette, team du mois), À propos (export/import). Mode développeur et notes de mise à jour compris (`docs/REBUILD_PLAN.md` §6.3). **Reste la phase 6** (PWA, poids, lancement) puis la bascule (destructive : confirmation explicite requise).
+**État** : phases 1 à 6 faites (outillage, données Pokémon FR/EN, images, **noyau de jeu testé**, **sauvegarde IndexedDB + état partagé + export/import**). L'écran affiche le **vrai Pokémon du jour**, tiré et sauvegardé, qui change à minuit sans recharger. Écrans : carte du jour (avec **partage en image** et bandeau d'événements), historique, Pokédex/Shinydex/Formes, statistiques, Pokékit (V-Roulette, team du mois), À propos (export/import). Mode développeur et notes de mise à jour compris (`docs/REBUILD_PLAN.md` §6.3). **Phase 6 faite** (hors-ligne, mise à jour avec confirmation, installation, CSP). **Reste la bascule** (`docs/REBUILD_PLAN.md` §8.1) : destructive, confirmation explicite de Diamant requise à chaque étape.
 
 ## Décisions de direction (Diamant) — à respecter
 
@@ -81,7 +81,8 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `src/features/pokedex/` | Pokédex / Shinydex / Formes (`progress.ts` pur : une forme compte pour son espèce, + `pokedex.ts`) |
 | `src/features/history/` · `shared/` | Calendrier mensuel (`calendar.ts` pur + `history.ts`) · `shared/sprite.ts` (`createSprite` : image avec repère « ? » si absente, à réutiliser partout) |
 | `src/features/home/` · `backup/` | Accueil (chargement/erreur, bandeaux, carte) · panneau « Ma collection » (export/import avec confirmation) |
-| `src/pwa/sw.ts` | Service worker (shell seulement pour l'instant) |
+| `src/pwa/` | `sw.ts` (service worker unique : shell, navigation hors-ligne, cache d'images, mise à jour **sur demande**), `register.ts` (enregistrement + proposition de mise à jour), `offline-images.ts` (télécharger les images à la demande), `install.ts` (installation Android/iPhone), `persist.ts` (collection protégée), `constants.ts` |
+| `vercel.json` | Construction (`pnpm sprites --verify && pnpm build`), **politique de sécurité (CSP)** et durées de cache |
 | `tests/` | Miroir de `src/` |
 
 ## Conventions à respecter
@@ -105,7 +106,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 1. **Un clic retire le focus d'un champ** : cliquer sur un bouton valide (`blur`) un champ en cours de saisie. C'est normal ; les tests qui changent l'état « par code » ne reproduisent pas ça.
 2. **Les tests happy-dom ne voient ni CSS ni mise en page** : vérifie les écrans dans Chromium.
 3. **Images** : `public/sprites/` n'est pas dans git. Pour voir l'app avec ses images en local : `pnpm sprites` (≈ 75 s la 1ʳᵉ fois, 2,5 s ensuite). Sans image, l'app affiche un repère « ? » (voulu). `pnpm build` copie `public/` dans `dist/` (≈ 69 Mo, 5 358 fichiers) ; la CI n'a pas les images, c'est normal. **Vercel** les génère au déploiement via `vercel.json` (`pnpm sprites --verify && pnpm build`, ≈ 75 s) ; sans ça, une prévisualisation n'affiche aucune image.
-4. **Service worker** : après un changement de `src/pwa/sw.ts`, désenregistre-le/vide les caches dans le navigateur avant de déboguer.
+4. **Service worker** : après un changement de `src/pwa/sw.ts`, désenregistre-le/vide les caches dans le navigateur avant de déboguer. Il ne s'active **qu'en build** (`pnpm build && pnpm preview`), pas avec `pnpm dev`. **Si les images changent** (nouvelle version de PokeAPI/sprites, `pnpm sprites` modifie des fichiers), **change `SPRITE_CACHE` dans `src/pwa/constants.ts`** (`…-v2`) : le cache d'images est « cache d'abord » et garderait les anciennes à jamais.
 5. **Avertissement du build** `inlineDynamicImports option is deprecated` : vient de `vite-plugin-pwa` 2 avec Vite 8, sans effet.
 6. **Notes de mise à jour** : `src/data/changelog.ts` (guide : `docs/CHANGELOG_GUIDE.md`). **Tutoiement, zéro jargon, ne jamais écrire ni inventer la « Note de Diamant »** (sa voix) : on omet le champ `note` tant qu'elle ne l'a pas écrite. Des tests vérifient ces règles.
 7. **PokéAPI refuse (403) les requêtes sans `User-Agent` propre** (constaté avec l'agent par défaut de Python ; `curl` passe). Tout script qui l'interroge doit envoyer un `User-Agent` qui nous identifie, mettre les réponses en cache local (`.cache/`) et rester poli (peu de requêtes en parallèle).
@@ -115,6 +116,9 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 10. **Transactions IndexedDB** : ne fais **aucun** `await` d'autre chose qu'une requête IndexedDB au milieu d'une transaction (elle se terminerait toute seule). Les tests d'atomicité utilisent `fake-indexeddb` (une valeur non clonable fait échouer la sauvegarde ; il ne doit rien rester).
 11. **Format de sauvegarde** : `STATE_SCHEMA_VERSION` reste à **1** tant que l'app n'est pas lancée ; on y a AJOUTÉ des champs facultatifs (ex. `rouletteBoost`), lus avec une valeur par défaut. Après le lancement, tout changement incompatible exige un numéro de version + une migration testée.
 12. **Import** : il remplace TOUT, y compris le Pokémon d'aujourd'hui (un fichier ancien redonne un nouveau tirage pour aujourd'hui). C'est voulu et dit dans la confirmation.
+
+13. **CSP stricte** (`vercel.json`) : le site ne peut charger **que de lui-même**. Pas de `<script>` ni de `style=""` inline (pose les styles avec `element.style.x = …`, pas avec un attribut), pas de police/image/requête externe. Un test en local avec les mêmes en-têtes : `docs/REBUILD_PLAN.md` §6.4. Toute exception doit être justifiée (règle n°6 : aucun service tiers).
+14. **`pkill -f "vite preview"` ne tue pas `vite.js preview`** : plusieurs serveurs s'empilent sur d'autres ports sans qu'on le voie. Utilise `pkill -f "vite.js previe[w]"`.
 
 ## Ne pas faire
 

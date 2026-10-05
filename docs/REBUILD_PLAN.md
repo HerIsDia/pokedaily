@@ -312,7 +312,7 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 - Carte + partage, historique, Pokédex/Shinydex, stats, événements, Pokékit (V-Roulette, Team du mois), changelog, **mode dev**, FR/EN, accessibilité des fenêtres (focus, Échap, `aria`).
 - **Sortie** : checklist §7 cochée.
 
-### Phase 6 — PWA, poids, lancement
+### Phase 6 — PWA, poids, lancement ✅ FAIT (voir §6.4) ; reste la bascule (§8)
 - SW unique, précache correct (`events.json`, police, manifeste), mise à jour **avec confirmation**, pré-cache progressif des images, parcours iOS (aide « Ajouter à l'écran d'accueil »), mesures Lighthouse avant/après.
 - README (code/images/non-commercial), changelog 4.0, bascule (§8).
 
@@ -378,6 +378,37 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 **Correctif de déploiement (5 oct. 2026)** : la prévisualisation Vercel n'affichait **aucune image** (les images ne sont pas dans git et Vercel ne les générait pas). `vercel.json` lance maintenant `pnpm sprites --verify && pnpm build` (≈ 75 s de plus). Simulé sur un clone vierge sans cache : 5 358 fichiers, 69 Mo, disponibilité identique au fichier versionné. `--verify` **arrête le build** si les images obtenues diffèrent de `src/data/sprites.json` (téléchargement incomplet, source modifiée) plutôt que de publier un site incohérent.
 
+### 6.4 Ce qui a été réalisé en phase 6 (5 oct. 2026) ✅
+
+| Domaine | Ce qui est fait | Vérifié par |
+|---|---|---|
+| **Hors-ligne** | Un seul service worker : le **shell** (code, CSS, polices principales, icônes, événements, données Pokémon) est gardé dès la 1ʳᵉ visite ; **n'importe quelle adresse** de l'app (`/?lang=en`…) s'ouvre hors-ligne ; les **images sont gardées au premier affichage** (« cache d'abord », seulement les vraies réponses) ; les polices rares (un seul nom de forme en a besoin) se gardent à l'usage | Chromium avec un vrai service worker : application ouverte **hors-ligne**, miniatures déjà vues affichées, **renommage possible hors-ligne** puis conservé |
+| **Mise à jour avec confirmation** | La nouvelle version s'installe **en arrière-plan et attend**. Un bandeau propose « Mettre à jour / Plus tard » ; rien ne change sous les doigts de la joueuse (la v3.1 pouvait remplacer l'app sans prévenir). Vérification toutes les heures et au retour sur l'app ; anciens caches nettoyés | Chromium : 2ᵉ version publiée → bandeau, toujours « 4.0 » tant qu'on n'accepte pas, « Plus tard » mémorisé le temps de la session, « Mettre à jour » → « 4.1 », surnom conservé |
+| **Images pour le hors-ligne** | **À la demande** (page « À propos ») : miniatures ≈ 13 Mo ou grandes images ≈ 47 Mo, avec progression, **annulation** (ce qui est reçu reste), compte des images gardées et « Libérer l'espace » (confirmation). Jamais automatique : ça compte sur données mobiles | Chromium : 2 679 miniatures en 10 s, ≈ 17 Mo, puis des miniatures **jamais vues avant** s'affichent hors-ligne |
+| **Collection protégée** | Quand l'app est **installée**, on demande au navigateur de ne pas effacer les données pour faire de la place (la collection n'existe qu'ici) | tests unitaires (installée / onglet / refus / erreur) ; **non essayé sur un vrai appareil** |
+| **Installation** | Android/ordinateur : bandeau « Installer » (proposition du navigateur) ; **iPhone/iPad** : aide pas à pas (Partager → Sur l'écran d'accueil → Ajouter) ; le bandeau se ferme pour de bon ; le bouton reste dans « À propos » | Chromium (agent iPhone simulé, événement d'installation simulé) ; **pas essayé sur un vrai iPhone** |
+| **Sécurité et vie privée** | Politique de sécurité (`vercel.json`) : **le site ne peut parler qu'à lui-même** (pas de script, style, image, police ni requête externes) ; en-têtes anti-détournement ; pas de « style en ligne » ; cache long pour les fichiers à empreinte | Chromium servi avec ces en-têtes : toute l'app (partage, export, téléchargement d'images, hors-ligne) → **0 violation** ; un script injecté à la main est **bloqué** |
+| **Accessibilité / SEO** | Lighthouse : accessibilité **96 → 100**, SEO **92 → 100** (contraste du texte discret relevé, noms accessibles des boutons, `robots.txt`) | Lighthouse sur les 6 écrans |
+| **Poids** | JS 71 Ko compressés (v3.1 : 214 Ko) ; **1ʳᵉ ouverture ≈ 231 Ko, dont l'image du Pokémon du jour** | Lighthouse |
+
+**Mesures (Lighthouse mobile simulé, même machine, 5 oct. 2026)**
+
+| | v3.1 | v4 au départ | v4 final |
+|---|---|---|---|
+| Performance | 85 | 97 | **96–98** |
+| Accessibilité | 94 | 96 | **100** |
+| Bonnes pratiques | 96 | 100 | **100** |
+| SEO | 100 | 92 | **100** |
+| 1ᵉʳ affichage (FCP) / image principale (LCP) | 2,6 s / 3,4 s | 1,7 s / 2,3 s | ≈ 1,8 s / 2,1 s |
+| JS transféré | 214 Ko | 66 Ko | 71 Ko |
+| Erreurs en console | 3 | 0 | 0 |
+
+⚠️ La v3.1 a été mesurée **sans accès à Internet** (cette machine n'en a pas pour PokéAPI) : ses appels réseau échouent, donc ses temps sont pessimistes. Le **poids du code** (214 → 71 Ko) est, lui, fiable. Le gain de performance « en vrai » reste à mesurer sur un téléphone.
+
+**Décision « mesurer avant de décider » : pas de chargement paresseux de `dex.json`.** Le fichier pèse 142 Ko (30 Ko compressés) mais il sert **dès le premier écran** (le nom du Pokémon du jour) : le charger plus tard ne ferait que retarder l'affichage. Découper les écrans secondaires n'économiserait qu'une quinzaine de Ko compressés pour une complexité réelle (écrans chargés à la demande, hors-ligne à garantir) : **non retenu**, à reconsidérer seulement si le code grossit beaucoup.
+
+**Non fait / limites** : aucun test sur un **vrai iPhone/Safari** ni sur un vrai téléphone Android (installation, hors-ligne, protection du stockage) ; la CSP n'a pas été vue en production Vercel (seulement en local avec les mêmes en-têtes) ; les images sont téléchargées par Vercel à chaque déploiement (75 s, risque de limitation côté GitHub : à surveiller au premier déploiement).
+
 ---
 
 ## 7. Cahier de non-régression
@@ -417,6 +448,23 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 **Poids après nettoyage** : un `git clone` classique ne récupère que les branches et étiquettes, pas les références des Pull Requests (`refs/pull/*`) ; une fois les anciennes branches supprimées, le clone devrait donc redevenir léger (❓ à vérifier au moment de la bascule). GitHub peut en revanche conserver l'ancien contenu côté serveur à cause des PR #16–18 : ça n'affecte pas les joueurs ni les clones.
 
 > ⚙️ Contrainte de cette session : je travaille sur la branche `claude/ecstatic-edison-vsuq66` et ne pousse nulle part ailleurs sans ton autorisation explicite. Créer la branche vide demande donc un « oui » de ta part (voir §11).
+
+### 8.1 Checklist de bascule (à exécuter SEULEMENT après ta confirmation explicite)
+
+**Avant** (rien de destructif) :
+- [ ] La prévisualisation Vercel de `v4` affiche les images (vérifier le journal de construction : ≈ 75 s de téléchargement des images, aucune erreur).
+- [ ] Essai **sur ton téléphone** (et celui d'un ami) : ouverture, hors-ligne, installation sur l'écran d'accueil, partage de la carte, export puis import.
+- [ ] Tu as écrit la **Note de Diamant** de la 4.0 (`src/data/changelog.ts`) : elle prévient que la collection de la v3 n'est pas reprise.
+- [ ] Ta copie de sauvegarde de la v3.1 est toujours là.
+- [ ] CI verte sur la dernière révision de `v4`.
+
+**La bascule** (destructive, une étape à la fois, avec ton accord à chaque étape) :
+1. Renommer/déclarer `v4` comme **branche par défaut** (nom sans emoji : `main`) dans les réglages GitHub ; vérifier que Vercel déploie bien cette branche en production.
+2. Vérifier le site de production (images, hors-ligne, installation).
+3. **Seulement ensuite** : supprimer l'ancienne branche `🏡master` et les anciennes branches de travail (`claude/…`). **Irréversible** (ta sauvegarde hors-dépôt est ton filet de sécurité).
+4. Premier lancement sur chaque appareil : l'ancienne base v3.1 est supprimée automatiquement (après ouverture réussie de la nouvelle).
+
+**Après** : surveiller 48 h ; Dependabot et les alertes de l'ancien dépôt disparaissent avec les anciennes branches.
 
 ---
 
@@ -475,4 +523,4 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 ## 11. Prochaine action
 
-**Phase 6 — PWA, poids, lancement** : mise à jour de l'application **avec confirmation**, hors-ligne vérifié (précache des écrans + du fichier d'événements + de la police), **chargement paresseux de `dex.json`** (le gros fichier de noms) pour alléger le premier affichage, mise en cache **progressive des images**, aide « Ajouter à l'écran d'accueil » pour iPhone, mesures Lighthouse avant/après, README, puis la **bascule** (§8, **destructive** : seulement avec ta confirmation explicite). À faire aussi avec toi : **écrire la Note de Diamant de la 4.0** (message aux 3–5 personnes : la collection de la v3 n'est pas reprise).
+**La bascule (§8.1)** : tout est prêt côté code. Il reste des choses qui ne dépendent que de toi : **essayer sur un vrai téléphone** (installation, hors-ligne, partage), **écrire la Note de Diamant de la 4.0**, vérifier la **prévisualisation Vercel** (images), puis **me donner ton accord explicite** pour chaque étape destructive de la bascule. Idées « fun » ensuite : §9.
