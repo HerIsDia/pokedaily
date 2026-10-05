@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   SOURCE,
+  SPRITE_SOURCES,
+  emptyAvailability,
   normalizeAvailability,
   parseIds,
   parseSizes,
@@ -10,6 +12,17 @@ import {
 } from '../../scripts/lib/sprites.ts';
 
 describe('sprites : adresses et noms', () => {
+  it('la chaîne de repli commence par « home » et les adresses sont distinctes', () => {
+    expect(SPRITE_SOURCES[0]).toBe('home');
+    const urls = SPRITE_SOURCES.map((s) => sourceUrl(10265, false, s));
+    expect(new Set(urls).size).toBe(SPRITE_SOURCES.length);
+    expect(urls[1]).toContain('/other/official-artwork/10265.png');
+    expect(urls[2]).toContain('/versions/generation-ix/scarlet-violet/10265.png');
+    expect(sourceUrl(10265, true, 'official-artwork')).toContain(
+      '/official-artwork/shiny/10265.png',
+    );
+  });
+
   it('construit les adresses de la source, épinglée sur un commit précis', () => {
     expect(SOURCE.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(sourceUrl(25, false)).toBe(
@@ -43,17 +56,36 @@ describe('arguments', () => {
 });
 
 describe('disponibilité', () => {
-  it('trie et dédoublonne ; le JSON écrit est valide et stable', () => {
-    const input = {
-      missing: { normal: [5, 3, 5], shiny: [9] },
-      extras: { normal: [], shiny: [2, 1] },
-    };
-    expect(normalizeAvailability(input).missing.normal).toEqual([3, 5]);
+  const input = {
+    missing: { normal: [5, 3, 5], shiny: [9] },
+    extras: { normal: [], shiny: [2, 1] },
+    fallbacks: {
+      normal: { 'official-artwork': [20, 10], 'scarlet-violet': [] },
+      shiny: {},
+    },
+    identicalShiny: [7, 7, 4],
+  };
+
+  it('trie et dédoublonne ; les listes de repli vides disparaissent', () => {
+    const n = normalizeAvailability(input);
+    expect(n.missing.normal).toEqual([3, 5]);
+    expect(n.fallbacks.normal).toEqual({ 'official-artwork': [10, 20] });
+    expect(n.identicalShiny).toEqual([4, 7]);
+  });
+
+  it('le JSON écrit est valide, complet et reproductible', () => {
     const text = stringifyAvailability(input);
     const parsed = JSON.parse(text);
+    expect(parsed.schemaVersion).toBe(2);
     expect(parsed.missing).toEqual({ normal: [3, 5], shiny: [9] });
     expect(parsed.extras.shiny).toEqual([1, 2]);
+    expect(parsed.fallbacks.normal['official-artwork']).toEqual([10, 20]);
+    expect(parsed.identicalShiny).toEqual([4, 7]);
     expect(parsed.source.repo).toBe('PokeAPI/sprites');
-    expect(stringifyAvailability(input)).toBe(text); // reproductible
+    expect(stringifyAvailability(input)).toBe(text);
+  });
+
+  it('emptyAvailability part de rien', () => {
+    expect(stringifyAvailability(emptyAvailability())).toContain('"identicalShiny": []');
   });
 });

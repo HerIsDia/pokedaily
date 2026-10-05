@@ -7,12 +7,27 @@ export const SOURCE = {
   path: 'sprites/pokemon/other/home',
 } as const;
 
+/**
+ * Chaîne de repli pour une image : on prend la première qui existe.
+ *  1. `home`             rendus 3D « Home » 512×512 (style de référence)
+ *  2. `official-artwork` illustrations officielles 2D, 475×475 (style différent)
+ *  3. `scarlet-violet`   sprites du jeu Écarlate/Violet, 256×256 (plus petits)
+ */
+export const SPRITE_SOURCES = ['home', 'official-artwork', 'scarlet-violet'] as const;
+export type SpriteSource = (typeof SPRITE_SOURCES)[number];
+
+const SOURCE_PATHS: Record<SpriteSource, string> = {
+  home: 'sprites/pokemon/other/home',
+  'official-artwork': 'sprites/pokemon/other/official-artwork',
+  'scarlet-violet': 'sprites/pokemon/versions/generation-ix/scarlet-violet',
+};
+
 export const DEFAULT_SIZES = [128, 256, 512] as const;
 
-/** Rendus « Home » 512×512 (normal et shiny) d'un Pokémon ou d'une forme. */
-export function sourceUrl(id: number, shiny: boolean): string {
-  const { repo, commit, path } = SOURCE;
-  return `https://raw.githubusercontent.com/${repo}/${commit}/${path}/${shiny ? 'shiny/' : ''}${id}.png`;
+/** Adresse d'une image dans l'une des sources (normal ou shiny). */
+export function sourceUrl(id: number, shiny: boolean, source: SpriteSource = 'home'): string {
+  const { repo, commit } = SOURCE;
+  return `https://raw.githubusercontent.com/${repo}/${commit}/${SOURCE_PATHS[source]}/${shiny ? 'shiny/' : ''}${id}.png`;
 }
 
 /** `25` → `25.webp` ; `25` shiny → `25s.webp`. */
@@ -42,31 +57,61 @@ export function parseIds(raw: string | undefined): number[] | undefined {
   });
 }
 
+type IdLists = { normal: number[]; shiny: number[] };
+
 export interface SpriteAvailability {
-  /** Images qu'AUCUNE source ne fournit (même après `assets/extra/`). */
-  missing: { normal: number[]; shiny: number[] };
-  /** Images fournies par `assets/extra/` faute de mieux chez la source principale. */
-  extras: { normal: number[]; shiny: number[] };
+  /** Images qu'AUCUNE source ne fournit (même après repli et `assets/extra/`). */
+  missing: IdLists;
+  /** Images fournies par `assets/extra/` (fichiers déposés à la main). */
+  extras: IdLists;
+  /** Images prises dans une source de REPLI (pas `home`), par source. */
+  fallbacks: Record<'normal' | 'shiny', Partial<Record<SpriteSource, number[]>>>;
+  /** « Shiny » strictement identiques au normal : ce ne sont pas de vrais shiny, écartés. */
+  identicalShiny: number[];
 }
 
 const sortedUnique = (ids: number[]): number[] => [...new Set(ids)].sort((a, b) => a - b);
 
+export function emptyAvailability(): SpriteAvailability {
+  return {
+    missing: { normal: [], shiny: [] },
+    extras: { normal: [], shiny: [] },
+    fallbacks: { normal: {}, shiny: {} },
+    identicalShiny: [],
+  };
+}
+
 export function normalizeAvailability(a: SpriteAvailability): SpriteAvailability {
+  const fallbacks: SpriteAvailability['fallbacks'] = { normal: {}, shiny: {} };
+  for (const kind of ['normal', 'shiny'] as const) {
+    for (const source of SPRITE_SOURCES) {
+      const ids = a.fallbacks[kind][source];
+      if (ids && ids.length) fallbacks[kind][source] = sortedUnique(ids);
+    }
+  }
   return {
     missing: { normal: sortedUnique(a.missing.normal), shiny: sortedUnique(a.missing.shiny) },
     extras: { normal: sortedUnique(a.extras.normal), shiny: sortedUnique(a.extras.shiny) },
+    fallbacks,
+    identicalShiny: sortedUnique(a.identicalShiny),
   };
 }
 
 export function stringifyAvailability(a: SpriteAvailability): string {
   const n = normalizeAvailability(a);
   const list = (ids: number[]) => `[${ids.join(',')}]`;
+  const fallback = (kind: 'normal' | 'shiny') =>
+    `{${Object.entries(n.fallbacks[kind])
+      .map(([source, ids]) => `${JSON.stringify(source)}: ${list(ids)}`)
+      .join(', ')}}`;
   return `{
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "note": "Fichier généré par \`pnpm sprites\` — ne pas modifier à la main.",
   "source": ${JSON.stringify(SOURCE)},
   "missing": { "normal": ${list(n.missing.normal)}, "shiny": ${list(n.missing.shiny)} },
-  "extras": { "normal": ${list(n.extras.normal)}, "shiny": ${list(n.extras.shiny)} }
+  "extras": { "normal": ${list(n.extras.normal)}, "shiny": ${list(n.extras.shiny)} },
+  "fallbacks": { "normal": ${fallback('normal')}, "shiny": ${fallback('shiny')} },
+  "identicalShiny": ${list(n.identicalShiny)}
 }
 `;
 }

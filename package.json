@@ -28,8 +28,7 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "dex": "node scripts/build-dex.ts",
-    "sprites": "node scripts/sync-sprites.ts",
-    "sprites:gaps": "node scripts/fill-gaps.ts"
+    "sprites": "node scripts/sync-sprites.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
