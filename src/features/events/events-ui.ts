@@ -106,11 +106,14 @@ export function createEventsUi({ i18n, scope, events, today }: EventsUiDeps): {
     body,
   });
   badge.addEventListener('click', () => modal.open());
-  // Texte accessible du bandeau : annonce clairement ce qu'il ouvre.
-  bindAttr(scope, badge, 'aria-label', [today, lang], () => {
-    const all = statuses();
-    const active = all.filter((s) => s.isActive).length;
-    return active > 0 ? t('event.ariaActive', { count: active }) : t('event.ariaUpcoming');
-  });
+  // Texte accessible du bandeau : il COMMENCE par le texte visible (règle d'accessibilité « label
+  // in name »), puis annonce ce que le bouton ouvre.
+  bindAttr(
+    scope,
+    badge,
+    'aria-label',
+    [today, lang],
+    () => `${(badge.textContent ?? '').trim()} — ${t('event.openList')}`,
+  );
   return { badge, modal };
 }

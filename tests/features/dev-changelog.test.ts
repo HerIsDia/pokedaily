@@ -55,7 +55,7 @@ describe('notes de mise à jour', () => {
     });
     document.body.append(badge, modal.element);
     expect(badge.textContent).toBe('4.0');
-    expect(badge.getAttribute('aria-label')).toBe('Voir les nouveautés (version 4.0)');
+    expect(badge.getAttribute('aria-label')).toBe('4.0 : voir les nouveautés');
     badge.click();
     expect(modal.element.open).toBe(true);
     expect(modal.element.querySelector('.modal-title')?.textContent).toBe('Dernières mises à jour');

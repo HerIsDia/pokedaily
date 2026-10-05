@@ -72,7 +72,8 @@ describe('bandeau et fenêtre des événements', () => {
     expect(badge.hidden).toBe(false);
     expect(badge.hasAttribute('data-active')).toBe(true);
     expect(badge.textContent).toContain('Joyeux Noël');
-    expect(badge.getAttribute('aria-label')).toContain('en cours');
+    // Le nom accessible COMMENCE par le texte visible (règle « label in name »).
+    expect(badge.getAttribute('aria-label')).toBe('Joyeux Noël ! — ouvrir la liste des événements');
   });
 
   it('plusieurs événements le même jour : « +N »', () => {

@@ -60,6 +60,8 @@ export function createCardView({ i18n, entry, onRename }: CardDeps): View {
       const { id, isShiny } = entry.get();
       const img = h('img', {
         src: spritePath(id, isShiny),
+        // Le Pokémon du jour est l'élément le plus important de l'écran : on le demande en priorité.
+        fetchpriority: 'high',
         alt: speciesName(),
         width: 200,
         height: 200,

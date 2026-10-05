@@ -44,6 +44,15 @@ registerRoute(
   }),
 );
 
+// Polices rarement utilisées (caractères hors du français et de l'anglais) : gardées au premier usage.
+registerRoute(
+  ({ url, request }) => request.destination === 'font' && url.origin === self.location.origin,
+  new CacheFirst({
+    cacheName: 'pokedaily-fonts-v1',
+    plugins: [new CacheableResponsePlugin({ statuses: [200] })],
+  }),
+);
+
 self.addEventListener('message', (event) => {
   if ((event.data as { type?: string } | null)?.type === 'SKIP_WAITING') void self.skipWaiting();
 });

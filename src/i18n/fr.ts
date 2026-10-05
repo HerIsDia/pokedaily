@@ -68,8 +68,7 @@ export const fr = {
   'event.active': 'En cours',
   'event.tomorrow': 'demain',
   'event.inDays': 'dans {days} j',
-  'event.ariaActive': 'Événement(s) en cours : {count}. Ouvrir la liste des événements.',
-  'event.ariaUpcoming': 'Prochain événement. Ouvrir la liste des événements.',
+  'event.openList': 'ouvrir la liste des événements',
   'event.mod.forcedChance': "🎯 {percent} % de chances d'un Pokémon spécial",
   'event.mod.forcedAlways': '🎯 Pokémon spécial garanti',
   'event.mod.shinyRate': '✦ Taux de shiny : 1/{rate}',
@@ -111,7 +110,7 @@ export const fr = {
   'roulette.again': 'Fermer',
 
   'changelog.title': 'Dernières mises à jour',
-  'changelog.open': 'Voir les nouveautés (version {version})',
+  'changelog.open': '{version} : voir les nouveautés',
   'changelog.noteLabel': 'Note de Diamant',
 
   'dev.title': 'Mode développeur',

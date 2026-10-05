@@ -21,7 +21,9 @@ export default defineConfig({
       injectManifest: {
         // Le « shell » de l'app uniquement. Les images passent par un cache à la demande (sw.ts).
         globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
-        globIgnores: ['**/sprites/**'],
+        // Les polices « latin-ext » (un seul nom de forme en a besoin) ne sont pas préchargées :
+        // elles se gardent au premier usage (voir sw.ts).
+        globIgnores: ['**/sprites/**', '**/*latin-ext*'],
       },
       manifest: {
         name: 'Pokédaily',

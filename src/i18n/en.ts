@@ -70,8 +70,7 @@ export const en: Record<MessageKey, string> = {
   'event.active': 'Active',
   'event.tomorrow': 'tomorrow',
   'event.inDays': 'in {days} d',
-  'event.ariaActive': 'Active events: {count}. Open the events list.',
-  'event.ariaUpcoming': 'Next event. Open the events list.',
+  'event.openList': 'open the events list',
   'event.mod.forcedChance': '🎯 {percent}% chance of a special Pokémon',
   'event.mod.forcedAlways': '🎯 Special Pokémon guaranteed',
   'event.mod.shinyRate': '✦ Shiny rate: 1/{rate}',
@@ -113,7 +112,7 @@ export const en: Record<MessageKey, string> = {
   'roulette.again': 'Close',
 
   'changelog.title': 'Latest updates',
-  'changelog.open': "See what's new (version {version})",
+  'changelog.open': "{version}: see what's new",
   'changelog.noteLabel': "Diamant's note",
 
   'dev.title': 'Developer mode',
