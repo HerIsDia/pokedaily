@@ -15,7 +15,7 @@
 | Tirage des formes | **Pourcentage progressif** : 1 % par défaut, +1 % par jour sans forme, retour à 1 % dès qu'une forme sort (§4.5). |
 | Pokédex | **Séparé** : 1 025 espèces + un onglet « Formes » (validé). |
 | Noms français des formes | Pris dans **PokéAPI** (326/326 vérifiés, §4.4). Pokémon DB ne fournit que les noms d'**espèces**. |
-| Images | **`PokeAPI/sprites` en base + Pokémon DB pour combler les trous**, en respectant leurs règles (§4.2 bis). Générées au build et non commitées. Taille 256/512 px : **à trancher après un essai visuel**. |
+| Images | **`PokeAPI/sprites` avec chaîne de repli** (Pokémon DB essayé : il ne comble rien, §4.2 bis). Générées au build, non commitées. Tailles : **recommandation 512 + 128 px**, à valider (§4.6). |
 | Dépôt | **Branche vide nommée `v4`** dans le même dépôt. Copie de sauvegarde de la v3.1 **déjà faite par Diamant**. La bascule (suppression de l'ancien) reste en dernier, avec confirmation. |
 | Changement de jour | **Minuit heure locale** de chaque joueur. |
 | Données existantes | 3 à 5 utilisateurs : **aucune migration**. L'ancienne base est **supprimée** au premier lancement de la v4 (§5). |
@@ -169,6 +169,12 @@ Diamant a signalé que [Pokémon DB](https://pokemondb.net/sprites) possède une
 
 **Décision de Diamant (5 oct.)** : `PokeAPI/sprites` reste la base et **Pokémon DB sert à combler les trous**, en respectant leurs règles : téléchargement **ponctuel** (jamais à chaque build), **2 s entre deux requêtes**, `User-Agent` qui nous identifie, pas de `wget`, **fichiers auto-hébergés** (pas de lien direct), provenance notée, **lien retour** dans l'écran « À propos ». Les données PokéAPI et les fichiers Pokémon DB sont gardés dans un **cache local** (`.cache/`, non commité) : on ne retélécharge jamais ce qu'on a déjà, ce qui respecte aussi la [politique d'usage équitable de PokéAPI](https://pokeapi.co/docs/v2).
 
+**Verdict final après essai (phase 2, 5 oct. 2026)** — avec 4 pages de galerie téléchargées poliment (2 s entre requêtes) :
+- Pokémon DB n'a **rien** pour Évoli « partenaire », Koraidon et Miraidon (0 correspondance) ✅.
+- Ses « shiny » des casquettes de Pikachu sont **strictement identiques** aux normaux (même empreinte numérique) : ce sont de faux shiny, ce qui confirme que **le shiny n'existe pas** pour ces formes ✅.
+- Le costume `cosplay` n'existe que dans une vieille galerie en **120×120 px**, d'un autre style, et les 5 autres costumes n'y figurent pas ✅.
+- **Conclusion : Pokémon DB ne comble aucun trou valable.** Les trous ont été comblés autrement, dans la source principale elle-même (chaîne de repli, §4.6). Aucun fichier de Pokémon DB n'est utilisé ; le script `fill-gaps` prévu n'a pas été écrit. Le dossier `assets/extra/` reste disponible pour déposer un jour une image à la main (qui devrait alors être créditée, avec lien vers sa source).
+
 **Verdict initial (inchangé)** : on garde **`PokeAPI/sprites`** comme source du script. Aspirer ~2 700 fichiers sur Pokémon DB à chaque build, à raison d'une requête toutes les 2 s (≈ 1 h 30), serait lent, fragile et peu respectueux d'un site qui vit de la bande passante qu'on lui demanderait.
 
 **Là où Pokémon DB peut quand même servir** :
@@ -193,29 +199,30 @@ Dans l'app : `getSprite(id, shiny)` consulte le manifeste → **repli propre** (
 
 ### 4.4 Les formes alternatives : toutes, sans exception
 
-**Décision : les 326 formes sont dans le jeu.** Pour information, leur composition (comptage sur les noms ✅) :
+**Décision : les 326 formes sont dans le jeu.** Leur composition **exacte** (calculée par `pnpm dex`, une forme n'a qu'une catégorie ; mes comptages du premier jour se chevauchaient et étaient approximatifs) :
 
 | Catégorie | Nb |
 |---|---|
 | Méga | 97 |
 | Gigamax | 34 |
-| Régionales (Alola 20, Galar 20, Hisui 16, Paldea 4) | 60 |
+| Régionales (Alola 18, Galar 20, Hisui 16, Paldea 4) | 58 |
 | Primo | 2 |
-| Totem | 11 |
-| Pikachu casquettes / costumes | 14 |
-| Autres (états de combat, genres, tailles, couleurs, « partenaires », Koraidon/Miraidon…) | 108 |
+| Totem | 12 |
+| Pikachu : casquettes et costumes | 14 |
+| « Partenaires » (Pikachu, Évoli) | 2 |
+| Autres (états de combat, genres, tailles, couleurs, modes de Koraidon/Miraidon…) | 107 |
 | **Total** | **326** ✅ |
 
 **Noms français et anglais : PokéAPI les fournit pour les 326 formes.** *Vérifié le 5 oct. 2026* en interrogeant le point d'accès `pokemon-form` de chaque forme : **326 sur 326 ont un nom français**. Exemples : `charizard-mega-x` → « Méga-Dracaufeu X », `raichu-alola` → « Raichu d'Alola », `groudon-primal` → « Primo-Groudon », `pikachu-sinnoh-cap` → « Pikachu Casquette de Sinnoh », `eevee-starter` → « Évoli Partenaire ». La relecture rapide de 20 noms donne des résultats cohérents. Deux **doublons** à départager (même nom FR pour deux formes) : `zygarde-10` / `zygarde-10-power-construct` et `meowstic-male-mega` / `meowstic-female-mega`.
 > Correction d'une hypothèse : sur deux pages testées (Raichu, Dracaufeu), **Pokémon DB ne donne que le nom français de l'espèce**, pas celui des formes ✅. Il n'est donc pas la source des noms de formes ; les noms viennent de PokéAPI.
 
-**`forms.json`** (généré) contient pour chaque forme : `id`, `speciesId`, catégorie, noms FR/EN, `canBeShiny`, et si une image existe. **Aucun filtre** : tout est actif.
+**Données générées** (`src/data/dex.json`) : une entrée par Pokémon ou forme avec `id`, `speciesId`, noms FR/EN, types, et pour les formes `{ slug, category }`. **Aucun filtre** : tout est actif. La disponibilité des images est dans `src/data/sprites.json`.
 
-**Images : 39 fichiers manquent chez `PokeAPI/sprites`** (✅ vérifié) : 16 formes n'ont **aucune** image normale (costumes de Pikachu ×6, Pikachu et Évoli « partenaires », modes de Koraidon/Miraidon ×8) et 23 n'ont **pas de shiny** (dont 6 casquettes de Pikachu, les costumes ci-dessus, les modes de Koraidon/Miraidon).
-- **Pour les combler** : script ponctuel `scripts/fill-gaps.ts` qui cherche chez Pokémon DB, avec leurs règles (§4.2 bis). Je n'ai pas encore la certitude qu'ils aient ces formes (mes premiers essais à l'aveugle ont donné 404, **non concluants**).
-- **Image plus petite** (128/256 px) : affichée telle quelle, jamais agrandie artificiellement.
-- **Shiny qui n'existe pas dans le jeu** : on marque `canBeShiny: false` (la forme ne peut alors pas sortir en shiny). ❓ à confirmer forme par forme.
-- **Cas limite** : une forme **sans aucune image nulle part** ne peut pas être affichée ; elle est mise de côté jusqu'à ce qu'on trouve une image (voir §10, question 3), car « toutes sans exception » ne doit pas produire d'image cassée.
+**Noms anglais manquants et doublons** : PokéAPI n'a **pas de nom anglais** pour les 8 formes de Koraidon/Miraidon (j'avais seulement testé le français) et donne le **même nom** à deux paires de formes. Les 12 corrections sont dans `scripts/dex-overrides.json`, **chacune avec sa source** (ex. « Limited Build » confirmé par Pokémon DB ; Zygarde départagé par son talent, « Rassemblement » / « Aura Inversée », noms lus dans PokéAPI).
+
+**Images** (résultat final, voir §4.6) : il ne manque plus que **2 images normales** (`koraidon-swimming-build`, `miraidon-aquatic-mode`), grâce à une chaîne de repli. Ces 2 formes **ne sont pas tirées au sort** (jamais d'image cassée) tant qu'on n'a pas d'image.
+- **Image plus petite** (repli Écarlate/Violet, 256 px) : affichée telle quelle, jamais agrandie artificiellement.
+- **Pas d'image shiny** : le Pokémon **ne peut pas sortir en shiny** (`canBeShiny` faux). 21 formes sont concernées (casquettes de Pikachu, Minior en météore, Terapagos stellaire, « partenaires », certaines formes de Koraidon/Miraidon). ❓ « le jeu non plus » est plausible mais non vérifié forme par forme.
 
 **Modèle de données** : `id` (identifiant PokéAPI, jusqu'à `10326`) **et** `speciesId` dès le départ.
 
@@ -244,6 +251,28 @@ Dans l'app : `getSprite(id, shiny)` consulte le manifeste → **repli propre** (
 
 ---
 
+### 4.6 Ce qui a été réalisé en phase 2 (5 oct. 2026) ✅
+
+**Commandes** (Node exécute directement les scripts TypeScript, sans outil en plus ; `pnpm check` signale la syntaxe non supportée) :
+
+| Commande | Rôle | Mesures |
+|---|---|---|
+| `pnpm dex` | Génère `src/data/dex.json` (1 025 espèces + 326 formes) et `natures.json` depuis PokéAPI | **2 747 requêtes, 16 s** la 1ʳᵉ fois (ensuite 0 requête : tout est en cache `.cache/`) ; fichier de 142 Ko (**29 Ko compressé**) ; **1 025 + 326 + 25** vérifiés par des tests |
+| `pnpm sprites` | Télécharge, convertit et écrit `public/sprites/<taille>/<id>.webp` (+ `s` pour le shiny) ; met à jour `src/data/sprites.json` | **74 s** la 1ʳᵉ fois, **2,5 s** ensuite (cache) ; 2 662 images par taille |
+
+**Poids réels des ensembles complets** (WebP, qualité 80) : **128 px = 13,1 Mo · 256 px = 29,6 Mo · 512 px = 46,2 Mo** (estimations de départ : 30 et 41 Mo pour 256 et 512).
+
+**Chaîne de repli** (première source disponible) : ① rendus 3D « Home » 512 px (référence) → ② illustrations officielles 2D 475 px (`official-artwork`) → ③ sprites Écarlate/Violet 256 px. Résultat : **14 des 16 images normales manquantes sont récupérées** (12 en illustration 2D : costumes et « partenaires » de Pikachu, Évoli, 4 formes de Koraidon/Miraidon ; 2 en sprite Écarlate/Violet). Il reste 2 formes sans image.
+**Règle des shiny** : un shiny n'est cherché **que dans la source de son normal** (jamais de mélange 2D/3D pour un même Pokémon : j'avais d'abord laissé passer 17 mélanges, corrigé), et un shiny **identique octet pour octet** au normal est écarté (8 cas : Minior en météore ×6, casquette « partenaire » de Pikachu, Terapagos stellaire).
+**Contrôle de qualité des shiny** : sur 1 330 paires normal/shiny comparées pixel à pixel, aucune n'est visuellement identique en dehors de ces cas ; les 10 shiny issus du repli 2D diffèrent nettement de leur normal.
+
+**Résultat côté application** : l'écran « carte du jour » utilise maintenant les vraies données (noms FR/EN, types, natures, images, **badge de forme**, numéro de l'espèce pour les formes). Vérifié dans Chromium sur 6 cas (espèce, Méga en shiny, repli 2D, repli Écarlate/Violet, anglais, forme sans image) : aucune erreur, aucune image cassée. Paramètres d'adresse de développement : `/?id=10034&shiny=1&level=88&nature=timid`.
+
+**Essai visuel 256 px / 512 px** (écran ×3, comme un iPhone) : à taille normale la différence est **discrète** ; en zoom, les contours en 256 px sont **nettement plus flous** ; pour les **vignettes de 56 px**, 128 px et 256 px sont **indiscernables**.
+**Ma recommandation (à valider par Diamant)** : **512 px pour la carte** (et l'image de partage) + **128 px pour les grilles** ; on **abandonne 256 px** (−29,6 Mo à générer et héberger). Cela donne ≈ **59 Mo** au total (13,1 + 46,2) contre 89 Mo pour les trois tailles. Les vignettes (13 Mo) seraient mises en cache pour le hors-ligne ; les grandes images seulement quand on les affiche.
+
+**Limites connues** : (1) `dex.json` est pour l'instant **inclus dans le JavaScript principal** (+ ≈ 35 Ko compressés ; bundle total 133 Ko / 35 Ko compressés) : le chargement différé est prévu en phase 6 ; (2) les 2 sprites Écarlate/Violet sont **petits** (256 px, contenu ≈ 110 px) : ils paraissent flous une fois étirés ; (3) les images de repli 2D ont un style **différent** des rendus 3D (voir la planche envoyée à Diamant) ; (4) **non fait** : déploiement des images (le build de prod devra lancer `pnpm sprites`, voir phase 6) ; (5) **non testé** : iPhone/Safari réel.
+
 ## 5. Données du joueur (sans migration, ancienne base supprimée)
 
 - **Nouvelle base IndexedDB** (nom/version distincts). Pas de `migrateFromLocalStorage`, pas de conversion : le code est plus simple.
@@ -264,10 +293,11 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 - `ui/dom.ts`, `ui/store.ts`, `ui/router.ts`, `i18n/` + **essai** de l'écran « carte du jour » (§2.3).
 - **Sortie** : verdict sur l'approche ; CI verte.
 
-### Phase 2 — Données et images
-- `scripts/build-dex.ts` (dex + natures FR/EN, **vérifiés** contre PokéAPI) et `scripts/sync-sprites.ts` (§4), manifeste, test de complétude.
-- `forms.json` (métadonnées des 326 formes, noms FR/EN depuis PokéAPI, §4.4), `scripts/fill-gaps.ts` (trous comblés chez Pokémon DB, §4.2 bis) et **page de comparaison 256/512 px** pour choisir la taille.
-- **Sortie** : `pnpm sprites` et `pnpm dex` produisent tout sans intervention ; l'app n'appelle plus jamais PokéAPI.
+### Phase 2 — Données et images ✅ FAIT (voir §4.6)
+- `pnpm dex` : 1 025 espèces + 326 formes + 25 natures, noms FR/EN (12 corrections sourcées dans `dex-overrides.json`).
+- `pnpm sprites` : images WebP, chaîne de repli, shiny de même source, disponibilité dans `src/data/sprites.json`. Pokémon DB essayé : ne comble rien (§4.2 bis).
+- Reste ouvert : **choix final des tailles** (recommandation : 512 + 128 px, §4.6).
+- **Sortie atteinte** : `pnpm dex` et `pnpm sprites` produisent tout sans intervention ; l'app n'appelle plus jamais PokéAPI.
 
 ### Phase 3 — Noyau testé (`core/`)
 - `constants`, `rng`, `dates` (jour local), `createEntry`, `draw`, moteur d'événements (mêmes 12 événements, mêmes résultats, durcis).
@@ -376,15 +406,15 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 ---
 
-## 10. Questions encore ouvertes (petites, avec une valeur par défaut)
+## 10. Questions encore ouvertes
 
-1. **Un « jour » du pourcentage progressif** : compte-t-on les **tirages réels** (par défaut : si tu n'ouvres pas l'app un jour, le compteur ne bouge pas) ou les **jours du calendrier** (le pourcentage monte même si tu ne viens pas) ?
-2. **Quelle forme sort** : **uniformément parmi les 326** (par défaut) ou en choisissant d'abord une espèce ?
-3. **Forme sans aucune image** (jusqu'à 16 aujourd'hui) : par défaut, **mise de côté** tant qu'on n'a pas d'image (jamais d'image cassée). Ça te va ?
-4. **V-Roulette et Team du mois** : par défaut **espèces seulement** (sans formes, sans compteur). Ça te va, ou tu veux des formes aussi ?
+**Réglé (valeurs par défaut validées par Diamant le 5 oct.)** : un « jour » du pourcentage progressif = un **tirage réel** ; la forme est tirée **à égalité parmi les formes disponibles** ; une forme **sans image est mise de côté** (2 aujourd'hui) ; la **V-Roulette** et la **Team du mois** restent sur les **espèces seulement**.
+Réglé aussi : toutes les formes, pourcentage progressif, Pokédex séparé, noms FR/EN depuis PokéAPI, images (PokeAPI/sprites avec repli ; Pokémon DB ne comble rien), branche `v4`, ancienne base supprimée, export/import tôt.
 
-Réglé : toutes les formes, pourcentage progressif, Pokédex séparé, noms FR (PokéAPI), images (PokeAPI/sprites + trous Pokémon DB), nom `v4`, copie de sauvegarde, ancienne base supprimée, export/import tôt.
+**Restent à décider**
+1. **Tailles d'images** : recommandation **512 px (carte) + 128 px (grilles)**, sans 256 px (§4.6). Qu'en penses-tu après avoir vu la comparaison ?
+2. **Images de repli au style 2D** (14 formes, dont les costumes de Pikachu et 4 formes de Koraidon/Miraidon) : on les garde (recommandé : « toutes les formes, sans exception ») ou on préfère s'en passer pour garder un style 3D uniforme ?
 
 ## 11. Prochaine action
 
-**Phase 1** sur la branche `v4` : fondations (outillage, tests, CI) + essai « carte du jour » sans framework, en petits commits relisibles. Les questions du §10 ne bloquent pas la phase 1 (elles concernent les phases 2 à 4).
+**Phase 3 — noyau testé (`core/`)** : constantes, aléa injectable, dates (jour local), fabrique de Pokémon, tirage du jour avec le pourcentage progressif, moteur d'événements (mêmes 12 événements), avec tests (dont la simulation de ≈ 12,2 jours entre deux formes).

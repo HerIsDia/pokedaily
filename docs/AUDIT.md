@@ -299,8 +299,8 @@ Points relevés par `svelte-check` et la lecture : popups `role="dialog"` sans `
 
 ### 8.4 Ce que l'audit a mesuré sur les formes
 
-- PokéAPI : **326 formes**, soit 97 Méga, 34 Gigamax, 60 régionales (Alola 20, Galar 20, Hisui 16, Paldea 4), 2 Primo, 11 Totem, 14 Pikachu à casquettes/costumes et **108 « autres »** (états de combat, genres, tailles, couleurs…) ✅ (comptage sur les noms).
-- Les **39 images absentes** de la source concernent : costumes et casquettes de Pikachu, Pikachu et Évoli « partenaires », modes de Koraidon/Miraidon ✅.
+- PokéAPI : **326 formes**. Comptage **exact** (calculé en phase 2 ; mes premiers comptages se chevauchaient) : 97 Méga, 34 Gigamax, 58 régionales (Alola 18, Galar 20, Hisui 16, Paldea 4), 2 Primo, 12 Totem, 14 Pikachu à casquettes/costumes, 2 « partenaires » et **107 « autres »** ✅.
+- Les **39 images absentes** de la source principale (costumes et casquettes de Pikachu, « partenaires », modes de Koraidon/Miraidon) ✅ : **14 des 16 images normales ont été retrouvées** dans d'autres dossiers de la même source (chaîne de repli, phase 2) ; il reste **2** formes sans image. Pokémon DB, essayé, **ne comble rien** ✅. Détail : `REBUILD_PLAN.md` §4.6.
 - Restent ouvertes : **quelles** formes activer, comment les compter, à quelle fréquence → `REBUILD_PLAN.md` §10.
 
 ### 8.5 Troisième série de réponses (5 octobre 2026)
