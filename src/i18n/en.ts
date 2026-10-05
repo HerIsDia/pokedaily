@@ -168,6 +168,19 @@ export const en: Record<MessageKey, string> = {
   'offline.failed': 'The download failed. Check your connection and try again.',
   'offline.cleared': '✓ Space freed.',
 
+  'install.text':
+    'Install Pokédaily on your home screen: it opens like an app, even without a connection.',
+  'install.button': 'Install',
+  'install.how': 'How?',
+  'install.helpTitle': 'Install on iPhone / iPad',
+  'install.step1':
+    'Open Pokédaily in Safari, then tap the Share button (the square with an arrow pointing up).',
+  'install.step2': 'Scroll the menu and tap “Add to Home Screen”.',
+  'install.step3': 'Tap “Add” at the top right. The Pokédaily icon appears on your home screen.',
+  'install.helpNote':
+    'Your collection stays the same: it is saved in this device’s browser. Remember to export it (“About” page) before changing phones.',
+  'install.title': 'Install the app',
+
   'home.loading': 'Opening your collection…',
   'home.error.too_new':
     'Your save was created by a newer version of Pokédaily. Update the app (reload the page) to read it.',

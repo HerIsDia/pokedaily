@@ -18,6 +18,14 @@ const lookup: StatsLookup = {
   isForm: (id) => getEntry(id)?.form !== undefined,
 };
 
+/** Une barre remplie à `percent` %. (Largeur posée par le code, pas par un attribut `style` : la
+ * politique de sécurité du site interdit les styles « en ligne ».) */
+function barFill(className: string, percent: number): HTMLElement {
+  const fill = h('div', { class: className });
+  fill.style.width = `${percent}%`;
+  return fill;
+}
+
 /** L'écran « Statistiques » : chiffres clés, complétion, types fréquents, Pokémon favoris. */
 export function createStatsView({ i18n, game }: StatsDeps): View {
   return ({ scope }) => {
@@ -56,10 +64,7 @@ export function createStatsView({ i18n, game }: StatsDeps): View {
               'aria-valuemax': total,
               'aria-valuenow': count,
             },
-            h('div', {
-              class: shiny ? 'progress-fill shiny-fill' : 'progress-fill',
-              style: `width: ${(count / total) * 100}%`,
-            }),
+            barFill(shiny ? 'progress-fill shiny-fill' : 'progress-fill', (count / total) * 100),
           ),
           h('span', { class: 'completion-value' }, `${count} / ${total}`),
         );
@@ -109,10 +114,7 @@ export function createStatsView({ i18n, game }: StatsDeps): View {
                     h(
                       'div',
                       { class: 'type-bar-track' },
-                      h('div', {
-                        class: 'type-bar-fill',
-                        style: `width: ${(count / maxType) * 100}%`,
-                      }),
+                      barFill('type-bar-fill', (count / maxType) * 100),
                     ),
                     h('span', { class: 'type-bar-count' }, count),
                   ),

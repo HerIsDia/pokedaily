@@ -7,6 +7,8 @@ import { createChangelogUi } from '../features/changelog/changelog';
 import { createHistoryView } from '../features/history/history';
 import { createHomeView } from '../features/home/home';
 import { createPokedexView } from '../features/pokedex/pokedex';
+import { createInstallUi } from '../features/install/install-ui';
+import { createInstaller, type Installer } from '../pwa/install';
 import type { Updater } from '../pwa/register';
 import type { Game } from '../state/game';
 import { createKitView } from '../features/kit/kit';
@@ -21,10 +23,15 @@ export interface AppDeps {
   game: Game;
   /** Mise à jour de l'application (absente en développement et dans les tests). */
   updater?: Updater | null;
+  /** Installation sur l'écran d'accueil (par défaut : celle du navigateur). */
+  installer?: Installer;
 }
 
 /** Monte l'application dans `root` et renvoie une fonction pour tout démonter. */
-export function mountApp(root: HTMLElement, { i18n, game, updater }: AppDeps): () => void {
+export function mountApp(
+  root: HTMLElement,
+  { i18n, game, updater, installer = createInstaller() }: AppDeps,
+): () => void {
   const scope = new Scope();
   const { t, lang, setLang } = i18n;
 
@@ -33,6 +40,8 @@ export function mountApp(root: HTMLElement, { i18n, game, updater }: AppDeps): (
     document.documentElement.lang = lang.get();
   });
 
+  const install = createInstallUi({ i18n, scope, installer });
+  scope.add(() => installer.stop());
   const devPanel = createDevPanel({ i18n, game, scope });
   // Raccourci clavier du mode développeur (comme en v3.1) : Ctrl/Cmd + Maj + C.
   const onKey = (event: KeyboardEvent) => {
@@ -54,7 +63,10 @@ export function mountApp(root: HTMLElement, { i18n, game, updater }: AppDeps): (
     { path: 'kit', view: createKitView({ i18n, game }) },
     { path: 'kit/roulette', view: createRouletteView({ i18n, game }) },
     { path: 'kit/team', view: createTeamView({ i18n, game }) },
-    { path: 'about', view: createAboutView({ i18n, game, openDev: () => devPanel.open() }) },
+    {
+      path: 'about',
+      view: createAboutView({ i18n, game, openDev: () => devPanel.open(), install }),
+    },
   ];
   const router = createRouter(outlet, routes, { fallback: '' });
 
@@ -157,10 +169,12 @@ export function mountApp(root: HTMLElement, { i18n, game, updater }: AppDeps): (
     { class: 'app-shell' },
     header,
     updateBanner,
+    install.banner,
     outlet,
     tabBar,
     changelog.modal.element,
     devPanel.element,
+    install.modal.element,
   );
   root.replaceChildren(shell);
   router.start();

@@ -167,6 +167,20 @@ export const fr = {
   'offline.failed': 'Le téléchargement a échoué. Vérifie ta connexion et réessaie.',
   'offline.cleared': '✓ Espace libéré.',
 
+  'install.text':
+    'Installe Pokédaily sur ton écran d’accueil : il s’ouvre comme une application, même sans connexion.',
+  'install.button': 'Installer',
+  'install.how': 'Comment faire ?',
+  'install.helpTitle': 'Installer sur iPhone / iPad',
+  'install.step1':
+    'Ouvre Pokédaily dans Safari, puis touche le bouton Partager (le carré avec une flèche vers le haut).',
+  'install.step2': 'Fais défiler le menu et touche « Sur l’écran d’accueil ».',
+  'install.step3':
+    'Touche « Ajouter » en haut à droite. L’icône Pokédaily apparaît sur ton écran d’accueil.',
+  'install.helpNote':
+    'Ta collection reste la même : elle est enregistrée dans le navigateur de cet appareil. Pense à l’exporter (page « À propos ») avant de changer de téléphone.',
+  'install.title': 'Installer l’application',
+
   'home.loading': 'Ouverture de ta collection…',
   'home.error.too_new':
     "Ta sauvegarde a été créée par une version plus récente de Pokédaily. Mets l'application à jour (recharge la page) pour la lire.",

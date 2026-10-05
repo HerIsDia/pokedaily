@@ -9,11 +9,14 @@ export function createAboutView({
   i18n,
   game,
   openDev,
+  install,
 }: {
   i18n: I18n;
   game: Game;
   /** Ouvre la fenêtre du mode développeur. */
   openDev: () => void;
+  /** Le bouton « Installer » de l'application (visible seulement quand c'est possible). */
+  install: { actionButton(className: string): HTMLButtonElement };
 }): View {
   return ({ scope }) => {
     const { t, lang } = i18n;
@@ -43,6 +46,7 @@ export function createAboutView({
       ),
       createBackupPanel({ i18n, game, scope }),
       createOfflinePanel({ i18n, scope }),
+      install.actionButton('about-install'),
       h(
         'p',
         { class: 'about-version' },
