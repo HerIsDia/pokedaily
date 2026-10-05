@@ -2,7 +2,9 @@ import type { I18n, MessageKey } from '../../i18n';
 import { appendChildren, bindAttr, bindChildren, bindText, effect, h, svg } from '../../ui/dom';
 import type { View } from '../../ui/router';
 import { createStore, type Store } from '../../ui/store';
-import { NATURES, SPECIES, type CardEntry } from './spike-data';
+import { getEntry, getNature } from '../../data';
+import { spriteUrl, type SpriteSize } from '../../data/sprites';
+import type { CardEntry } from './sample-entry';
 
 const NAME_MAX_LENGTH = 16;
 
@@ -11,9 +13,12 @@ export interface CardDeps {
   entry: Store<CardEntry>;
 }
 
-/** Chemin d'une image : un seul endroit à changer si le nommage évolue (phase 2). */
+/** Taille de l'image de la carte : 512 px reste net sur les écrans denses ; à confirmer à l'œil. */
+export const CARD_SPRITE_SIZE: SpriteSize = 512;
+
+/** Chemin de l'image de la carte (un seul endroit à changer). */
 export function spritePath(id: number, shiny: boolean): string {
-  return `/sprites/${id}${shiny ? 's' : ''}.webp`;
+  return spriteUrl(id, shiny, CARD_SPRITE_SIZE);
 }
 
 /** Limite en caractères réels (et non en unités UTF-16 : on ne coupe pas un emoji en deux). */
@@ -43,16 +48,19 @@ export function createCardView({ i18n, entry }: CardDeps): View {
     const { t, lang } = i18n;
     const editing = createStore(false);
 
-    const species = () => SPECIES[entry.get().id];
-    const speciesName = () => species()?.names[lang.get()] ?? `#${entry.get().id}`;
+    const dexEntry = () => getEntry(entry.get().id);
+    const speciesName = () => dexEntry()?.[lang.get()] ?? `#${entry.get().id}`;
     const displayName = () => entry.get().rename || speciesName();
 
     // ── En-tête : numéro + types + shiny ────────────────────────────────
     const badges = h('div', { class: 'card-badges' });
     bindChildren(scope, badges, [entry, lang], () => [
-      ...(species()?.types ?? []).map((type) =>
+      ...(dexEntry()?.types ?? []).map((type) =>
         h('span', { class: `type-badge type-${type}` }, t(`type.${type}` as MessageKey)),
       ),
+      dexEntry()?.form
+        ? h('span', { class: 'badge-form' }, t(`form.${dexEntry()!.form!.category}` as MessageKey))
+        : null,
       entry.get().isShiny ? h('span', { class: 'badge-shiny' }, t('card.shiny')) : null,
     ]);
 
@@ -148,7 +156,8 @@ export function createCardView({ i18n, entry }: CardDeps): View {
     const nameRow = h('div', { class: 'name-row' }, title, input, editButton);
 
     // ── Niveau + nature ─────────────────────────────────────────────────
-    const natureName = () => NATURES[entry.get().natureKey]?.[lang.get()] ?? entry.get().natureKey;
+    const natureName = () =>
+      getNature(entry.get().natureKey)?.[lang.get()] ?? entry.get().natureKey;
     const stats = h(
       'div',
       { class: 'stats-row' },
@@ -181,7 +190,7 @@ export function createCardView({ i18n, entry }: CardDeps): View {
 
     // ── Carte complète ──────────────────────────────────────────────────
     const card = h('article', { class: 'card' });
-    bindAttr(scope, card, 'data-type', [entry], () => species()?.types[0]);
+    bindAttr(scope, card, 'data-type', [entry], () => dexEntry()?.types[0]);
     bindAttr(scope, card, 'data-shiny', [entry], () => entry.get().isShiny);
 
     appendChildren(card, [
@@ -191,7 +200,12 @@ export function createCardView({ i18n, entry }: CardDeps): View {
         h(
           'span',
           { class: 'card-number' },
-          bindText(scope, [entry], () => `N°${String(entry.get().id).padStart(4, '0')}`),
+          bindText(
+            scope,
+            [entry],
+            // Une forme porte le numéro de son espèce (N°0006 pour Méga-Dracaufeu X).
+            () => `N°${String(dexEntry()?.speciesId ?? entry.get().id).padStart(4, '0')}`,
+          ),
         ),
         badges,
       ),

@@ -4,7 +4,7 @@ import { bindAttr, bindText, effect, h } from '../ui/dom';
 import { createRouter, type Route } from '../ui/router';
 import { Scope } from '../ui/scope';
 import { createCardView } from '../features/card/card';
-import { createSampleEntry } from '../features/card/spike-data';
+import { createSampleEntry } from '../features/card/sample-entry';
 import { createAboutView } from './about';
 
 export interface AppDeps {

@@ -24,6 +24,18 @@ export const en: Record<MessageKey, string> = {
 
   'footer.madeBy': 'Made by {author}',
 
+  'form.mega': 'Mega',
+  'form.gmax': 'Gigantamax',
+  'form.alola': 'Alolan',
+  'form.galar': 'Galarian',
+  'form.hisui': 'Hisuian',
+  'form.paldea': 'Paldean',
+  'form.primal': 'Primal',
+  'form.totem': 'Totem',
+  'form.costume': 'Costume',
+  'form.partner': 'Partner',
+  'form.other': 'Alternate form',
+
   'type.normal': 'Normal',
   'type.fire': 'Fire',
   'type.water': 'Water',

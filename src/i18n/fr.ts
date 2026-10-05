@@ -22,6 +22,18 @@ export const fr = {
 
   'footer.madeBy': 'Fait par {author}',
 
+  'form.mega': 'Méga',
+  'form.gmax': 'Gigamax',
+  'form.alola': 'd’Alola',
+  'form.galar': 'de Galar',
+  'form.hisui': 'de Hisui',
+  'form.paldea': 'de Paldea',
+  'form.primal': 'Primo',
+  'form.totem': 'Totem',
+  'form.costume': 'Costume',
+  'form.partner': 'Partenaire',
+  'form.other': 'Forme alternative',
+
   'type.normal': 'Normal',
   'type.fire': 'Feu',
   'type.water': 'Eau',

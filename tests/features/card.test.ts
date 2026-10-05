@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { clampName, createCardView, spritePath } from '../../src/features/card/card';
-import { createSampleEntry } from '../../src/features/card/spike-data';
+import { createSampleEntry } from '../../src/features/card/sample-entry';
 import { createI18n } from '../../src/i18n';
 import { Scope } from '../../src/ui/scope';
 import { createStore } from '../../src/ui/store';
@@ -141,7 +141,9 @@ describe('carte du jour', () => {
     const { entry, q } = mount();
     entry.update((e) => ({ ...e, id: 10034 }));
     expect(q('.card-name').textContent).toBe('Méga-Dracaufeu X');
-    expect(q('.card-number').textContent).toBe('N°10034');
+    expect(q('.card-number').textContent).toBe('N°0006'); // numéro de l'espèce
+    expect(q('.badge-form').textContent).toBe('Méga');
+    expect(q('.card').getAttribute('data-type')).toBe('fire');
   });
 
   it('libère ses abonnements quand la vue est détruite', () => {

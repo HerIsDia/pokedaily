@@ -182,3 +182,15 @@
   font-size: 13px;
   color: var(--text-muted);
 }
+
+.badge-form {
+  padding: 3px 10px;
+  border-radius: var(--badge-radius);
+  border: 1px solid var(--border-accent);
+  background: var(--accent-subtle);
+  color: var(--accent-light);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
