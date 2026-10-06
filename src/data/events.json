@@ -12,7 +12,11 @@
       "startDate": "2026-03-01",
       "endDate": "2026-03-31",
       "repeats": "once",
-      "modifiers": {"forcedPokemonId": 132, "forcedPokemonChance": 0.1, "shinyRate": 30}
+      "modifiers": {
+        "forcedPokemonId": 132,
+        "forcedPokemonChance": 0.1,
+        "shinyRate": 30
+      }
     },
     {
       "id": "april_fools",
@@ -23,7 +27,14 @@
       "type": "recurring_date",
       "month": 4,
       "day": 1,
-      "modifiers": {"forcedPokemonId": 129, "forcedPokemonChance": 1.0, "shinyRate": 100, "victiniTicketsMin": 1, "victiniTicketsMax": 1, "aprilFoolsBox": true}
+      "modifiers": {
+        "forcedPokemonId": 129,
+        "forcedPokemonChance": 1.0,
+        "shinyRate": 100,
+        "victiniTicketsMin": 1,
+        "victiniTicketsMax": 1,
+        "aprilFoolsBox": true
+      }
     },
     {
       "id": "pokemon_day",
@@ -34,7 +45,25 @@
       "type": "recurring_date",
       "month": 2,
       "day": 27,
-      "modifiers": {"forcedPokemonId": 25, "forcedPokemonChance": 0.1, "forcedShiny": true}
+      "modifiers": {
+        "forcedPokemonId": 25,
+        "forcedPokemonChance": 0.1,
+        "forcedShiny": true
+      }
+    },
+    {
+      "id": "pokemon_day_caps",
+      "nameFr": "Pokémon Day : les casquettes",
+      "nameEn": "Pokémon Day: the caps",
+      "descriptionFr": "Pour fêter le Pokémon Day, des Pikachu portent la casquette de tous leurs voyages : Hoenn, Sinnoh, Unys, Kalos, Alola, et même celle du monde entier ! 10 % de chance d'en croiser un.",
+      "descriptionEn": "To celebrate Pokémon Day, Pikachu are wearing the caps from all their journeys: Hoenn, Sinnoh, Unova, Kalos, Alola, and even the World Cap! 10% chance of meeting one.",
+      "type": "recurring_date",
+      "month": 2,
+      "day": 27,
+      "modifiers": {
+        "forcedPokemonIds": [10094, 10095, 10096, 10097, 10098, 10099, 10148, 10160],
+        "forcedPokemonChance": 0.1
+      }
     },
     {
       "id": "diamant_day",
@@ -45,7 +74,10 @@
       "type": "recurring_date",
       "month": 11,
       "day": 18,
-      "modifiers": {"forcedShiny": true, "forcedLevel": 69}
+      "modifiers": {
+        "forcedShiny": true,
+        "forcedLevel": 69
+      }
     },
     {
       "id": "season_change",
@@ -54,8 +86,28 @@
       "descriptionFr": "Les saisons changent ! Vivaldaim et Deerling profitent du renouveau pour apparaître plus souvent (20% de chance).",
       "descriptionEn": "The seasons change! Sawsbuck and Deerling take advantage of the renewal to appear more often (20% chance).",
       "type": "recurring_dates",
-      "dates": [{"month": 3, "day": 20}, {"month": 6, "day": 21}, {"month": 9, "day": 22}, {"month": 12, "day": 21}],
-      "modifiers": {"forcedPokemonIds": [585, 586], "forcedPokemonChance": 0.2}
+      "dates": [
+        {
+          "month": 3,
+          "day": 20
+        },
+        {
+          "month": 6,
+          "day": 21
+        },
+        {
+          "month": 9,
+          "day": 22
+        },
+        {
+          "month": 12,
+          "day": 21
+        }
+      ],
+      "modifiers": {
+        "forcedPokemonIds": [585, 586],
+        "forcedPokemonChance": 0.2
+      }
     },
     {
       "id": "christmas",
@@ -66,18 +118,26 @@
       "type": "recurring_date",
       "month": 12,
       "day": 25,
-      "modifiers": {"forcedPokemonId": 225, "forcedPokemonChance": 1.0, "shinyRate": 50}
+      "modifiers": {
+        "forcedPokemonId": 225,
+        "forcedPokemonChance": 1.0,
+        "shinyRate": 50
+      }
     },
     {
       "id": "halloween",
       "nameFr": "Halloween",
       "nameEn": "Halloween",
-      "descriptionFr": "Les esprits et créatures des ténèbres s'éveillent ! Des Pokémon spectraux hantent la zone avec un taux de Chromatique de 1/30.",
-      "descriptionEn": "Spirits and dark creatures awaken! Ghostly Pokémon haunt the area with a 1/30 shiny rate.",
+      "descriptionFr": "Les esprits et créatures des ténèbres s'éveillent ! Des Pokémon spectraux hantent la zone (et même des formes : Méga-Ectoplasma, Citrouillard, Mimiqui…) avec un taux de Chromatique de 1/30.",
+      "descriptionEn": "Spirits and dark creatures awaken! Ghostly Pokémon haunt the area (even special forms: Mega Gengar, Pumpkaboo, Mimikyu…) with a 1/30 shiny rate.",
       "type": "recurring_date",
       "month": 10,
       "day": 31,
-      "modifiers": {"forcedPokemonIds": [92, 93, 94, 200, 292, 353, 354, 355, 356, 442, 477, 478, 487, 563, 592, 593, 710, 711, 718, 778, 855, 856, 867, 869], "forcedPokemonChance": 0.3, "shinyRate": 30}
+      "modifiers": {
+        "forcedPokemonIds": [92, 93, 94, 200, 292, 353, 354, 355, 356, 442, 477, 478, 487, 563, 592, 593, 710, 711, 718, 778, 855, 856, 867, 869, 10007, 10026, 10027, 10028, 10029, 10030, 10031, 10032, 10038, 10056, 10066, 10143, 10179, 10202, 10285, 10291],
+        "forcedPokemonChance": 0.3,
+        "shinyRate": 30
+      }
     },
     {
       "id": "valentine",
@@ -88,7 +148,11 @@
       "type": "recurring_date",
       "month": 2,
       "day": 14,
-      "modifiers": {"forcedPokemonIds": [35, 36, 39, 40, 122, 173, 174, 175, 176, 210, 282, 298, 303, 370, 439, 468, 531, 546, 547, 669, 670, 671, 676, 700, 730, 742, 743, 764, 765, 788], "forcedPokemonChance": 0.5, "shinyRate": 30}
+      "modifiers": {
+        "forcedPokemonIds": [35, 36, 39, 40, 122, 173, 174, 175, 176, 210, 282, 298, 303, 370, 439, 468, 531, 546, 547, 669, 670, 671, 676, 700, 730, 742, 743, 764, 765, 788],
+        "forcedPokemonChance": 0.5,
+        "shinyRate": 30
+      }
     },
     {
       "id": "new_year",
@@ -99,7 +163,10 @@
       "type": "recurring_date",
       "month": 1,
       "day": 1,
-      "modifiers": {"forcedLevel": 100, "shinyRate": 50}
+      "modifiers": {
+        "forcedLevel": 100,
+        "shinyRate": 50
+      }
     },
     {
       "id": "go_fest",
@@ -108,8 +175,19 @@
       "descriptionFr": "C'est le GO Fest ! Les Pokémon Chromatiques sont plus fréquents ce week-end (taux : 1/30). Profites-en !",
       "descriptionEn": "It's GO Fest! Shiny Pokémon are more common this weekend (rate: 1/30). Make the most of it!",
       "type": "recurring_dates",
-      "dates": [{"month": 6, "day": 14}, {"month": 6, "day": 15}],
-      "modifiers": {"shinyRate": 30}
+      "dates": [
+        {
+          "month": 6,
+          "day": 14
+        },
+        {
+          "month": 6,
+          "day": 15
+        }
+      ],
+      "modifiers": {
+        "shinyRate": 30
+      }
     },
     {
       "id": "lucky_day",
@@ -120,7 +198,12 @@
       "type": "recurring_weekday_date",
       "weekday": 5,
       "day": 13,
-      "modifiers": {"shinyRate": 13, "victiniTicketsMin": 1, "victiniTicketsMax": 3, "luckyDayBox": true}
+      "modifiers": {
+        "shinyRate": 13,
+        "victiniTicketsMin": 1,
+        "victiniTicketsMax": 3,
+        "luckyDayBox": true
+      }
     },
     {
       "id": "victini_launch_march_2026",
@@ -133,7 +216,55 @@
       "endDate": "2026-03-31",
       "weekday": 0,
       "repeats": "once",
-      "modifiers": {"forcedPokemonId": 494, "forcedPokemonChance": 0.05}
+      "modifiers": {
+        "forcedPokemonId": 494,
+        "forcedPokemonChance": 0.05
+      }
+    },
+    {
+      "id": "music_day",
+      "nameFr": "Fête de la musique",
+      "nameEn": "Music Day",
+      "descriptionFr": "Le 21 juin, les Pokémon chanteurs montent sur scène ! Rondoudou, Chatot, Meloetta, Brouhabam et leurs amis ont 40 % de chances de se produire pour toi. Taux de Chromatique : 1/50.",
+      "descriptionEn": "On June 21st, the singing Pokémon take the stage! Jigglypuff, Chatot, Meloetta, Loudred and friends have a 40% chance to perform for you. Shiny rate: 1/50.",
+      "type": "recurring_date",
+      "month": 6,
+      "day": 21,
+      "modifiers": {
+        "forcedPokemonIds": [39, 40, 131, 293, 294, 295, 402, 441, 648, 715, 730, 848, 849],
+        "forcedPokemonChance": 0.4,
+        "shinyRate": 50
+      }
+    },
+    {
+      "id": "cat_day",
+      "nameFr": "Journée du chat",
+      "nameEn": "Cat Day",
+      "descriptionFr": "Le 8 août, c'est la journée internationale du chat : Miaouss, Skitty, Chaglam, Félinferno et tous les Pokémon félins sortent leurs griffes ! 50 % de chances d'en croiser un. Taux de Chromatique : 1/50.",
+      "descriptionEn": "August 8th is International Cat Day: Meowth, Skitty, Glameow, Incineroar and all the feline Pokémon are out and about! 50% chance of meeting one. Shiny rate: 1/50.",
+      "type": "recurring_date",
+      "month": 8,
+      "day": 8,
+      "modifiers": {
+        "forcedPokemonIds": [52, 53, 300, 301, 431, 432, 509, 510, 677, 678, 725, 726, 727, 906, 907, 908, 10107, 10108, 10161, 10200],
+        "forcedPokemonChance": 0.5,
+        "shinyRate": 50
+      }
+    },
+    {
+      "id": "dog_day",
+      "nameFr": "Journée du chien",
+      "nameEn": "Dog Day",
+      "descriptionFr": "Le 26 août, c'est la journée internationale du chien : Caninos, Arcanin, Chartor, Lougaroc et les autres Pokémon canins viennent te faire la fête ! 50 % de chances d'en croiser un. Taux de Chromatique : 1/50.",
+      "descriptionEn": "August 26th is International Dog Day: Growlithe, Arcanine, Houndoom, Lycanroc and the other canine Pokémon come to greet you! 50% chance of meeting one. Shiny rate: 1/50.",
+      "type": "recurring_date",
+      "month": 8,
+      "day": 26,
+      "modifiers": {
+        "forcedPokemonIds": [58, 59, 228, 229, 261, 262, 506, 507, 508, 744, 745, 835, 836, 10229, 10230, 10126, 10152, 10151],
+        "forcedPokemonChance": 0.5,
+        "shinyRate": 50
+      }
     }
   ]
 }

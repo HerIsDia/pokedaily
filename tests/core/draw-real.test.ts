@@ -71,6 +71,10 @@ describe('tirage avec les vraies données', () => {
       new_year: 1,
       valentine: 1,
       pokemon_day: 1,
+      pokemon_day_caps: 1,
+      music_day: 1,
+      cat_day: 1,
+      dog_day: 1,
       april_fools: 1,
       halloween: 1,
       diamant_day: 1,
@@ -123,18 +127,53 @@ describe('tirage avec les vraies données', () => {
       for (let seed = 0; seed < 50; seed++) expect(one('2026-12-25', seed).entry.id).toBe(225);
     });
 
-    it('Pokémon Day : Pikachu environ 10 % du temps, et alors forcément shiny', () => {
+    it('Pokémon Day : Pikachu (shiny) ≈ 9 % du temps, et un Pikachu à casquette ≈ 10 %', () => {
+      const caps = events.find((e) => e.id === 'pokemon_day_caps')!.modifiers.forcedPokemonIds!;
       let pikachu = 0;
+      let capped = 0;
       const n = 20_000;
       for (let seed = 0; seed < n; seed++) {
         const r = one('2027-02-27', seed);
-        if (r.reason === 'event') {
+        if (r.reason !== 'event') continue;
+        if (r.entry.id === 25) {
           pikachu++;
-          expect(r.entry).toMatchObject({ id: 25, isShiny: true });
+          expect(r.entry.isShiny).toBe(true);
+        } else {
+          capped++;
+          expect(caps).toContain(r.entry.id);
         }
       }
-      expect(pikachu / n).toBeGreaterThan(0.09);
-      expect(pikachu / n).toBeLessThan(0.11);
+      // Les deux événements tirent chacun leur chance ; si les deux réussissent, le dernier gagne
+      // (la casquette) : Pikachu = 10 % × 90 % = 9 %, casquette = 10 %.
+      expect(pikachu / n).toBeGreaterThan(0.08);
+      expect(pikachu / n).toBeLessThan(0.1);
+      expect(capped / n).toBeGreaterThan(0.09);
+      expect(capped / n).toBeLessThan(0.11);
+    });
+
+    it('Journée du chat et du chien : 50 % de félins / de canidés, tous pris dans la liste', () => {
+      for (const [id, day] of [
+        ['cat_day', '2026-08-08'],
+        ['dog_day', '2026-08-26'],
+      ] as const) {
+        const list = events.find((e) => e.id === id)!.modifiers.forcedPokemonIds!;
+        let forced = 0;
+        const n = 10_000;
+        for (let seed = 0; seed < n; seed++) {
+          const r = one(day, seed);
+          if (r.reason === 'event') {
+            forced++;
+            expect(list, id).toContain(r.entry.id);
+          }
+        }
+        expect(forced / n, id).toBeGreaterThan(0.47);
+        expect(forced / n, id).toBeLessThan(0.53);
+      }
+    });
+
+    it('Halloween : une partie de la liste est faite de FORMES spectrales', () => {
+      const list = events.find((e) => e.id === 'halloween')!.modifiers.forcedPokemonIds!;
+      expect(list.filter((id) => drawPool.isForm(id)).length).toBeGreaterThanOrEqual(10);
     });
 
     it('Halloween : environ 30 % de Pokémon spectraux, tous pris dans la liste', () => {

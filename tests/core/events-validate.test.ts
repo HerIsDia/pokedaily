@@ -21,8 +21,8 @@ const good = (): Draft => ({
 });
 
 describe('validateEvents', () => {
-  it('le vrai fichier events.json est valide (12 événements)', () => {
-    expect(events).toHaveLength(12);
+  it('le vrai fichier events.json est valide (16 événements)', () => {
+    expect(events).toHaveLength(16);
     expect(validateEvents(events, drawable)).toEqual([]);
   });
 

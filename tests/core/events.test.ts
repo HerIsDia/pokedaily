@@ -14,7 +14,7 @@ import { events } from '../../src/data/events';
 const ids = (list: readonly GameEvent[]) => list.map((e) => e.id);
 const byId = (id: string) => events.find((e) => e.id === id)!;
 
-describe('événements actifs (les 12 événements de la v3.1, mêmes résultats)', () => {
+describe('événements actifs (les 12 de la v3.1 gardent les mêmes résultats ; 4 ajoutés depuis)', () => {
   it.each([
     ['2026-03-13', ['pokopia_2026', 'lucky_day']], // vendredi 13 pendant Pokopia
     ['2026-03-15', ['pokopia_2026', 'victini_launch_march_2026']], // dimanche de mars
@@ -24,7 +24,10 @@ describe('événements actifs (les 12 événements de la v3.1, mêmes résultats
     ['2026-04-01', ['april_fools']],
     ['2026-02-13', ['lucky_day']],
     ['2026-02-14', ['valentine']],
-    ['2026-02-27', ['pokemon_day']],
+    ['2026-02-27', ['pokemon_day', 'pokemon_day_caps']], // Pikachu + ses casquettes
+    ['2026-06-21', ['season_change', 'music_day']], // solstice + fête de la musique
+    ['2026-08-08', ['cat_day']],
+    ['2026-08-26', ['dog_day']],
     ['2026-06-14', ['go_fest']],
     ['2026-06-15', ['go_fest']],
     ['2026-06-16', []],
@@ -40,9 +43,11 @@ describe('événements actifs (les 12 événements de la v3.1, mêmes résultats
   });
 
   it('les 4 changements de saison', () => {
-    for (const day of ['2027-03-20', '2027-06-21', '2027-09-22', '2027-12-21']) {
+    for (const day of ['2027-03-20', '2027-09-22', '2027-12-21']) {
       expect(ids(activeEvents(events, day))).toEqual(['season_change']);
     }
+    // le solstice d'été tombe le jour de la fête de la musique : les deux sont actifs
+    expect(ids(activeEvents(events, '2027-06-21'))).toEqual(['season_change', 'music_day']);
   });
 
   it('Vendredi 13 : exactement les vendredis 13, ni plus ni moins', () => {
