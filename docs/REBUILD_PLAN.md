@@ -409,6 +409,23 @@ Chaque phase se termine par un état qui **build, passe les tests et se déploie
 
 **Non fait / limites** : aucun test sur un **vrai iPhone/Safari** ni sur un vrai téléphone Android (installation, hors-ligne, protection du stockage) ; la CSP n'a pas été vue en production Vercel (seulement en local avec les mêmes en-têtes) ; les images sont téléchargées par Vercel à chaque déploiement (75 s, risque de limitation côté GitHub : à surveiller au premier déploiement).
 
+### 6.5 Idées « fun » — avancement (6 oct. 2026)
+
+Diamant a accepté **tout le menu sauf** : l'amorce d'écriture du jour, « Quel est ce Pokémon ? » (les tickets ne se gagnent que pendant les événements) et les surnoms suggérés.
+
+| Lot | Idée | État | Détail |
+|---|---|---|---|
+| 1 | 🔥 Série + badges | ✅ | Pastille « 🔥 Jour N d'affilée » (et 🎉 le jour où un badge se débloque), badges 7/30/100/365 dans les Stats. Un badge obtenu ne se perd jamais (calcul sur la **meilleure** série) ; le « reste à faire » vient de la série **en cours** |
+| 1 | 📈 Jauge « chance de forme » | ✅ | Sous la carte et dans l'onglet Formes : « Chance de forme demain : N % », barre, « garantie dans N j au plus tard », et « une forme est sortie aujourd'hui : la jauge repart à 1 % » |
+| 1 | 🎨 Thème par type | ✅ | L'interface prend la couleur du type du jour (`ui/theme.css`, couleurs de `types.css`, **texte des boutons choisi pour rester lisible**). **Accessibilité Lighthouse 100 sur les 18 types × 3 écrans.** Désactivable dans « À propos » |
+| 1 | 🛠️ Mode dev enrichi | ✅ | **Simuler une date ou un événement** dans un **bac à sable** : `?simulate=AAAA-MM-JJ` copie ta sauvegarde en mémoire (jusqu'à la veille du jour simulé), truque l'horloge, affiche un bandeau « SIMULATION » avec « Quitter ». **Ta vraie sauvegarde n'est jamais modifiée** (vérifié dans Chromium : identique avant, pendant et après, même en donnant un surnom en simulation) |
+| 1 | 🎃 Événements avec formes + 🎁 saisonniers + 🗓️ « entre amis » | ✅ | Halloween : 16 **formes spectrales** ajoutées ; Pokémon Day : **8 Pikachu à casquette** (événement séparé, même date) ; nouveaux : **Fête de la musique** (21 juin), **Journée du chat** (8 août), **Journée du chien** (26 août) → 16 événements. « Entre amis » = un événement comme les autres : **`docs/EVENTS_GUIDE.md`** explique comment l'ajouter (il suffit de me donner la date et le Pokémon préféré de la personne) |
+| 2 | 🧬 Horoscope + natures | ⏳ | |
+| 2 | 🖼️ Cartes thématisées + 📝 fiche personnage | ⏳ | |
+| 2 | 🎖️ Succès + 🥚 easter eggs | ⏳ | |
+| 3 | 📊 Wrapped · 🤝 Comparer avec un·e ami·e | ⏳ | |
+| 3 | 🔔 Notification | ⏳ | étude de faisabilité honnête d'abord (pas de serveur) |
+
 ---
 
 ## 7. Cahier de non-régression

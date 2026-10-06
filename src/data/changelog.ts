@@ -86,6 +86,26 @@ export const changelog: ChangelogEntry[] = [
       },
       {
         title: {
+          fr: 'Petits plus',
+          en: 'Little extras',
+        },
+        items: {
+          fr: [
+            'Ta série de jours d’affilée s’affiche sous le bandeau d’événement, et des badges se débloquent à 7, 30, 100 et 365 jours (page « Stats »). Un badge obtenu ne se perd jamais.',
+            'Une jauge sous ta carte montre ta chance de tomber sur une forme alternative demain : elle monte de 1 % chaque jour sans forme, et retombe à 1 % quand une forme sort.',
+            'L’application prend les couleurs du type de ton Pokémon du jour. Tu peux désactiver ça dans la page « À propos ».',
+            'Halloween a maintenant des formes spectrales (Méga-Ectoplasma, Citrouillard…), le Pokémon Day fait venir des Pikachu à casquette, et trois nouveaux événements arrivent : la Fête de la musique (21 juin), la Journée du chat (8 août) et la Journée du chien (26 août).',
+          ],
+          en: [
+            'Your day streak shows under the event banner, and badges unlock at 7, 30, 100 and 365 days (“Stats” page). A badge you earned is never lost.',
+            'A gauge under your card shows your chance of meeting an alternate form tomorrow: it goes up by 1% every day without a form, and drops back to 1% when one shows up.',
+            'The app takes on the colors of your Pokémon of the day’s type. You can turn this off on the “About” page.',
+            'Halloween now has ghostly forms (Mega Gengar, Pumpkaboo…), Pokémon Day brings Pikachu wearing caps, and three new events arrive: Music Day (June 21), Cat Day (August 8) and Dog Day (August 26).',
+          ],
+        },
+      },
+      {
+        title: {
           fr: 'À savoir',
           en: 'Good to know',
         },

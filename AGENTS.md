@@ -77,7 +77,9 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `src/features/kit/` | Pokékit : `kit.ts` (menu), `roulette.ts` (V-Roulette), `team.ts` (team du mois), `spin-schedule.ts` (le « film » de l'animation, pur) |
 | `src/features/events/` | Bandeau + liste des événements (`events-ui.ts`), étiquettes des effets (`modifiers.ts`) |
 | `src/ui/dialog.ts` | `createModal` : fenêtre modale accessible (élément natif `<dialog>` : focus, Échap, retour du focus). **À utiliser pour toute fenêtre** |
-| `src/features/stats/` | Statistiques (`stats.ts` pur : séries en jours locaux, totaux, classements + `stats-view.ts`) |
+| `src/features/theme/` · `forms/` | Thème selon le type du jour (réglage mémorisé ; styles dans `ui/theme.css`) · jauge « chance de forme » (`form-gauge.ts`) |
+| `src/app/simulate.ts` | Simulation d'une date (`?simulate=`), bac à sable en mémoire (voir `boot.ts`, `core/dev-tools.ts › prepareSimulation`) |
+| `src/features/stats/` | Statistiques (`stats.ts` pur : séries en jours locaux, totaux, classements ; `badges.ts` : badges de série ; + `stats-view.ts`) |
 | `src/features/pokedex/` | Pokédex / Shinydex / Formes (`progress.ts` pur : une forme compte pour son espèce, + `pokedex.ts`) |
 | `src/features/history/` · `shared/` | Calendrier mensuel (`calendar.ts` pur + `history.ts`) · `shared/sprite.ts` (`createSprite` : image avec repère « ? » si absente, à réutiliser partout) |
 | `src/features/home/` · `backup/` | Accueil (chargement/erreur, bandeaux, carte) · panneau « Ma collection » (export/import avec confirmation) |
@@ -118,6 +120,8 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 12. **Import** : il remplace TOUT, y compris le Pokémon d'aujourd'hui (un fichier ancien redonne un nouveau tirage pour aujourd'hui). C'est voulu et dit dans la confirmation.
 
 13. **CSP stricte** (`vercel.json`) : le site ne peut charger **que de lui-même**. Pas de `<script>` ni de `style=""` inline (pose les styles avec `element.style.x = …`, pas avec un attribut), pas de police/image/requête externe. Un test en local avec les mêmes en-têtes : `docs/REBUILD_PLAN.md` §6.4. Toute exception doit être justifiée (règle n°6 : aucun service tiers).
+15. **Événements** : on les ajoute dans `src/data/events.json` (guide : `docs/EVENTS_GUIDE.md`) ; le test « vrai fichier valide » compte les événements : mets-le à jour. **Simulation** (`?simulate=`) : bac à sable, jamais d'écriture dans la vraie base ; ne branche rien qui sauvegarde ailleurs sans passer par `game`.
+16. **Thème par type** : tout texte posé sur un fond `--accent` doit utiliser `color: var(--on-accent)` (jamais `#fff` en dur) et les survols ne doivent pas mettre un fond `--accent` plein sous du texte clair (`color-mix(... 35%, transparent)`) : sinon illisible sur les types clairs (Électrik, Glace…). Vérification : Lighthouse accessibilité sur plusieurs types.
 14. **`pkill -f "vite preview"` ne tue pas `vite.js preview`** : plusieurs serveurs s'empilent sur d'autres ports sans qu'on le voie. Utilise `pkill -f "vite.js previe[w]"`.
 
 ## Ne pas faire
