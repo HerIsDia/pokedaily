@@ -181,6 +181,26 @@ export const fr = {
     'Ta collection reste la même : elle est enregistrée dans le navigateur de cet appareil. Pense à l’exporter (page « À propos ») avant de changer de téléphone.',
   'install.title': 'Installer l’application',
 
+  'streak.pill': '🔥 Jour {days} d’affilée',
+  'streak.unlocked': '🎉 Badge « {name} » débloqué !',
+  'badge.7': 'Une semaine',
+  'badge.30': 'Un mois',
+  'badge.100': 'Cent jours',
+  'badge.365': 'Un an',
+  'badges.title': 'Badges de série',
+  'badges.remaining': 'encore {days} j',
+  'badges.earned': 'Obtenu',
+  'badges.hint':
+    'Ouvre Pokédaily chaque jour sans en manquer un. Un badge obtenu ne se perd jamais.',
+
+  'gauge.title': 'Chance de forme alternative',
+  'gauge.tomorrow': '🌀 Chance de forme demain : {percent} %',
+  'gauge.hint': 'Elle monte de 1 % chaque jour sans forme.',
+  'gauge.gotForm': 'Une forme est sortie aujourd’hui : la jauge repart à 1 %.',
+  'gauge.guaranteed': 'Garantie dans {days} j au plus tard.',
+
+  'theme.toggle': 'Colorer l’application selon le type de ton Pokémon du jour',
+
   'home.loading': 'Ouverture de ta collection…',
   'home.error.too_new':
     "Ta sauvegarde a été créée par une version plus récente de Pokédaily. Mets l'application à jour (recharge la page) pour la lire.",

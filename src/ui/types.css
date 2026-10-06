@@ -104,58 +104,78 @@
   border-color: rgba(214, 133, 173, 0.4);
 }
 
-/* Couleur principale d'un type : UNE seule définition (la v3 en avait trois). */
+/* Couleur principale d'un type : UNE seule définition (la v3 en avait trois).
+   `--on-type` = la couleur de texte lisible (contraste ≥ 4,5) sur un fond de cette couleur : le
+   thème « selon le type du jour » (theme.css) s'en sert pour les boutons. */
 [data-type='fire'] {
   --type-color: #ee8130;
+  --on-type: #14101f;
 }
 [data-type='water'] {
   --type-color: #6390f0;
+  --on-type: #14101f;
 }
 [data-type='grass'] {
   --type-color: #7ac74c;
+  --on-type: #14101f;
 }
 [data-type='electric'] {
   --type-color: #f7d02c;
+  --on-type: #14101f;
 }
 [data-type='ice'] {
   --type-color: #96d9d6;
+  --on-type: #14101f;
 }
 [data-type='fighting'] {
   --type-color: #c22e28;
+  --on-type: #ffffff;
 }
 [data-type='poison'] {
   --type-color: #a33ea1;
+  --on-type: #ffffff;
 }
 [data-type='ground'] {
   --type-color: #e2bf65;
+  --on-type: #14101f;
 }
 [data-type='flying'] {
   --type-color: #a98ff3;
+  --on-type: #14101f;
 }
 [data-type='psychic'] {
   --type-color: #f95587;
+  --on-type: #14101f;
 }
 [data-type='bug'] {
   --type-color: #a6b91a;
+  --on-type: #14101f;
 }
 [data-type='rock'] {
   --type-color: #b6a136;
+  --on-type: #14101f;
 }
 [data-type='ghost'] {
   --type-color: #7b62a3;
+  --on-type: #ffffff;
 }
 [data-type='dragon'] {
   --type-color: #6f35fc;
+  --on-type: #ffffff;
 }
 [data-type='dark'] {
   --type-color: #705746;
+  --on-type: #ffffff;
 }
 [data-type='steel'] {
   --type-color: #b7b7ce;
+  --on-type: #14101f;
 }
 [data-type='fairy'] {
   --type-color: #d685ad;
+  --on-type: #14101f;
 }
 [data-type='normal'] {
   --type-color: #a8a77a;
+  --on-type: #14101f;
 }

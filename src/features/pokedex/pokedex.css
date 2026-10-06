@@ -157,3 +157,7 @@
   border-radius: 50%;
   background: var(--accent-light);
 }
+
+.form-gauge[hidden] {
+  display: none;
+}

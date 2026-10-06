@@ -174,7 +174,69 @@
   color: var(--accent-light);
 }
 
-.stats-empty {
+.stats-empty,
+.badge-hint {
   color: var(--text-muted);
   font-size: 14px;
+}
+
+.badge-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.badge-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'days name' 'days state';
+  align-items: center;
+  column-gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-subtle);
+}
+
+.badge-item.earned {
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.badge-days {
+  grid-area: days;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--bg-main);
+  border: 2px solid var(--text-muted);
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--text-secondary);
+}
+
+.badge-item.earned .badge-days {
+  border-color: var(--shiny-color);
+  color: var(--shiny-color);
+}
+
+.badge-name {
+  grid-area: name;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.badge-state {
+  grid-area: state;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.badge-item.earned .badge-state {
+  color: var(--shiny-color);
 }

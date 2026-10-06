@@ -1,0 +1,38 @@
+.form-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+}
+
+.gauge-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.gauge-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-main);
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  transition: width 0.3s;
+}
+
+.gauge-detail {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}

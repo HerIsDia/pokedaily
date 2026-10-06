@@ -181,6 +181,25 @@ export const en: Record<MessageKey, string> = {
     'Your collection stays the same: it is saved in this device’s browser. Remember to export it (“About” page) before changing phones.',
   'install.title': 'Install the app',
 
+  'streak.pill': '🔥 Day {days} in a row',
+  'streak.unlocked': '🎉 Badge “{name}” unlocked!',
+  'badge.7': 'One week',
+  'badge.30': 'One month',
+  'badge.100': 'One hundred days',
+  'badge.365': 'One year',
+  'badges.title': 'Streak badges',
+  'badges.remaining': '{days} d to go',
+  'badges.earned': 'Earned',
+  'badges.hint': 'Open Pokédaily every day without missing one. A badge you earned is never lost.',
+
+  'gauge.title': 'Alternate form chance',
+  'gauge.tomorrow': '🌀 Chance of a form tomorrow: {percent}%',
+  'gauge.hint': 'It goes up by 1% every day without a form.',
+  'gauge.gotForm': 'A form showed up today: the gauge goes back to 1%.',
+  'gauge.guaranteed': 'Guaranteed within {days} d at the latest.',
+
+  'theme.toggle': 'Tint the app with the type of your Pokémon of the day',
+
   'home.loading': 'Opening your collection…',
   'home.error.too_new':
     'Your save was created by a newer version of Pokédaily. Update the app (reload the page) to read it.',

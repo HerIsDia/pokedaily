@@ -8,7 +8,10 @@ import { bindAttr, bindChildren, bindText, effect, h } from '../../ui/dom';
 import type { View } from '../../ui/router';
 import { createStore, derived, type Store } from '../../ui/store';
 import { createEventsUi } from '../events/events-ui';
+import { BADGE_NAME_KEY, badgeUnlockedToday } from '../stats/badges';
+import { streaks } from '../stats/stats';
 import { createCardView } from '../card/card';
+import { createFormGauge } from '../forms/form-gauge';
 
 export interface HomeDeps {
   i18n: I18n;
@@ -80,13 +83,34 @@ export function createHomeView({ i18n, game, events = allEvents }: HomeDeps): Vi
     const todayDay = derived(game.today, (entry) => entry?.day ?? localDay());
     const { badge, modal } = createEventsUi({ i18n, scope, events, today: todayDay });
 
+    // Série de jours d'affilée (et badge débloqué aujourd'hui) : une pastille discrète.
+    const streak = derived(game.state, (state) => streaks(Object.keys(state.entries)).current);
+    const streakPill = h('span', { class: 'streak-pill' });
+    streakPill.append(
+      bindText(scope, [streak, lang], () => {
+        const days = streak.get();
+        const unlocked = badgeUnlockedToday(days);
+        return unlocked
+          ? t('streak.unlocked', { name: t(BADGE_NAME_KEY[unlocked]) })
+          : t('streak.pill', { days });
+      }),
+    );
+    bindAttr(scope, streakPill, 'hidden', [streak], () => streak.get() < 2);
+    bindAttr(
+      scope,
+      streakPill,
+      'data-unlocked',
+      [streak],
+      () => badgeUnlockedToday(streak.get()) !== null,
+    );
+
     const root = h(
       'section',
       { class: 'home' },
       volatile,
       failed,
       warnings,
-      badge,
+      h('div', { class: 'home-pills' }, badge, streakPill),
       message,
       modal.element,
     );
@@ -112,6 +136,8 @@ export function createHomeView({ i18n, game, events = allEvents }: HomeDeps): Vi
             if (day) void game.rename(day, name);
           },
         })({ scope }),
+        // Sous la carte : la jauge qui rend visible la chance de forme de demain.
+        h('div', { class: 'home-gauge' }, createFormGauge({ i18n, scope, state: game.state })),
       );
     });
 

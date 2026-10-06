@@ -5,6 +5,7 @@ import type { Game } from '../../state/game';
 import { bindAttr, bindChildren, bindText, effect, h } from '../../ui/dom';
 import type { View } from '../../ui/router';
 import { createStore } from '../../ui/store';
+import { createFormGauge } from '../forms/form-gauge';
 import { createSprite } from '../shared/sprite';
 import { dexProgress, formCategories } from './progress';
 
@@ -124,6 +125,12 @@ export function createPokedexView({ i18n, game }: PokedexDeps): View {
       }
     });
 
+    // Onglet « Formes » : on y explique le pourcentage progressif.
+    const gauge = createFormGauge({ i18n, scope, state: game.state });
+    effect(scope, [tab], () => {
+      gauge.hidden = tab.get() !== 'forms';
+    });
+
     const empty = h('p', { class: 'dex-empty', role: 'status' });
     empty.append(bindText(scope, [lang], () => t('pokedex.shinyEmpty')));
     effect(scope, [game.state, tab], () => {
@@ -137,6 +144,7 @@ export function createPokedexView({ i18n, game }: PokedexDeps): View {
       h('div', { class: 'pokedex-header' }, counter),
       bar,
       label,
+      gauge,
       chips,
       empty,
       grid,

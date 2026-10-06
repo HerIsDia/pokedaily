@@ -1,0 +1,13 @@
+/*
+ * Thème « selon le type du jour » : quand le Pokémon du jour est de type Feu, l'interface prend
+ * des reflets orangés, etc. Les couleurs viennent de `types.css` (--type-color, --on-type) : on
+ * ne les recopie pas ici. L'attribut `data-type` est posé sur `.app-shell` par `app.ts`.
+ */
+.app-shell[data-type] {
+  --accent: color-mix(in srgb, var(--type-color) 95%, white);
+  --on-accent: var(--on-type);
+  --accent-light: color-mix(in srgb, var(--type-color) 50%, white);
+  --accent-subtle: color-mix(in srgb, var(--type-color) 14%, transparent);
+  --border-accent: color-mix(in srgb, var(--type-color) 45%, transparent);
+  --accent-glow: color-mix(in srgb, var(--type-color) 35%, transparent);
+}

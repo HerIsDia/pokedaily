@@ -1,3 +1,4 @@
+import type { TypeTheme } from '../features/theme/type-theme';
 import { createBackupPanel } from '../features/backup/backup-panel';
 import { createOfflinePanel } from '../features/offline/offline-panel';
 import type { I18n } from '../i18n';
@@ -10,6 +11,7 @@ export function createAboutView({
   game,
   openDev,
   install,
+  theme,
 }: {
   i18n: I18n;
   game: Game;
@@ -17,6 +19,8 @@ export function createAboutView({
   openDev: () => void;
   /** Le bouton « Installer » de l'application (visible seulement quand c'est possible). */
   install: { actionButton(className: string): HTMLButtonElement };
+  /** Réglage du thème selon le type du jour. */
+  theme: TypeTheme;
 }): View {
   return ({ scope }) => {
     const { t, lang } = i18n;
@@ -45,6 +49,20 @@ export function createAboutView({
         text(() => t('about.version', { version: __APP_VERSION__ })),
       ),
       createBackupPanel({ i18n, game, scope }),
+      h(
+        'label',
+        { class: 'theme-toggle' },
+        h('input', {
+          type: 'checkbox',
+          checked: theme.enabled.get(),
+          onchange: (event) => theme.enabled.set((event.target as HTMLInputElement).checked),
+        }),
+        h(
+          'span',
+          null,
+          text(() => t('theme.toggle')),
+        ),
+      ),
       createOfflinePanel({ i18n, scope }),
       install.actionButton('about-install'),
       h(

@@ -226,7 +226,7 @@
 }
 
 .action-btn:hover:not(:disabled) {
-  background: var(--accent);
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .action-btn:disabled {

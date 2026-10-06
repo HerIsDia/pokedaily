@@ -6,6 +6,7 @@ import type { View } from '../../ui/router';
 import { localeOf } from '../card/share-image';
 import { dexProgress } from '../pokedex/progress';
 import { createSprite } from '../shared/sprite';
+import { BADGE_NAME_KEY, streakBadges } from './badges';
 import { computeStats, type StatsLookup } from './stats';
 
 export interface StatsDeps {
@@ -84,6 +85,31 @@ export function createStatsView({ i18n, game }: StatsDeps): View {
           card('stats.bestStreak', String(stats.bestStreak)),
           card('stats.forms', String(stats.forms)),
           card('stats.tickets', String(state.tickets)),
+        ),
+        h(
+          'section',
+          { class: 'stats-section' },
+          h('h2', null, t('badges.title')),
+          h(
+            'ul',
+            { class: 'badge-list' },
+            ...streakBadges(stats.streak, stats.bestStreak).map((badge) =>
+              h(
+                'li',
+                { class: badge.earned ? 'badge-item earned' : 'badge-item' },
+                h('span', { class: 'badge-days' }, String(badge.days)),
+                h('span', { class: 'badge-name' }, t(BADGE_NAME_KEY[badge.days])),
+                h(
+                  'span',
+                  { class: 'badge-state' },
+                  badge.earned
+                    ? t('badges.earned')
+                    : t('badges.remaining', { days: badge.remaining ?? 0 }),
+                ),
+              ),
+            ),
+          ),
+          h('p', { class: 'badge-hint' }, t('badges.hint')),
         ),
         h(
           'section',

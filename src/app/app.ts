@@ -7,6 +7,8 @@ import { createChangelogUi } from '../features/changelog/changelog';
 import { createHistoryView } from '../features/history/history';
 import { createHomeView } from '../features/home/home';
 import { createPokedexView } from '../features/pokedex/pokedex';
+import { createTypeTheme, type TypeTheme } from '../features/theme/type-theme';
+import { getEntry } from '../data';
 import { createInstallUi } from '../features/install/install-ui';
 import { createInstaller, type Installer } from '../pwa/install';
 import type { Updater } from '../pwa/register';
@@ -25,12 +27,14 @@ export interface AppDeps {
   updater?: Updater | null;
   /** Installation sur l'écran d'accueil (par défaut : celle du navigateur). */
   installer?: Installer;
+  /** Réglage du thème selon le type du jour (par défaut : celui mémorisé sur l'appareil). */
+  theme?: TypeTheme;
 }
 
 /** Monte l'application dans `root` et renvoie une fonction pour tout démonter. */
 export function mountApp(
   root: HTMLElement,
-  { i18n, game, updater, installer = createInstaller() }: AppDeps,
+  { i18n, game, updater, installer = createInstaller(), theme = createTypeTheme() }: AppDeps,
 ): () => void {
   const scope = new Scope();
   const { t, lang, setLang } = i18n;
@@ -65,7 +69,7 @@ export function mountApp(
     { path: 'kit/team', view: createTeamView({ i18n, game }) },
     {
       path: 'about',
-      view: createAboutView({ i18n, game, openDev: () => devPanel.open(), install }),
+      view: createAboutView({ i18n, game, openDev: () => devPanel.open(), install, theme }),
     },
   ];
   const router = createRouter(outlet, routes, { fallback: '' });
@@ -175,6 +179,10 @@ export function mountApp(
     changelog.modal.element,
     devPanel.element,
     install.modal.element,
+  );
+  // Thème selon le type du jour : `data-type` sur la coquille (voir ui/theme.css).
+  bindAttr(scope, shell, 'data-type', [game.today, theme.enabled], () =>
+    theme.enabled.get() ? getEntry(game.today.get()?.id ?? 0)?.types[0] : undefined,
   );
   root.replaceChildren(shell);
   router.start();
