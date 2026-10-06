@@ -12,6 +12,7 @@ import {
   formatDay,
   IMAGE_HEIGHT,
   IMAGE_WIDTH,
+  SHINY_SPARKLES,
 } from '../../src/features/card/share-image';
 import { createI18n } from '../../src/i18n';
 import { Scope } from '../../src/ui/scope';
@@ -71,6 +72,7 @@ describe('contenu de l’image', () => {
 function fakeCtx() {
   const texts: string[] = [];
   const calls: string[] = [];
+  const methods: string[] = [];
   const gradient = { addColorStop: vi.fn() };
   const ctx = new Proxy(
     {
@@ -83,14 +85,14 @@ function fakeCtx() {
     {
       get(target, prop: string) {
         if (prop in target) return target[prop];
-        return () => undefined; // beginPath, fill, stroke, roundRect…
+        return () => void methods.push(prop); // beginPath, fill, stroke, roundRect…
       },
       set() {
         return true;
       },
     },
   );
-  return { ctx: ctx as unknown as CanvasRenderingContext2D, texts, calls };
+  return { ctx: ctx as unknown as CanvasRenderingContext2D, texts, calls, methods };
 }
 
 describe('dessin', () => {
@@ -121,6 +123,36 @@ describe('dessin', () => {
     drawCardImage(ctx, buildCardImageSpec(entry, createI18n('fr')), null);
     expect(texts).toContain('?');
     expect(calls).not.toContain('drawImage');
+  });
+
+  it('décor du type : des anneaux et des points sur toute carte', () => {
+    const { ctx, methods } = fakeCtx();
+    drawCardImage(ctx, buildCardImageSpec({ ...entry, isShiny: false }, createI18n('fr')), null);
+    expect(methods.filter((m) => m === 'arc').length).toBe(3 + 6);
+  });
+
+  it('un shiny reçoit le cadre doré et ses étincelles ; un Pokémon normal non', () => {
+    const shiny = fakeCtx();
+    drawCardImage(shiny.ctx, buildCardImageSpec(entry, createI18n('fr')), null);
+    const plain = fakeCtx();
+    drawCardImage(
+      plain.ctx,
+      buildCardImageSpec({ ...entry, isShiny: false }, createI18n('fr')),
+      null,
+    );
+    const sparkles = (c: { methods: string[] }) =>
+      c.methods.filter((m) => m === 'quadraticCurveTo').length;
+    expect(sparkles(shiny)).toBe(SHINY_SPARKLES.length * 4);
+    expect(sparkles(plain)).toBe(0);
+  });
+
+  it('le dessin est reproductible : deux fois la même carte, exactement les mêmes gestes', () => {
+    const a = fakeCtx();
+    const b = fakeCtx();
+    const spec = buildCardImageSpec(entry, createI18n('fr'));
+    drawCardImage(a.ctx, spec, null);
+    drawCardImage(b.ctx, spec, null);
+    expect(a.methods).toEqual(b.methods);
   });
 
   it('a des dimensions de carte (portrait)', () => {
@@ -198,12 +230,12 @@ describe('boutons sous la carte', () => {
     [...root.querySelectorAll('button')].map((b) => b.textContent);
 
   it('affiche Partager, Copier, Télécharger quand tout est possible', () => {
-    expect(labels(mount(env()).root)).toEqual(['Partager', 'Copier', 'Télécharger']);
+    expect(labels(mount(env()).root)).toEqual(['Partager', 'Copier', 'Télécharger', 'Fiche']);
   });
 
   it('cache ce que le navigateur ne sait pas faire', () => {
     const e = env({ supportsShare: () => false, canCopyImage: () => false });
-    expect(labels(mount(e).root)).toEqual(['Télécharger']);
+    expect(labels(mount(e).root)).toEqual(['Télécharger', 'Fiche']);
   });
 
   it('télécharger : nomme le fichier avec le jour et confirme', async () => {
@@ -213,6 +245,16 @@ describe('boutons sous la carte', () => {
     await vi.waitFor(() => expect(e.downloads).toEqual(['pokedaily-2026-05-01.png']));
     await vi.waitFor(() =>
       expect(root.querySelector('.share-status')?.textContent).toBe('✓ Image téléchargée'),
+    );
+  });
+
+  it('fiche : télécharge le texte Markdown daté et confirme', async () => {
+    const e = env();
+    const { root } = mount(e);
+    root.querySelectorAll('button')[3]!.click();
+    expect(e.downloads).toEqual(['pokedaily-2026-05-01-fiche.md']);
+    await vi.waitFor(() =>
+      expect(root.querySelector('.share-status')?.textContent).toBe('✓ Fiche téléchargée'),
     );
   });
 

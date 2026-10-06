@@ -24,6 +24,39 @@
   box-shadow: 0 0 32px var(--shiny-glow);
 }
 
+/* Reflet doré qui traverse la carte shiny de temps en temps (seulement si l'animation est permise). */
+.card[data-shiny]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(255, 225, 102, 0.28) 50%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card[data-shiny]::after {
+    opacity: 1;
+    animation: card-shimmer 5s ease-in-out 1s infinite;
+  }
+}
+
+@keyframes card-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  35%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .card-header {
   display: flex;
   align-items: flex-start;

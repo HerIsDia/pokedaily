@@ -20,6 +20,31 @@ export interface HoroscopeDeps {
   entry: ReadStore<PokemonEntry>;
 }
 
+/** Les phrases de l'horoscope (nature, puis types) et la ligne « effet de la nature ». Pur. */
+export function horoscopeText(
+  current: PokemonEntry,
+  { t, lang }: I18n,
+): { lines: string[]; effect: string } {
+  const code = lang.get();
+  const nature = getNature(current.natureKey);
+  const types = getEntry(current.id)?.types ?? [];
+  const lines = [
+    natureLines[current.natureKey]?.[code],
+    ...types.map((type) => typeLines[type]?.[code]),
+  ].filter((line): line is string => Boolean(line));
+
+  const effect = nature
+    ? nature.up && nature.down
+      ? t('horoscope.effect', {
+          nature: nature[code],
+          up: t(STAT_KEYS[nature.up]),
+          down: t(STAT_KEYS[nature.down]),
+        })
+      : t('horoscope.neutral', { nature: nature[code] })
+    : '';
+  return { lines, effect };
+}
+
 /**
  * L'« horoscope du jour » : une phrase selon la nature du Pokémon, une ou deux selon son type, et
  * ce que la nature change vraiment aux statistiques (+10 % / −10 %). Pour sourire, pas pour y croire.
@@ -32,25 +57,7 @@ export function createHoroscope({ i18n, scope, entry }: HoroscopeDeps): HTMLElem
 
   const body = h('div', { class: 'horoscope-body' });
   const render = () => {
-    const current = entry.get();
-    const code = lang.get();
-    const nature = getNature(current.natureKey);
-    const types = getEntry(current.id)?.types ?? [];
-    const lines = [
-      natureLines[current.natureKey]?.[code],
-      ...types.map((type) => typeLines[type]?.[code]),
-    ].filter((line): line is string => Boolean(line));
-
-    const effect = nature
-      ? nature.up && nature.down
-        ? t('horoscope.effect', {
-            nature: nature[code],
-            up: t(STAT_KEYS[nature.up]),
-            down: t(STAT_KEYS[nature.down]),
-          })
-        : t('horoscope.neutral', { nature: nature[code] })
-      : '';
-
+    const { lines, effect } = horoscopeText(entry.get(), i18n);
     body.replaceChildren(
       ...lines.map((line) => h('p', { class: 'horoscope-line' }, line)),
       h('p', { class: 'horoscope-effect' }, effect),

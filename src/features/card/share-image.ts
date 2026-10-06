@@ -105,6 +105,77 @@ function fitFont(ctx: Ctx, text: string, weight: string, start: number, maxWidth
   } while (size > 14 && ctx.measureText(text).width > maxWidth);
 }
 
+/**
+ * Décor propre au type : des anneaux concentriques derrière l'illustration et quelques points
+ * lumineux. Positions FIXES (aucun hasard) : la même carte donne toujours la même image.
+ */
+const DOTS: readonly (readonly [number, number, number])[] = [
+  [52, 130, 3],
+  [350, 112, 2.5],
+  [78, 246, 2],
+  [330, 258, 3.5],
+  [40, 200, 1.5],
+  [364, 188, 2],
+];
+
+function drawTypeDecor(ctx: Ctx, color: string): void {
+  const cx = IMAGE_WIDTH / 2;
+  const cy = 184;
+  ctx.lineWidth = 1.5;
+  [112, 138, 166].forEach((radius, index) => {
+    ctx.strokeStyle = `${color}${['38', '24', '14'][index]}`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+  ctx.fillStyle = `${color}70`;
+  for (const [x, y, r] of DOTS) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/** Les étincelles d'une carte shiny : position (x, y) et taille. Fixes, comme le reste. */
+export const SHINY_SPARKLES: readonly (readonly [number, number, number])[] = [
+  [60, 110, 9],
+  [338, 98, 7],
+  [96, 262, 6],
+  [320, 244, 10],
+  [44, 330, 5],
+  [358, 322, 6],
+  [200, 70, 5],
+];
+
+/** Une étoile à quatre branches, centrée en (x, y). */
+function drawSparkle(ctx: Ctx, x: number, y: number, size: number): void {
+  const inner = size * 0.28;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size);
+  ctx.quadraticCurveTo(x + inner, y - inner, x + size, y);
+  ctx.quadraticCurveTo(x + inner, y + inner, x, y + size);
+  ctx.quadraticCurveTo(x - inner, y + inner, x - size, y);
+  ctx.quadraticCurveTo(x - inner, y - inner, x, y - size);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/** Double cadre doré + étincelles : l'habit de fête d'une carte shiny. */
+function drawShinyFrame(ctx: Ctx): void {
+  const W = IMAGE_WIDTH;
+  const H = IMAGE_HEIGHT;
+  ctx.strokeStyle = 'rgba(255,215,0,0.85)';
+  ctx.lineWidth = 3;
+  roundedRect(ctx, 3, 3, W - 6, H - 6, 18);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,215,0,0.4)';
+  ctx.lineWidth = 1;
+  roundedRect(ctx, 10, 10, W - 20, H - 20, 12);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,225,102,0.9)';
+  for (const [x, y, size] of SHINY_SPARKLES) drawSparkle(ctx, x, y, size);
+}
+
 /** Dessine la carte. `image` vaut `null` si l'illustration n'a pas pu être chargée. */
 export function drawCardImage(ctx: Ctx, spec: CardImageSpec, image: CanvasImageSource | null) {
   const W = IMAGE_WIDTH;
@@ -124,6 +195,8 @@ export function drawCardImage(ctx: Ctx, spec: CardImageSpec, image: CanvasImageS
   glow.addColorStop(1, `${color}00`);
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
+
+  drawTypeDecor(ctx, color);
 
   ctx.fillStyle = color;
   roundedRect(ctx, 0, 0, W, 4, [20, 20, 0, 0]);
@@ -229,6 +302,9 @@ export function drawCardImage(ctx: Ctx, spec: CardImageSpec, image: CanvasImageS
   ctx.fillStyle = 'rgba(255,255,255,0.35)';
   ctx.font = `400 13px ${FONT}`;
   ctx.fillText(spec.footer, W / 2, 512);
+
+  // Par-dessus tout : le cadre doré des shiny
+  if (spec.shinyLabel) drawShinyFrame(ctx);
 }
 
 function loadImage(url: string): Promise<HTMLImageElement | null> {

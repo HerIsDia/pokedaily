@@ -72,13 +72,14 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `scripts/` | Scripts Node en TypeScript (`build-dex.ts`, `sync-sprites.ts`), `lib/` (client HTTP poli, logique testée), `dex-overrides.json` (corrections de noms **avec leur source**) |
 | `assets/extra/` | (optionnel, absent pour l'instant) images déposées à la main : `<id>.png`, `<id>s.png` pour le shiny ; à créditer |
 | `src/app/boot.ts` | Démarrage : ouvre la sauvegarde (ou le mode mémoire), monte l'écran, tire le Pokémon du jour, nettoie la v3.1 |
-| `src/features/card/` | Carte du jour (reçoit un état en lecture + `onRename`) ; `share-image.ts` (image PNG de la carte : contenu / dessin / assemblage séparés) et `share-actions.ts` (Partager / Copier / Télécharger) ; `preview.ts` : **aperçu de dev** `/?preview=10034&shiny=1&level=88&nature=timid` (en mémoire, **rien n'est sauvegardé**) |
+| `src/features/card/` | Carte du jour (reçoit un état en lecture + `onRename`) ; `share-image.ts` (image PNG de la carte : contenu / dessin / assemblage séparés ; décor du type + cadre shiny **sans hasard**), `share-actions.ts` (Partager / Copier / Télécharger / Fiche) et `character-sheet.ts` (fiche personnage Markdown, pure) ; `preview.ts` : **aperçu de dev** `/?preview=10034&shiny=1&level=88&nature=timid` (en mémoire, **rien n'est sauvegardé**) |
 | `src/features/changelog/` · `dev/` | Notes de mise à jour (numéro de version cliquable) · mode développeur (`dev-panel.ts` ; outils purs dans `core/dev-tools.ts`, appliqués via `game.devApply`) ; ouverture : **Ctrl/Cmd+Maj+C** ou lien en bas de « À propos » |
 | `src/features/kit/` | Pokékit : `kit.ts` (menu), `roulette.ts` (V-Roulette), `team.ts` (team du mois), `spin-schedule.ts` (le « film » de l'animation, pur) |
 | `src/features/events/` | Bandeau + liste des événements (`events-ui.ts`), étiquettes des effets (`modifiers.ts`) |
 | `src/ui/dialog.ts` | `createModal` : fenêtre modale accessible (élément natif `<dialog>` : focus, Échap, retour du focus). **À utiliser pour toute fenêtre** |
 | `src/features/theme/` · `forms/` | Thème selon le type du jour (réglage mémorisé ; styles dans `ui/theme.css`) · jauge « chance de forme » (`form-gauge.ts`) |
 | `src/app/simulate.ts` | Simulation d'une date (`?simulate=`), bac à sable en mémoire (voir `boot.ts`, `core/dev-tools.ts › prepareSimulation`) |
+| `src/features/horoscope/` | Horoscope du jour (`horoscopeText` pur : phrases de nature + type de `data/horoscope.ts`, effet réel de la nature `up`/`down`) |
 | `src/features/stats/` | Statistiques (`stats.ts` pur : séries en jours locaux, totaux, classements ; `badges.ts` : badges de série ; + `stats-view.ts`) |
 | `src/features/pokedex/` | Pokédex / Shinydex / Formes (`progress.ts` pur : une forme compte pour son espèce, + `pokedex.ts`) |
 | `src/features/history/` · `shared/` | Calendrier mensuel (`calendar.ts` pur + `history.ts`) · `shared/sprite.ts` (`createSprite` : image avec repère « ? » si absente, à réutiliser partout) |

@@ -4,6 +4,7 @@ import { bindAttr, bindText, h } from '../../ui/dom';
 import { downloadBlob } from '../../ui/download';
 import type { Scope } from '../../ui/scope';
 import { createStore, type ReadStore } from '../../ui/store';
+import { buildCharacterSheet, sheetFilename } from './character-sheet';
 import { buildCardImageSpec, readTypeColor, renderCardImage } from './share-image';
 import { getEntry } from '../../data';
 
@@ -92,7 +93,7 @@ const OUTCOME_MESSAGE: Partial<Record<ShareOutcome, MessageKey>> = {
   failed: 'card.shareFailed',
 };
 
-/** Les trois boutons sous la carte : Partager · Copier · Télécharger. */
+/** Les boutons sous la carte : Partager · Copier · Télécharger · Fiche (texte Markdown). */
 export function createShareActions({
   i18n,
   entry,
@@ -165,6 +166,24 @@ export function createShareActions({
         }),
     ),
   ];
+
+  // La fiche personnage est un simple texte : pas d'image à fabriquer, donc pas d'attente.
+  buttons.push(
+    button('sheet.button', () => {
+      const current = entry.get();
+      const sheet = new Blob([buildCharacterSheet(current, i18n)], {
+        type: 'text/markdown;charset=utf-8',
+      });
+      try {
+        env.download(sheetFilename(current), sheet);
+        message.set('sheet.downloaded');
+      } catch {
+        message.set('card.shareFailed');
+      }
+      clearTimeout(timer);
+      timer = setTimeout(() => message.set(null), 3000);
+    }),
+  );
 
   const status = h('p', { class: 'share-status', role: 'status' });
   status.append(
