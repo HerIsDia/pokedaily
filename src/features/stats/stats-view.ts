@@ -1,9 +1,11 @@
+import { events } from '../../data/events';
 import { forms, getEntry, species, type DexEntry } from '../../data';
 import type { I18n, MessageKey } from '../../i18n';
 import type { Game } from '../../state/game';
 import { bindChildren, bindText, h } from '../../ui/dom';
 import type { View } from '../../ui/router';
 import { localeOf } from '../card/share-image';
+import { achievementTotals, computeAchievements } from '../achievements/achievements';
 import { dexProgress } from '../pokedex/progress';
 import { createSprite } from '../shared/sprite';
 import { BADGE_NAME_KEY, streakBadges } from './badges';
@@ -17,6 +19,11 @@ export interface StatsDeps {
 const lookup: StatsLookup = {
   typesOf: (id) => getEntry(id)?.types ?? [],
   isForm: (id) => getEntry(id)?.form !== undefined,
+};
+
+const achievementLookup = {
+  ...lookup,
+  speciesOf: (id: number) => getEntry(id)?.speciesId ?? id,
 };
 
 /** Une barre remplie à `percent` %. (Largeur posée par le code, pas par un attribut `style` : la
@@ -70,6 +77,58 @@ export function createStatsView({ i18n, game }: StatsDeps): View {
           h('span', { class: 'completion-value' }, `${count} / ${total}`),
         );
 
+      const achievementsSection = () => {
+        const list = computeAchievements(state, events, achievementLookup);
+        const totals = achievementTotals(list);
+        return h(
+          'section',
+          { class: 'stats-section' },
+          h('h2', null, t('ach.title')),
+          h('p', { class: 'ach-count' }, t('ach.count', { ...totals })),
+          h(
+            'ul',
+            { class: 'ach-list' },
+            ...list.map((a) => {
+              const hidden = a.secret && !a.done;
+              return h(
+                'li',
+                {
+                  class: a.done ? 'ach-item earned' : 'ach-item',
+                  'data-secret': a.secret ? '' : undefined,
+                },
+                h(
+                  'span',
+                  { class: 'ach-mark', 'aria-hidden': 'true' },
+                  a.done ? '✓' : hidden ? '?' : '·',
+                ),
+                h(
+                  'span',
+                  { class: 'ach-text' },
+                  h(
+                    'span',
+                    { class: 'ach-name' },
+                    hidden ? t('ach.secret') : t(`ach.${a.id}.name` as MessageKey),
+                  ),
+                  h(
+                    'span',
+                    { class: 'ach-desc' },
+                    hidden ? t('ach.secretHint') : t(`ach.${a.id}.desc` as MessageKey),
+                  ),
+                ),
+                a.progress && !a.done
+                  ? h(
+                      'span',
+                      { class: 'ach-progress' },
+                      `${a.progress.current} / ${a.progress.total}`,
+                    )
+                  : null,
+              );
+            }),
+          ),
+          h('p', { class: 'badge-hint' }, t('ach.hint')),
+        );
+      };
+
       const maxType = stats.types[0]?.count ?? 1;
       const name = (entry: DexEntry | undefined, id: number) => entry?.[lang.get()] ?? `#${id}`;
 
@@ -111,6 +170,7 @@ export function createStatsView({ i18n, game }: StatsDeps): View {
           ),
           h('p', { class: 'badge-hint' }, t('badges.hint')),
         ),
+        achievementsSection(),
         h(
           'section',
           { class: 'stats-section' },

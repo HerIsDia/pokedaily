@@ -3,6 +3,7 @@ import { bindAttr, bindText, effect, h } from '../ui/dom';
 import { createRouter, type Route } from '../ui/router';
 import { Scope } from '../ui/scope';
 import { createDevPanel } from '../features/dev/dev-panel';
+import { installEggs } from '../features/eggs/eggs';
 import { createChangelogUi } from '../features/changelog/changelog';
 import { createHistoryView } from '../features/history/history';
 import { createHomeView } from '../features/home/home';
@@ -117,19 +118,17 @@ export function mountApp(
 
   const changelog = createChangelogUi({ i18n, scope });
 
+  const logo = h(
+    'span',
+    { class: 'app-logo' },
+    bindText(scope, [lang], () => t('app.name')),
+  );
+  installEggs({ i18n, scope, logo });
+
   const header = h(
     'header',
     { class: 'app-header' },
-    h(
-      'div',
-      { class: 'app-brand' },
-      h(
-        'span',
-        { class: 'app-logo' },
-        bindText(scope, [lang], () => t('app.name')),
-      ),
-      changelog.badge,
-    ),
+    h('div', { class: 'app-brand' }, logo, changelog.badge),
     link('about', 'about', () => t('nav.about'), 'header-link'),
     h('div', { class: 'lang-switch', role: 'group' }, ...LANGS.map(langButton)),
   );

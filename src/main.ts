@@ -8,6 +8,7 @@ import './ui/tokens.css';
 import './ui/types.css';
 import './ui/dialog.css';
 import './ui/theme.css';
+import './ui/toast.css';
 import './app/app.css';
 import './features/card/card.css';
 import './features/home/home.css';

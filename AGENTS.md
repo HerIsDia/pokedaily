@@ -80,6 +80,7 @@ TypeScript 5.9 `strict` (+ `noUncheckedIndexedAccess`) · Vite 8 · `vite-plugin
 | `src/features/theme/` · `forms/` | Thème selon le type du jour (réglage mémorisé ; styles dans `ui/theme.css`) · jauge « chance de forme » (`form-gauge.ts`) |
 | `src/app/simulate.ts` | Simulation d'une date (`?simulate=`), bac à sable en mémoire (voir `boot.ts`, `core/dev-tools.ts › prepareSimulation`) |
 | `src/features/horoscope/` | Horoscope du jour (`horoscopeText` pur : phrases de nature + type de `data/horoscope.ts`, effet réel de la nature `up`/`down`) |
+| `src/features/achievements/` · `eggs/` | Succès (`achievements.ts` pur : **calculés** depuis la collection, jamais sauvegardés ; textes `ach.<id>.name/desc`) · œufs de Pâques (code Konami, logo à 7 appuis) ; `ui/toast.ts` = petit message qui disparaît |
 | `src/features/stats/` | Statistiques (`stats.ts` pur : séries en jours locaux, totaux, classements ; `badges.ts` : badges de série ; + `stats-view.ts`) |
 | `src/features/pokedex/` | Pokédex / Shinydex / Formes (`progress.ts` pur : une forme compte pour son espèce, + `pokedex.ts`) |
 | `src/features/history/` · `shared/` | Calendrier mensuel (`calendar.ts` pur + `history.ts`) · `shared/sprite.ts` (`createSprite` : image avec repère « ? » si absente, à réutiliser partout) |

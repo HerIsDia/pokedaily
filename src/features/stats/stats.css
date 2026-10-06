@@ -240,3 +240,68 @@
 .badge-item.earned .badge-state {
   color: var(--shiny-color);
 }
+
+/* Succès */
+.ach-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ach-item {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.ach-item.earned {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.ach-mark {
+  text-align: center;
+  font-weight: 900;
+  color: var(--text-muted);
+}
+
+.ach-item.earned .ach-mark {
+  color: var(--accent-light);
+}
+
+.ach-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ach-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.ach-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ach-progress {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}

@@ -97,6 +97,7 @@ export const changelog: ChangelogEntry[] = [
             'Halloween a maintenant des formes spectrales (Méga-Ectoplasma, Citrouillard…), le Pokémon Day fait venir des Pikachu à casquette, et trois nouveaux événements arrivent : la Fête de la musique (21 juin), la Journée du chat (8 août) et la Journée du chien (26 août).',
             'Un petit horoscope sous ta carte, selon la nature et le type de ton Pokémon (avec ce que sa nature change vraiment à ses statistiques).',
             'Les cartes partagées ont un décor à la couleur du type, et un cadre doré scintillant pour les shiny. Un nouveau bouton « Fiche » télécharge une fiche personnage de ton Pokémon à compléter.',
+            'Des succès à débloquer dans la page « Stats », dont quelques-uns secrets… Et peut-être d’autres surprises cachées.',
           ],
           en: [
             'Your day streak shows under the event banner, and badges unlock at 7, 30, 100 and 365 days (“Stats” page). A badge you earned is never lost.',
@@ -105,6 +106,7 @@ export const changelog: ChangelogEntry[] = [
             'Halloween now has ghostly forms (Mega Gengar, Pumpkaboo…), Pokémon Day brings Pikachu wearing caps, and three new events arrive: Music Day (June 21), Cat Day (August 8) and Dog Day (August 26).',
             'A little horoscope under your card, based on your Pokémon’s nature and type (with what its nature really changes to its stats).',
             'Shared cards get a decor in the type’s color, and a sparkling golden frame for shiny ones. A new “Sheet” button downloads a character sheet of your Pokémon for you to fill in.',
+            'Achievements to unlock on the “Stats” page, a few of them secret… And maybe other hidden surprises.',
           ],
         },
       },
