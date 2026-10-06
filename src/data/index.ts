@@ -30,11 +30,18 @@ export interface DexEntry {
   form?: { slug: string; category: FormCategory };
 }
 
+/** Les statistiques qu'une nature peut monter ou baisser (noms de PokéAPI). */
+export type NatureStat = 'attack' | 'defense' | 'special-attack' | 'special-defense' | 'speed';
+
 export interface Nature {
   id: number;
   key: string;
   fr: string;
   en: string;
+  /** Statistique augmentée (`null` pour les 5 natures neutres). */
+  up: NatureStat | null;
+  /** Statistique baissée (`null` pour les 5 natures neutres). */
+  down: NatureStat | null;
 }
 
 export const dex = dexFile.entries as DexEntry[];

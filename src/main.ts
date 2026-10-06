@@ -12,6 +12,7 @@ import './app/app.css';
 import './features/card/card.css';
 import './features/home/home.css';
 import './features/forms/form-gauge.css';
+import './features/horoscope/horoscope.css';
 import './features/history/history.css';
 import './features/pokedex/pokedex.css';
 import './features/stats/stats.css';

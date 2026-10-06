@@ -213,6 +213,15 @@ export const en: Record<MessageKey, string> = {
   'dev.simNone': 'This event has no next date.',
   'dev.simExit': 'Exit the simulation',
 
+  'horoscope.title': '🔮 Your Pokémon’s horoscope',
+  'horoscope.effect': '{nature} nature: {up} up (+10%), {down} down (−10%).',
+  'horoscope.neutral': '{nature} nature: no effect on stats.',
+  'stat.attack': 'Attack',
+  'stat.defense': 'Defense',
+  'stat.specialAttack': 'Special Attack',
+  'stat.specialDefense': 'Special Defense',
+  'stat.speed': 'Speed',
+
   'home.loading': 'Opening your collection…',
   'home.error.too_new':
     'Your save was created by a newer version of Pokédaily. Update the app (reload the page) to read it.',

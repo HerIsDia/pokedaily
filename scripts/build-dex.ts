@@ -19,6 +19,7 @@ import {
   stringifyRows,
   type DexEntry,
   type Nature,
+  type NatureStat,
   type NameOverrides,
 } from './lib/dex.ts';
 
@@ -112,11 +113,25 @@ for (const e of unnamed)
 log('3/4 Natures…');
 const natureList = await fetcher.json<NamedList>(`${API}/nature?limit=100`);
 const natures: Nature[] = await inBatches(natureList.results, 'natures', async (r) => {
-  const nature = await fetcher.json<Localized & { id: number; name: string }>(r.url);
+  const nature = await fetcher.json<
+    Localized & {
+      id: number;
+      name: string;
+      increased_stat: { name: NatureStat } | null;
+      decreased_stat: { name: NatureStat } | null;
+    }
+  >(r.url);
   const fr = pickName(nature.names, 'fr');
   const en = pickName(nature.names, 'en');
   if (!fr || !en) problems.push(`nature ${nature.name} : nom FR/EN manquant`);
-  return { id: nature.id, key: nature.name, fr: fr ?? nature.name, en: en ?? nature.name };
+  return {
+    id: nature.id,
+    key: nature.name,
+    fr: fr ?? nature.name,
+    en: en ?? nature.name,
+    up: nature.increased_stat?.name ?? null,
+    down: nature.decreased_stat?.name ?? null,
+  };
 });
 natures.sort((a, b) => a.id - b.id);
 

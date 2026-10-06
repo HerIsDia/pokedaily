@@ -95,3 +95,7 @@
 .home-gauge {
   padding: 0 16px 24px;
 }
+
+.home-gauge .horoscope {
+  margin-top: 12px;
+}

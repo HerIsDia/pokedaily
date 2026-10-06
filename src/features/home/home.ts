@@ -12,6 +12,7 @@ import { BADGE_NAME_KEY, badgeUnlockedToday } from '../stats/badges';
 import { streaks } from '../stats/stats';
 import { createCardView } from '../card/card';
 import { createFormGauge } from '../forms/form-gauge';
+import { createHoroscope } from '../horoscope/horoscope';
 
 export interface HomeDeps {
   i18n: I18n;
@@ -136,8 +137,13 @@ export function createHomeView({ i18n, game, events = allEvents }: HomeDeps): Vi
             if (day) void game.rename(day, name);
           },
         })({ scope }),
-        // Sous la carte : la jauge qui rend visible la chance de forme de demain.
-        h('div', { class: 'home-gauge' }, createFormGauge({ i18n, scope, state: game.state })),
+        // Sous la carte : la jauge de chance de forme de demain, puis l'horoscope du Pokémon.
+        h(
+          'div',
+          { class: 'home-gauge' },
+          createFormGauge({ i18n, scope, state: game.state }),
+          createHoroscope({ i18n, scope, entry: shown }),
+        ),
       );
     });
 

@@ -214,6 +214,15 @@ export const fr = {
   'dev.simNone': 'Cet événement n’a plus de prochaine date.',
   'dev.simExit': 'Quitter la simulation',
 
+  'horoscope.title': '🔮 L’horoscope de ton Pokémon',
+  'horoscope.effect': 'Nature {nature} : {up} en hausse (+10 %), {down} en baisse (−10 %).',
+  'horoscope.neutral': 'Nature {nature} : aucun effet sur les statistiques.',
+  'stat.attack': 'Attaque',
+  'stat.defense': 'Défense',
+  'stat.specialAttack': 'Attaque spéciale',
+  'stat.specialDefense': 'Défense spéciale',
+  'stat.speed': 'Vitesse',
+
   'home.loading': 'Ouverture de ta collection…',
   'home.error.too_new':
     "Ta sauvegarde a été créée par une version plus récente de Pokédaily. Mets l'application à jour (recharge la page) pour la lire.",
