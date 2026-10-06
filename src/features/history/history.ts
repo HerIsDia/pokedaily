@@ -39,7 +39,7 @@ function weekdayLabels(lang: Lang): string[] {
   );
 }
 
-function longDate(day: string, lang: Lang): string {
+export function longDay(day: string, lang: Lang): string {
   const [year = 0, month = 1, date = 1] = day.split('-').map(Number);
   return capitalize(
     new Intl.DateTimeFormat(localeOf(lang), {
@@ -226,7 +226,7 @@ export function createHistoryView({ i18n, game, today = () => localDay() }: Hist
             { class: 'detail-info' },
             h('span', { class: 'detail-name' }, entryName(entry)),
             entry.rename ? h('span', { class: 'detail-original' }, species) : null,
-            h('span', { class: 'detail-date' }, longDate(day, lang.get())),
+            h('span', { class: 'detail-date' }, longDay(day, lang.get())),
             h(
               'div',
               { class: 'detail-meta' },

@@ -201,6 +201,19 @@ export const fr = {
 
   'theme.toggle': 'Colorer l’application selon le type de ton Pokémon du jour',
 
+  'sim.banner': '🧪 SIMULATION : {date}. Rien n’est enregistré.',
+  'sim.exit': 'Quitter',
+  'dev.simTitle': 'Simuler une date',
+  'dev.simDate': 'Date',
+  'dev.simGo': 'Simuler',
+  'dev.simEvent': 'Événement',
+  'dev.simEventGo': 'Simuler cet événement',
+  'dev.simHint':
+    'Ouvre l’application comme si on était ce jour-là, dans un bac à sable : ta vraie collection n’est jamais modifiée.',
+  'dev.simBadDate': 'Date invalide (entre 2000 et 2100).',
+  'dev.simNone': 'Cet événement n’a plus de prochaine date.',
+  'dev.simExit': 'Quitter la simulation',
+
   'home.loading': 'Ouverture de ta collection…',
   'home.error.too_new':
     "Ta sauvegarde a été créée par une version plus récente de Pokédaily. Mets l'application à jour (recharge la page) pour la lire.",

@@ -138,3 +138,15 @@ export function devClearHistory(state: GameState): GameState {
 export function devResetAll(): GameState {
   return emptyGameState();
 }
+
+/**
+ * Prépare le BAC À SABLE de la simulation d'une date : une copie de la sauvegarde où les jours
+ * à partir de `day` n'existent pas encore, pour que « le jour J » soit tiré comme un vrai jour
+ * (événements du jour compris). La vraie sauvegarde n'est jamais touchée : cette copie vit en
+ * mémoire et disparaît avec l'onglet.
+ */
+export function prepareSimulation(state: GameState, day: Day): GameState {
+  const entries = Object.fromEntries(Object.entries(state.entries).filter(([key]) => key < day));
+  const days = Object.keys(entries).sort();
+  return { ...state, entries, lastDrawDay: days[days.length - 1] ?? null };
+}

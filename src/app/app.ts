@@ -9,6 +9,7 @@ import { createHomeView } from '../features/home/home';
 import { createPokedexView } from '../features/pokedex/pokedex';
 import { createTypeTheme, type TypeTheme } from '../features/theme/type-theme';
 import { getEntry } from '../data';
+import { longDay } from '../features/history/history';
 import { createInstallUi } from '../features/install/install-ui';
 import { createInstaller, type Installer } from '../pwa/install';
 import type { Updater } from '../pwa/register';
@@ -29,12 +30,24 @@ export interface AppDeps {
   installer?: Installer;
   /** Réglage du thème selon le type du jour (par défaut : celui mémorisé sur l'appareil). */
   theme?: TypeTheme;
+  /** Simulation d'une date (mode développeur) : le jour simulé et comment en sortir. */
+  simulation?: { day: string; exit: () => void };
+  /** Pour les tests : comment ouvrir une adresse (par défaut : la page actuelle change). */
+  navigate?: (url: string) => void;
 }
 
 /** Monte l'application dans `root` et renvoie une fonction pour tout démonter. */
 export function mountApp(
   root: HTMLElement,
-  { i18n, game, updater, installer = createInstaller(), theme = createTypeTheme() }: AppDeps,
+  {
+    i18n,
+    game,
+    updater,
+    installer = createInstaller(),
+    theme = createTypeTheme(),
+    simulation,
+    navigate = (url) => window.location.assign(url),
+  }: AppDeps,
 ): () => void {
   const scope = new Scope();
   const { t, lang, setLang } = i18n;
@@ -46,7 +59,7 @@ export function mountApp(
 
   const install = createInstallUi({ i18n, scope, installer });
   scope.add(() => installer.stop());
-  const devPanel = createDevPanel({ i18n, game, scope });
+  const devPanel = createDevPanel({ i18n, game, scope, simulation, navigate });
   // Raccourci clavier du mode développeur (comme en v3.1) : Ctrl/Cmd + Maj + C.
   const onKey = (event: KeyboardEvent) => {
     if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'c') {
@@ -142,6 +155,25 @@ export function mountApp(
   );
   bindAttr(scope, tabBar, 'aria-label', [lang], () => t('nav.main'));
 
+  // Bandeau de simulation : toujours visible, impossible de l'oublier.
+  const simBanner = h(
+    'div',
+    { class: 'sim-banner', role: 'status' },
+    h(
+      'span',
+      null,
+      bindText(scope, [lang], () =>
+        simulation ? t('sim.banner', { date: longDay(simulation.day, lang.get()) }) : '',
+      ),
+    ),
+    h(
+      'button',
+      { class: 'sim-exit', type: 'button', onclick: () => simulation?.exit() },
+      bindText(scope, [lang], () => t('sim.exit')),
+    ),
+  );
+  simBanner.hidden = !simulation;
+
   // Bandeau « nouvelle version » : on propose, on n'impose jamais.
   const updateBanner = h(
     'div',
@@ -172,6 +204,7 @@ export function mountApp(
     'div',
     { class: 'app-shell' },
     header,
+    simBanner,
     updateBanner,
     install.banner,
     outlet,

@@ -200,6 +200,19 @@ export const en: Record<MessageKey, string> = {
 
   'theme.toggle': 'Tint the app with the type of your Pokémon of the day',
 
+  'sim.banner': '🧪 SIMULATION: {date}. Nothing is saved.',
+  'sim.exit': 'Exit',
+  'dev.simTitle': 'Simulate a date',
+  'dev.simDate': 'Date',
+  'dev.simGo': 'Simulate',
+  'dev.simEvent': 'Event',
+  'dev.simEventGo': 'Simulate this event',
+  'dev.simHint':
+    'Opens the app as if it were that day, in a sandbox: your real collection is never changed.',
+  'dev.simBadDate': 'Invalid date (between 2000 and 2100).',
+  'dev.simNone': 'This event has no next date.',
+  'dev.simExit': 'Exit the simulation',
+
   'home.loading': 'Opening your collection…',
   'home.error.too_new':
     'Your save was created by a newer version of Pokédaily. Update the app (reload the page) to read it.',

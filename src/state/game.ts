@@ -55,6 +55,8 @@ export interface GameDeps {
   rng?: Rng;
   now?: () => Date;
   sync?: GameSync;
+  /** Mode simulation (mode développeur) : tout est en mémoire et l'horloge est truquée. */
+  simulated?: boolean;
 }
 
 export type ImportOutcome = { ok: true } | { ok: false };
@@ -91,6 +93,8 @@ export interface Game {
   saveFailed: ReadStore<boolean>;
   /** Faux en mode « sans sauvegarde » (IndexedDB indisponible, ou aperçu de développement). */
   readonly persistent: boolean;
+  /** Vrai dans le bac à sable de simulation d'une date. */
+  readonly simulated: boolean;
 
   start(): Promise<void>;
   /** Tire le Pokémon du jour s'il ne l'est pas encore (minuit passé, par exemple). */
@@ -202,6 +206,7 @@ export function createGame(deps: GameDeps): Game {
     warnings,
     saveFailed,
     persistent: repository.persistent,
+    simulated: deps.simulated ?? false,
 
     start() {
       return enqueue(async () => {

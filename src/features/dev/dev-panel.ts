@@ -10,6 +10,10 @@ import {
   devSetToday,
 } from '../../core/dev-tools';
 import { allEntries } from '../../core/game-state';
+import { addDays, isValidDay, localDay } from '../../core/dates';
+import { daysUntilNextActive, isEventActive } from '../../core/events/engine';
+import { events } from '../../data/events';
+import { simulationUrl } from '../../app/simulate';
 import { getEntry } from '../../data';
 import { stateLookup } from '../../data/lookup';
 import type { I18n, MessageKey } from '../../i18n';
@@ -25,6 +29,9 @@ export interface DevPanelDeps {
   scope: Scope;
   /** Pour les tests : par défaut `window.confirm`. */
   confirmAction?: (message: string) => boolean;
+  /** Simulation en cours (le cas échéant) et ouverture d'une adresse. */
+  simulation?: { day: string; exit: () => void };
+  navigate?: (url: string) => void;
 }
 
 const asNumber = (input: HTMLInputElement): number => Number.parseInt(input.value, 10);
@@ -40,6 +47,8 @@ export function createDevPanel({
   game,
   scope,
   confirmAction = (message) => window.confirm(message),
+  simulation,
+  navigate = (url) => window.location.assign(url),
 }: DevPanelDeps): Modal {
   const { t, lang } = i18n;
   const text = (key: MessageKey) => bindText(scope, [lang], () => t(key));
@@ -228,6 +237,74 @@ export function createDevPanel({
     text('dev.reset'),
   );
 
+  // ── Simulation d'une date / d'un événement ──────────────────────────
+  const simDate = h('input', {
+    class: 'dev-input',
+    type: 'date',
+    min: '2000-01-01',
+    max: '2100-12-31',
+  });
+  const simError = createStore<MessageKey | null>(null);
+  const goTo = (day: string) => navigate(simulationUrl(window.location.href, day));
+  const simGo = h(
+    'button',
+    {
+      class: 'dev-btn',
+      type: 'button',
+      onclick: () => {
+        const day = simDate.value;
+        const valid =
+          /^\d{4}-\d{2}-\d{2}$/.test(day) &&
+          isValidDay(day) &&
+          day >= '2000-01-01' &&
+          day <= '2100-12-31';
+        simError.set(valid ? null : 'dev.simBadDate');
+        if (valid) goTo(day);
+      },
+    },
+    text('dev.simGo'),
+  );
+  const simEvent = h(
+    'select',
+    { class: 'dev-input' },
+    ...events.map((e) => h('option', { value: e.id }, '')),
+  );
+  const fillEventNames = () => {
+    [...simEvent.options].forEach((option, i) => {
+      const e = events[i];
+      if (e) option.textContent = lang.get() === 'fr' ? e.nameFr : e.nameEn;
+    });
+  };
+  fillEventNames();
+  scope.add(lang.subscribe(fillEventNames, { immediate: false }));
+  const simEventGo = h(
+    'button',
+    {
+      class: 'dev-btn',
+      type: 'button',
+      onclick: () => {
+        const event = events.find((e) => e.id === simEvent.value);
+        if (!event) return;
+        const today = localDay();
+        // Actif aujourd'hui : on simule aujourd'hui ; sinon la prochaine fois qu'il a lieu.
+        const days = isEventActive(event, today) ? 0 : daysUntilNextActive(event, today);
+        simError.set(days === null ? 'dev.simNone' : null);
+        if (days !== null) goTo(addDays(today, days));
+      },
+    },
+    text('dev.simEventGo'),
+  );
+  const simHint = h('p', { class: 'dev-hint', role: 'alert' });
+  simHint.append(
+    bindText(scope, [simError, lang], () => (simError.get() ? t(simError.get()!) : '')),
+  );
+  const simExit = h(
+    'button',
+    { class: 'dev-btn danger', type: 'button', onclick: () => simulation?.exit() },
+    text('dev.simExit'),
+  );
+  simExit.hidden = !simulation;
+
   const status = h('p', { class: 'dev-status', role: 'status' });
   status.append(bindText(scope, [saved, lang], () => (saved.get() ? t(saved.get()!) : '')));
 
@@ -261,6 +338,15 @@ export function createDevPanel({
       row('dev.days', fillDays, fill),
       historyList,
       clearHistory,
+    ),
+    section(
+      'dev.simTitle',
+      h('p', { class: 'dev-note' }, text('dev.simHint')),
+      row('dev.simDate', simDate, simGo),
+      row('dev.simEvent', simEvent),
+      simEventGo,
+      simHint,
+      simExit,
     ),
     section('dev.danger', reset),
     status,

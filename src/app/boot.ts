@@ -1,4 +1,4 @@
-import { localDay } from '../core/dates';
+import { localDay, type Day } from '../core/dates';
 import { emptyGameState, type GameState } from '../core/game-state';
 import type { PokemonEntry } from '../core/model';
 import { stateLookup } from '../data/lookup';
@@ -14,7 +14,9 @@ import { createMemoryRepository } from '../storage/memory';
 import type { Repository } from '../storage/repository';
 import { requestPersistence } from '../pwa/persist';
 import { createBrowserUpdater, type Updater } from '../pwa/register';
+import { prepareSimulation } from '../core/dev-tools';
 import { mountApp } from './app';
+import { exitSimulationUrl, noonOf, parseSimulateParam } from './simulate';
 
 export interface BootDeps {
   i18n: I18n;
@@ -23,6 +25,10 @@ export interface BootDeps {
   /** Aperçu de développement (`?preview=…`), lu dans l'adresse par défaut. */
   preview?: PokemonEntry | null;
   cleanup?: () => Promise<void>;
+  /** Simulation d'une date (`?simulate=…`), lue dans l'adresse par défaut. */
+  simulate?: Day | null;
+  /** Pour les tests : où aller pour quitter la simulation. */
+  navigate?: (url: string) => void;
   /** Mise à jour de l'application ; par défaut le vrai (absent en développement). */
   updater?: Updater | null;
 }
@@ -49,6 +55,22 @@ async function openRepository(factory: IDBFactory | null): Promise<Repository> {
 }
 
 /**
+ * Le bac à sable de la simulation : on LIT la vraie sauvegarde (sans jamais y écrire), on en fait
+ * une copie en mémoire où le jour simulé n'existe pas encore, puis on referme la vraie base.
+ */
+async function openSandbox(factory: IDBFactory | null, day: Day): Promise<Repository> {
+  const real = await openRepository(factory);
+  try {
+    const { state } = await real.load();
+    return createMemoryRepository(prepareSimulation(state, day));
+  } catch {
+    return createMemoryRepository(); // sauvegarde illisible : un bac à sable vide vaut mieux que rien
+  } finally {
+    real.close();
+  }
+}
+
+/**
  * Démarre l'application : ouvre la sauvegarde, monte l'écran, tire le Pokémon du jour, puis —
  * seulement après un démarrage réussi sur une sauvegarde durable — supprime les restes de la
  * v3.1 (jamais sur un aperçu, jamais en mode secours). Renvoie la fonction qui arrête tout.
@@ -60,22 +82,37 @@ export async function boot(
     indexedDB = browserIndexedDb(),
     preview = createPreviewEntry(),
     cleanup = cleanupLegacy,
+    simulate = parseSimulateParam(window.location.search),
+    navigate = (url) => window.location.assign(url),
     updater = createBrowserUpdater(),
   }: BootDeps,
 ): Promise<{ game: Game; stop: () => void }> {
+  const simulating = !preview && simulate !== null;
   const repository = preview
     ? createMemoryRepository(stateWithToday({ ...preview, day: localDay() }))
-    : await openRepository(indexedDB);
+    : simulating
+      ? await openSandbox(indexedDB, simulate)
+      : await openRepository(indexedDB);
 
   const game = createGame({
     repository,
     pool: drawPool,
     events,
     lookup: stateLookup,
-    sync: preview ? undefined : createBroadcastSync(),
+    sync: preview || simulating ? undefined : createBroadcastSync(),
+    // En simulation, l'horloge est truquée : on est « le jour demandé, à midi ».
+    now: simulating ? () => noonOf(simulate) : undefined,
+    simulated: simulating,
   });
 
-  const unmount = mountApp(root, { i18n, game, updater });
+  const unmount = mountApp(root, {
+    i18n,
+    game,
+    updater,
+    simulation: simulating
+      ? { day: simulate, exit: () => navigate(exitSimulationUrl(window.location.href)) }
+      : undefined,
+  });
   await game.start();
   const stopWatching = game.watch();
 

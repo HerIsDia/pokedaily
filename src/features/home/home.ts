@@ -36,7 +36,7 @@ export function createHomeView({ i18n, game, events = allEvents }: HomeDeps): Vi
     };
 
     const volatile = notice('volatile', () => t('notice.volatile'));
-    volatile.hidden = game.persistent;
+    volatile.hidden = game.persistent || game.simulated; // la simulation a son propre bandeau
 
     const failed = notice('failed', () => t('notice.saveFailed'));
     bindAttr(scope, failed, 'hidden', [game.saveFailed], () => !game.saveFailed.get());

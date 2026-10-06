@@ -156,3 +156,43 @@
   color: #ff9a9a;
   cursor: pointer;
 }
+
+.dev-note {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+select.dev-input {
+  appearance: auto;
+}
+
+.sim-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 170, 0, 0.16);
+  border-bottom: 1px solid rgba(255, 170, 0, 0.55);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sim-banner[hidden] {
+  display: none;
+}
+
+.sim-exit {
+  flex: none;
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 170, 0, 0.7);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
